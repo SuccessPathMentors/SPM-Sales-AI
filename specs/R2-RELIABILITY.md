@@ -1,59 +1,50 @@
-# R2 — Reliability & Error Handling (Feature Spec)
+# R2 — Reliability & Error Handling (Feature Spec) — UPDATED (classification)
 
 Spec ID: R2-RELIABILITY-ERROR-HANDLING
-Status: DRAFT
+Status: DRAFT — CLASSIFICATION PASS
+
+This update classifies each requirement as Current / Proposed / Needs Validation to avoid codifying assumptions into the constitution.
 
 Objective
-- Define the reliability and error-handling requirements for background workflows and agent interactions, with the goal of producing an APPROVED spec that becomes the baseline for R2 work.
+- Define the reliability and error-handling requirements for background workflows and agent interactions and indicate which items are currently in place vs proposed changes.
 
-Motivation
-- Ensure predictable behavior and safe degradation in the face of failures in external services (Google Sheets, scheduling, OpenAI), and define retry, circuit-breaker, and incident escalation behavior.
+Classification key
+- Current: Implemented today and confirmed in the architecture.
+- Proposed: Recommended change to be approved and implemented if accepted.
+- Needs Validation: We suspect this is needed but must confirm implementation details, feasibility, and impact in the current runtime (n8n, Redis, Sheets, scheduler).
 
-Scope
-- n8n workflow error handling and retries
-- Agent error-handling patterns (fallbacks to human handoff)
-- Transient store (Redis) failure modes and fallback persistence
-- Observability and alerting rules for failed interactions
+Requirements (classified)
 
-Success Criteria / Acceptance
-- Automated tests simulate failures of Google Sheets API and scheduling API; system must reach a safe state and log an incident event.
-- n8n workflows must be idempotent and contain retry/backoff policy documented in their spec.
-- Agent runtime returns a deterministic fallback response that triggers human-handoff within configured thresholds.
-- Playbook: When OpenAI or model provider returns error/unexpected output, agents must not attempt to continue open-ended generation and instead enact the R1 fallback.
-
-Detailed Requirements
 1. n8n Workflows
-   - Default retry policy: 3 attempts, exponential backoff (e.g., 1s, 4s, 16s). Retries are configurable per node.
-   - On persistent failure: mark lead state = "error:integration" and surface to the operator queue.
+   - Default retry policy (3 attempts, exponential backoff 1s/4s/16s): Proposed — choose after validating n8n's node-level retry configurability and external API rate limits. (Needs Validation: whether existing n8n workflows already set retries.)
+   - On persistent failure: mark lead state = "error:integration": Proposed — needs review of canonical lead-state taxonomy in Google Sheets and CRM.
 
 2. Agent Error Handling
-   - Agents must implement a guarded execution wrapper: validate model output against allowed schema/template; if validation fails, trigger deterministic fallback.
-   - Fallback behavior: (a) emit structured incident event, (b) attach conversation transcript, (c) create human-handoff ticket.
+   - Guarded execution wrapper and output validation: Current (Needs Validation) — agents perform some validation today, but the coverage and validation harness must be audited and documented.
+   - Deterministic fallback that creates a human-handoff ticket on validation failure: Proposed — fallback behavior exists in spirit but requires a formalized ticket structure and QA acceptance.
 
 3. Redis / State
-   - Redis outages must be detected; on detection, write critical session snapshots to durable storage (Google Drive or temporary sheet) so the handoff preserves context.
+   - Detect outages and write critical session snapshots to durable storage (temporary sheet or drive): Proposed / Needs Validation — the snapshot destination and data-loss risk need confirmation with operations and security.
 
 4. Observability
-   - Define metrics: failed_tasks_per_minute, mean_time_to_recovery (MTTR), fallback_trigger_count, handoff_lag.
-   - Alerts: fire when fallback_trigger_count > threshold over rolling window or when n8n errors spike.
+   - Metrics: failed_tasks_per_minute, MTTR, fallback_trigger_count, handoff_lag: Proposed — we recommend these metrics be implemented; validate existing telemetry coverage.
+   - Alerts: fire when fallback_trigger_count crosses threshold: Proposed — thresholds need to be calibrated against production baselines.
 
 5. Testing & QA
-   - Unit tests for routing and fallback logic.
-   - Integration tests that inject API failures and assert deterministic fallback.
-   - Manual QA plan: run staged failure scenarios in staging and confirm correct tickets and lead state updates.
+   - Unit tests and integration tests simulating API failures: Current/Needs Validation — some automated tests exist; extent needs validation.
+   - Manual QA plan for staged failure scenarios: Proposed — must be drafted in QA artifacts.
 
-Rollout Plan
-- Implement in staging with feature flags controlling fallback activation.
-- Canary: 5% of traffic for one week, escalate rate to 25% if no regressions, then 100%.
-- Rollback: flip feature flag off and run remediation patch.
+Rollout Plan (classification)
+- Canary rollout (5% → 25% → 100%): Proposed — rollout percentages and windows to be validated against staging traffic patterns and canary tooling.
+- Fallback rollback via feature flag: Current (if feature flags available) / Needs Validation — confirm feature flagging mechanism and its integration with runtime.
 
-Owners
-- Feature owner: <name/email>
-- QA owner: <name/email>
+Acceptance Criteria
+- Tests covering simulated failures: Needs Validation (confirm CI/integration harness).
+- Manual staging validation and QA sign-off: Proposed — QA process must be documented and scheduled.
+- Metrics and alerting configured: Proposed — requires instrumentation and production baseline.
 
-Acceptance Checklist
-- [ ] Tests added and passing in CI
-- [ ] Manual staging validation completed and signed off by QA
-- [ ] Documentation updated (OPERATIONS.md entry for failure modes)
-- [ ] Metrics and alerting configured
+Next validation steps
+1. Owners to confirm which items are Current by pointing to implementation artifacts (n8n workflows, agent code, Redis configs, telemetry dashboards).
+2. For Proposed items, produce change specs describing implementation approach and acceptance criteria.
+3. After validation, move items from Proposed/Needs Validation to Current and update master spec accordingly.
 
