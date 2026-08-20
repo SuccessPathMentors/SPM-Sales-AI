@@ -1,34 +1,61 @@
-# Master System Specification — Draft
+# Master System Specification — SPM-Sales-AI (REPLACEMENT)
 
-This file is the top-level system specification for SPM-Sales-AI. It should describe the system boundaries, major components, integration points, and high-level non-functional requirements.
+Status: DRAFT — NOT APPROVED
 
-## Overview
-SPM-Sales-AI is an AI-enabled sales assistant platform composed of the following major components:
+This master system spec describes the currently intended system baseline for SPM-Sales-AI. This document represents the canonical system boundaries and the components that are considered part of the approved system only after the spec is APPROVED.
 
-- openai-backend: Node/Express service that proxies prompts to OpenAI and enforces auth/rate-limiting.
-- Frontend: Web UI for agents to interact with the assistant (TBD).
-- n8n Workflows: Automation flows for lead handling, CRM sync, and notifications.
-- Integrations: CRM, email gateway, analytics, and monitoring.
+Important notes
+- The add/openai-backend Express experiment exists in the repository as an unapproved experiment and is intentionally NOT described here as an approved component.
+- This spec reflects the working SPM design: n8n orchestration, deterministic agent routing, knowledge base, Google Sheets/data layer, Redis/state, lead capture, human handoff, scheduling/integrations, multilingual behavior, and locked R1 behavior.
 
-## System Boundaries
-- The system processes customer data (leads, interactions) and uses OpenAI models for assistance. Data residency and privacy must be considered.
+1. System Overview
+SPM-Sales-AI is an AI-assisted sales orchestration system intended to capture leads, qualify them, schedule follow-ups, and route conversations between AI agents and human operators.
 
-## Major Components
-- API Gateway / Backend: Handles auth, routing, and business logic.
-- AI Service (openai-backend): Responsible for safe prompt handling, rate limiting, and model selection.
-- Orchestration (n8n): Runs workflows for background processing.
-- Persistence: Database(s) for users, leads, and logs.
-- Observability: Logging, metrics, and alerting for critical paths.
+2. High-level Components
+- Orchestration (n8n): Responsible for event-driven workflows that connect webhooks, Google Sheets, CRM, email, and scheduling. n8n is the canonical orchestrator for external integrations and background flows.
 
-## Non-Functional Requirements (Draft)
-- Security: Secrets must be stored in host environment variables or secrets manager; no API keys stored in repo.
-- Availability: Critical API endpoints 99.9% uptime target.
-- Privacy: Sensitive PII must be redacted or stored according to policy.
-- Performance: Typical conversational responses within 2s median.
+- AI Agent Layer: A set of deterministic agents with an explicit routing policy. Agents are not monolithic: each agent has a role (lead-capture, qualification, multilingual-sales, scheduling, human-handoff) and operates against a defined knowledge base and state store.
 
-## Next Steps
-- Flesh out component responsibilities with owners and acceptance criteria.
-- Break down system spec into sub-specs per component (backend, n8n, frontend, infra, QA).
-- Draft concrete cross-cutting concerns (auth, observability, CI/CD, testing strategy).
+- Routing & Decision Engine: Deterministic routing rules ensure predictable behavior for R1. Routing may call into a rule engine or deterministic policy service that maps inputs (lead attributes, intent detection, language) to agents or human-handoff.
 
-(Use this master spec as the authoritative top-level document and keep it in sync with the constitution and lower-level specs.)
+- Knowledge Base (KB): Searchable, authenticated store (indexed content from docs, onboarding scripts, playbooks) used by agents for context. The KB includes curated prompts and allowed response patterns for R1.
+
+- Canonical Data Layer (Google Sheets): Google Sheets acts as the canonical lead datastore for early-stage MVP. Source-of-truth data synchronization jobs (n8n) ensure sheets represent the latest approved lead state.
+
+- Short-lived State Store (Redis): Holds transient conversation state, locks for human handoff, rate-limiting counters, and per-session metadata needed for deterministic routing.
+
+- Human Handoff & Scheduling: Integrations with Calendly / scheduling provider and human operator queues. Handoff includes an audit trail, conversation transcript snapshot, and handoff triggers (explicit user request, confidence threshold, or rule match).
+
+- Logging, Monitoring & Observability: Structured logs, metrics, and alerts for failed workflows, routing anomalies, and uptime issues. Sensitive data must be redacted in logs.
+
+3. Architecture Boundaries
+- External Systems: Google Sheets, CRM, OpenAI (or other model providers), calendar/scheduling, email gateways, and payment providers are external to the system and accessed via controlled integrations.
+- In-Repo Experiments: Branches/feature directories like add/openai-backend are experiments and must be promoted via spec approval to become part of the canonical architecture.
+- Data Residency: PII stored in Google Sheets or CRM must align with privacy rules; any sync to other persistence must be captured in a spec and approved.
+
+4. Non-Functional Requirements (Initial Draft)
+- Reliability: R1 must be deterministic for approved flows (i.e., behavioral invariants enforced by routing and templated responses).
+- Observability: End-to-end traces for lead lifecycle events; errors surfaced to n8n runs and a monitoring dashboard.
+- Privacy & Security: Secrets are injected via host provider secrets; no keys in repo.
+- Performance: Define per-spec targets — R1 behavior is about determinism and safety over low-latency. Specific latency SLOs belong in the R2 reliability spec.
+
+5. R1 Locked Behavior (must be preserved unless changed by an APPROVED spec)
+- Deterministic routing rules for lead-capture and qualification flows.
+- Template-driven responses for sensitive decisions (no open-ended generation in R1 without guardrails).
+- Human handoff triggers and mandatory transcript capture for operator context.
+- Language detection and deterministic selection of multilingual agent variants.
+
+6. QA / Release Gates (overview)
+- Each feature spec must include:
+  - Acceptance criteria (functional and non-functional)
+  - Automated tests (unit/integration where applicable)
+  - Manual QA checklist items (hand-off flows, PII checks, multilingual spot-checks)
+  - Rollout plan with canary percentage and rollback criteria
+- No feature affecting R1 behavior can be released without a QA sign-off and staging validation run (see specs/R2-RELIABILITY.md for the R2 gate).
+
+7. Ownership & Next Steps
+- Break this master spec into component-level specs (n8n, agents, KB, data sync, human handoff) and assign owners.
+- Draft concrete SLOs and test plans for R2 reliability.
+
+8. Appendix
+- Experiment inventory: add/openai-backend (branch) — EXPERIMENT, NOT APPROVED.

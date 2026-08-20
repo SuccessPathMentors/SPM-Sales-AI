@@ -1,32 +1,47 @@
-# Project Constitution — SPM Sales AI
+# Project Constitution — SPM Sales AI (REPLACEMENT)
 
-This constitution documents the project's purpose, scope, governance, decision-making, and contribution guidelines for Spec-Driven Development. It is a living document and should be reviewed in planning/retro cycles.
+Status: DRAFT — NOT APPROVED — NOT MERGEABLE
 
-Project name: SPM-Sales-AI
-Repository: SuccessPathMentors/SPM-Sales-AI
+This constitution is the authoritative governance and decision document for the SPM-Sales-AI project while we adopt Spec-Driven Development.
 
-1. Purpose
-- Provide AI-powered sales tools and workflows for Success Path Mentors, including chat assistants, code generation helpers, and automation integrations.
+Maintainers and Owners
+- Primary owner: SuccessPathMentors (org)
+- Core engineering maintainers: @<list-to-be-filled-in-PR>
+- Product owner: <name/email>
+- QA owner: <name/email>
 
-2. Scope
-- Architecture components covered by this constitution:
-  - Backend services (openai-backend, APIs)
-  - n8n workflows and automation
-  - Frontend user interfaces and admin panels
-  - QA, testing, and CI/CD for production delivery
+Purpose
+- Deliver a reliable, safe, and explainable AI Sales Assistant for Success Path Mentors focused on lead capture, qualification, and scheduling. The constitution governs how specs are produced, reviewed, and approved.
 
-3. Governance
-- Maintainers: SuccessPathMentors core team (list owners in the PR when ready)
-- Decision process: Proposals are documented as specs and approved by maintainers. Significant changes require a system spec update and a PR.
+Scope
+- This constitution applies to all code, infra, workflows, and specs under SuccessPathMentors/SPM-Sales-AI. It covers:
+  - Orchestration: n8n workflows and integrations
+  - AI agents and routing (deterministic routing; R1 locked behavior)
+  - Knowledge base and data layers (Google Sheets as the canonical lead store, indexed KB)
+  - Short-lived state stores (Redis) and durable storage
+  - Human handoff and scheduling integrations
+  - Internationalization and multilingual sales behaviors
+  - Diagnostics, QA, and release gates
 
-4. Contribution guidelines
-- All feature work should reference or update relevant specs in /specs.
-- Small changes (typo fixes, docs) may be merged by maintainers; feature changes require at least one review from a maintainer.
+Decision-making & Spec Lifecycle
+- Spec statuses: DRAFT, REVIEW, APPROVED, DEPRECATED.
+- All architecture, infra, and cross-cutting changes must be captured in a spec and reach APPROVED status before being considered master-system behavior.
+- Small operational changes (docs, tests) may be merged by maintainers without full spec approval, but must reference the relevant spec.
+- Major experiments (e.g., add/openai-backend) must be explicitly marked in PROJECT_STATE.md as EXPERIMENT and are NOT included in the master system spec until approved.
 
-5. Review cadence
-- Weekly spec review meeting (or asynchronous review inIssues/PRs) to keep the master spec up to date.
+Review & Approval Process
+- Spec authors create a spec under specs/ and open a PR from a feature branch to spec/bootstrap (or the main branch) referencing the spec file.
+- At least one maintainer and one QA reviewer must approve.
+- Acceptance criteria and rollout plan must be included in the spec.
 
-6. QA & Acceptance
-- Epics and features must include acceptance criteria in spec artifacts.
+Security & Data Policy
+- Secrets are never stored in the repo. All credentials must use environment variables or provider secret stores.
+- Customer/lead PII handling must be specified within the relevant feature spec and comply with applicable privacy rules.
 
-(Replace placeholders above with concrete names, emails, and schedules during the next editing pass.)
+Governance Cadence
+- Weekly status notes are optional. No automated cadence is enforced here — governance cadence will be captured in the CONDUCT section when maintainers are named.
+
+Change Control
+- Any change that impacts the R1 locked behavior or data handling requires an APPROVED spec and a staged rollout with QA gates.
+
+This constitution is intentionally prescriptive about the requirement to approve architecture before merging. The current branch spec/bootstrap remains DRAFT and NOT MERGEABLE until spec artifacts are APPROVED.

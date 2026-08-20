@@ -1,17 +1,12 @@
-# Spec Kit Bootstrap for SPM-Sales-AI
+# SPEC-KIT-BOOTSTRAP.md — Updated notes
 
-This branch contains a lightweight bootstrap of the GitHub Spec Kit (Spec-Driven Development) structure for the SPM-Sales-AI repository.
+We have not run the upstream GitHub Spec Kit CLI. The repository now contains a policy and spec baseline that must be reviewed and approved before running the toolchain.
 
-Purpose
-- Provide a starting structure to author the project constitution and the master system specification.
-- Make it easy to adopt the upstream Spec Kit tooling without placing tool-specific binaries or dependencies in the repo.
+Recommended procedure to initialize upstream Spec Kit CLI (run locally or on CI after approval):
 
-What I added
-- .speckit/config.yml — minimal config pointing at the specs directory
-- specs/CONSTITUTION.md — project constitution template (draft)
-- specs/MASTER_SYSTEM_SPEC.md — master system specification template (draft)
-- SPEC-KIT-BOOTSTRAP.md — instructions for installing and using GitHub Spec Kit locally and next steps
+1. Install the official Spec Kit CLI per the GitHub Spec Kit docs (link: https://github.com/github/spec-kit). Use the version pinned by maintainers.
+2. From repository root run: `spec-kit init` (or the official CLI's bootstrap command) to generate any required tool scaffolding.
+3. Run validation: `spec-kit validate` (or the equivalent) as part of CI to ensure specs meet organizational requirements.
+4. Add a GitHub Actions workflow for spec validation to run on PRs targeting the default branch.
 
-Notes
-- I did not run upstream tooling (the repo is only modified with scaffolding files). To complete initialization you can follow the steps in SPEC-KIT-BOOTSTRAP.md to run the Spec Kit CLI or GitHub-hosted workflow locally.
-- Per your request, this is on a new branch spec/bootstrap and I have not opened a PR.
+Do NOT run the CLI until maintainers confirm the specs in spec/bootstrap are approved for generation. Running the CLI prematurely may add tool-specific files that assume the spec is final.
