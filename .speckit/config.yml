@@ -1,0 +1,8 @@
+# Spec Kit configuration (bootstrap)
+
+# Minimal configuration for Spec Kit usage in this repository.
+project: SPM-Sales-AI
+specs_dir: specs
+constitution: specs/CONSTITUTION.md
+master_spec: specs/MASTER_SYSTEM_SPEC.md
+version: 0.1.0
