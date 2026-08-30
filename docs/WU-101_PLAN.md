@@ -1,77 +1,89 @@
-# WU-101 Conversation Analytics — Plan
+# WU-101 Conversation Analytics — Implementation Plan
 
-Status: READY_FOR_FREEZE_REVIEW
+Status: SPEC_FROZEN — READY_FOR_IMPLEMENTATION
 Issue: #12
 Branch: `wu/101-conversation-analytics`
 
 ## 1. Baseline
-Current locked production baseline:
-- workflow: `SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json`
-- exact artifact remains read-only;
-- existing observability nodes already create/redact `SPM_TELEMETRY_V2`;
-- existing customer response path must remain behaviorally equivalent.
+Locked current Production baseline:
+- workflow: `SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json`;
+- exact Production artifact remains read-only;
+- existing WU97 observability creates and redacts `SPM_TELEMETRY_V2`;
+- current customer response/business path must remain behaviorally equivalent.
 
-## 2. Smallest safe implementation
-Do not refactor unrelated graph sections.
+## 2. Freeze-review correction
+RC4.3.3 allows `input.correlation_id`, so correlation ID is not guaranteed to be internally generated. WU-101 therefore does not persist correlation ID and does not use it to construct analytics session grouping.
 
-Create a new STAGING candidate derived from the exact production baseline and add only the WU-101-owned changes below.
+Frozen identifier rules:
+- create a new internal `event_id` for every analytics event;
+- create a new internal random `analytics_session_key` on first Redis-backed state initialization;
+- preserve that session key through the existing non-destructive Redis state merge;
+- never derive the key from session ID, correlation ID, raw message, contact data, names, phone or email;
+- increment `turn_index` once per customer turn.
 
-### Change A — initialize pseudonymous analytics state in WU90 state merge
-Add a non-customer-facing `sales_state.analytics` object:
+## 3. Smallest safe implementation
+Do not refactor unrelated graph sections. Create a new STAGING candidate derived from the exact locked baseline and add only WU-101-owned changes.
+
+### Change A — analytics state in WU90 state merge
+Add:
 
 ```json
 {
-  "session_key": "conv-<first-correlation-id>",
-  "turn_index": 1
+  "analytics": {
+    "session_key": "conv-<internally-generated-random-id>",
+    "turn_index": 1
+  }
 }
 ```
 
 Rules:
-- preserve an existing `session_key`;
-- never derive the persisted analytics key from raw PII fields;
-- use first-turn `correlation_id` as the seed because it is already a generated non-customer identifier;
-- increment `turn_index` once per customer turn;
-- persist through the existing Redis state save rather than adding a separate Redis write.
+- preserve existing `session_key`;
+- initialize only when absent;
+- increment `turn_index` exactly once per incoming customer turn;
+- persist via the existing Redis state save, not a second Redis write;
+- generated values must be system-generated and independent of customer-controlled identifiers.
 
-### Change B — build a strict WU-101 analytics event after WU97 redaction
-New Code node: `Build WU101 Conversation Analytics Event`.
+### Change B — strict event builder after WU97 redaction
+Add Code node:
+`Build WU101 Conversation Analytics Event`
 
-Input source is the already-redacted final context. Build a new object by explicit field allowlist only. Never spread arbitrary source JSON into the event.
+Build `SPM_WU101_CONVERSATION_ANALYTICS_V1` with explicit field assignment only. Never spread arbitrary runtime JSON into the event.
 
-Contract: `contracts/WU101_CONVERSATION_ANALYTICS_EVENT_V1.schema.json`.
+Contract:
+`contracts/WU101_CONVERSATION_ANALYTICS_EVENT_V1.schema.json`
 
-### Change C — dispatch to a dedicated analytics logger
-Create a new STAGING subworkflow:
+Create `event_id` internally for each emitted event. Do not persist `correlation_id`.
+
+### Change C — dedicated analytics logger path
+Create a new STAGING logger path/subworkflow:
 
 `[STAGING] WU101 Conversation Analytics Logger`
 
-Proposed flow:
+Target flow:
 
-`Execute Workflow Trigger → Validate WU101 Event → Append CONVERSATION_ANALYTICS Row → Build Logger Result`
+`Validate WU101 Event → Append CONVERSATION_ANALYTICS Row → Build Logger Result`
 
-Main candidate flow around observability:
+Main candidate around observability:
 
-`Redact WU97 Observability Telemetry → Build WU101 Conversation Analytics Event → Dispatch WU101 Analytics Logger → Restore Customer Context → existing Save AI Message → existing final response`
+`Redact WU97 Observability Telemetry → Build WU101 Conversation Analytics Event → Dispatch Analytics Logger → Restore Customer Context → existing response persistence/final response`
 
-Dispatch requirements:
-- non-production only during implementation/test;
-- no wait for downstream processing where supported;
-- fail-open/continue path if dispatch cannot execute;
-- final customer response must continue from restored pre-dispatch context;
-- analytics logger result never determines business success.
+Requirements:
+- STAGING only during implementation;
+- analytics result never determines business success;
+- customer path restores original response/business context after dispatch;
+- logger failure must be fail-open and observable;
+- no analytics retry may repeat lead/booking/handoff/payment operations.
 
-### Change D — initial sink
-Proposed V1 sink: new `CONVERSATION_ANALYTICS` sheet tab in the existing SPM runtime workbook already used by the workflow.
+### Change D — V1 analytics sink
+Use a dedicated `CONVERSATION_ANALYTICS` tab in the existing SPM runtime workbook.
 
-The sheet is operational analytics data, not a knowledge source. It must not be loaded into the Sales Agent prompt or source-gate retrieval.
-
-Proposed columns, in contract order:
+Column order:
 1. event_schema
-2. event_timestamp
-3. workflow_release
-4. channel
-5. analytics_session_key
-6. correlation_id
+2. event_id
+3. event_timestamp
+4. workflow_release
+5. channel
+6. analytics_session_key
 7. turn_index
 8. primary_intent
 9. secondary_intent
@@ -94,120 +106,96 @@ Proposed columns, in contract order:
 26. pii_redacted
 27. raw_message_logged
 28. raw_session_logged
-29. secret_values_logged
+29. correlation_id_logged
+30. secret_values_logged
 
-No raw question/message column is allowed in WU-101. Raw/redacted question handling belongs to WU-102.
+No raw question/message, raw session ID, correlation ID, lead ID, phone, email, names or contact data column is allowed.
 
-## 3. Deterministic mappings
-### Classifier signals
-- primary = `classification.spm_intent`
-- secondary = `classification.secondary_spm_intent`
-- confidence = validated `classification.confidence`
-- language = validated `classification.language`, else `language_hint`, else `unknown`
-- classifier route = existing `classifier_route`
+The sheet is operational analytics data only. It must not be used as Sales Agent prompt input or a knowledge/source-gate source.
 
-### UX signals
-- clarification = `customer_clarification_required === true` or classifier route `clarify`
-- fallback = classifier route `fallback`
+## 4. Deterministic mappings
+- primary intent: `classification.spm_intent`
+- secondary intent: `classification.secondary_spm_intent`
+- confidence: validated classifier confidence
+- language: validated classifier language, else safe language hint, else `unknown`
+- journey stage: existing journey decision
+- source gate: existing source-gate decision/result
+- classifier route: existing route
+- clarification: existing clarification route/flag
+- fallback: existing fallback route
+- human requested: existing handoff/support request signal only
+- lead outcome: existing verified WU95 write/state truth only
+- lead ID: boolean presence only
+- opt-out: existing nurture state
+- action/degraded/recovery/duration/error codes: existing runtime/WU97 evidence
 
-### Human signal
-`human_requested=true` if any of:
-- primary intent is `human_handoff`;
-- secondary intent is `human_handoff`;
-- `wu95_handoff_contract.requested === true`;
-- support state/decision requires handoff.
+No second model call is permitted to create analytics fields.
 
-This records the request signal only. It must not imply that live handoff execution occurred.
-
-### Lead outcome
-Use existing WU95 verified evidence only:
-- verified successful operation `created` → `created`;
-- verified successful operation `updated` → `updated`;
-- lead/registration flow awaiting confirmation/write → `pending`;
-- attempted/required write with verified failure → `failed`;
-- otherwise → `none`.
-
-Persist only `lead_id_present: boolean`, never the actual lead ID in WU-101 analytics.
-
-## 4. Failure model
+## 5. Failure model
 Analytics is secondary observability.
 
-Expected behavior on analytics failure:
-- customer answer remains unchanged;
-- lead result remains unchanged;
-- business action truth remains unchanged;
-- runtime should expose an analytics-specific warning/error code for engineering evidence;
-- no retry storm or duplicate lead/business action may occur.
+On logger/sink failure:
+- answer remains unchanged;
+- lead/business result remains unchanged;
+- response still returns;
+- an analytics-specific warning/error is recorded for engineering evidence;
+- no retry storm;
+- no duplicate business write.
 
-No hidden retry of business actions is permitted.
-
-## 5. Tests
+## 6. Tests
 ### Static
-- JSON candidate parse.
-- unique node IDs/names.
-- strict event allowlist.
-- forbidden names/value-pattern scan.
-- Production workflow artifact unchanged.
-- Production workflow ID not used as writable deployment target.
+- candidate JSON parse;
+- unique node IDs/names;
+- event schema validity;
+- `additionalProperties=false`;
+- exact allowlist;
+- forbidden-field/value scan for message/session/correlation/contact/secret data;
+- Production SHA unchanged;
+- Production workflow ID absent from writable target configuration.
 
 ### Contract cases
-1. direct FAQ/commercial intent.
-2. low-confidence clarification.
-3. classifier fallback.
-4. human handoff request.
-5. lead pending confirmation.
-6. verified lead created.
-7. verified lead updated.
-8. lead write/readback failure.
-9. sticky opt-out.
-10. degraded/fail-closed runtime.
+1. direct intent;
+2. clarification;
+3. fallback;
+4. human request;
+5. lead pending;
+6. verified lead created;
+7. verified lead updated;
+8. lead failed;
+9. opt-out;
+10. degraded/recovery.
 
-For every case assert:
-- contract valid;
-- no forbidden fields;
-- correct deterministic booleans/outcome;
-- no model-generated reclassification.
+Every contract case must validate schema, privacy invariants, deterministic booleans/outcomes and absence of second-model inference.
 
 ### Runtime STAGING
-- first turn creates analytics session key + turn index 1;
-- second turn reuses same key + turn index 2;
-- append/readback row exact match;
-- logger unavailable/misconfigured test: response still returned correctly;
+- first turn: internal session key + turn 1;
+- second turn: same key + turn 2;
+- append/readback exact field match;
+- logger unavailable/misconfigured: chat response/business truth preserved;
 - EN/AR/FR representative parity.
 
 ### Regression
-Compare selected baseline RC4.3.3 outputs and truth fields against the WU-101 STAGING candidate. Analytics fields may differ/add; customer answer and business outcome may not regress.
+Compare selected RC4.3.3 customer-facing response and business truth fields against WU-101 STAGING. Analytics may add observability only; customer/business outcome may not regress.
 
-## 6. Review gate
-One material code review after static/contract/runtime evidence.
+## 7. Review gate
+After static/contract/runtime evidence, run one material review only. Report only requirement violation, PII/secret leakage, behavior regression, false success, blocking analytics dependency, duplicate/unsafe persistence or material architecture defect.
 
-Review only:
-- requirement violation;
-- PII/secret leakage;
-- behavior regression;
-- false business success;
-- blocking analytics dependency;
-- duplicate/unsafe persistence;
-- material architecture defect.
+## 8. Release boundary
+Passing WU-101 STAGING does not authorize Production modification.
 
-No speculative redesign or style-only loop.
-
-## 7. Release boundary
-Passing WU-101 STAGING does not authorize direct Production modification.
-
-After approval:
+After WU-101 approval:
 1. create a new immutable Production RC from the tested candidate;
-2. verify exact SHA and regression;
-3. use the normal release/human approval process;
-4. keep rollback to the current RC4.3.3 baseline available.
+2. verify SHA and regression;
+3. run the normal release/human approval gate;
+4. retain rollback to locked RC4.3.3.
 
-## 8. Dependencies / DAG
+## 9. DAG
 ```text
 GitHub cutover complete
         ↓
-HARD-001 main protection
+HARD-001 PASS
         ↓
-WU-101 spec freeze
+WU-101 SPEC FROZEN
         ↓
 Create analytics sheet + STAGING logger
         ↓
@@ -224,10 +212,10 @@ Owner approval
 New Production RC / separate release gate
 ```
 
-## 9. Not in this WU
-- unanswered-question content queue;
-- analytics dashboard;
-- automatic KB changes;
-- handoff adapter execution;
+## 10. Not in WU-101
+- unanswered-question queue/content;
+- analytics dashboard/KPIs;
+- automatic KB updates;
+- live human-handoff execution;
 - WhatsApp notification;
-- new scheduling/payment capabilities.
+- scheduling/payment enablement.
