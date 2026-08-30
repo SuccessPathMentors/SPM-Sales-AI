@@ -7,6 +7,7 @@ on:
     paths:
       - "scripts/wu101/build_failure_injection_candidate.py"
       - "scripts/wu101/test_failure_injection_candidate.py"
+      - "scripts/wu101/test_contract_signals.py"
       - "scripts/wu101/test_regression_parity.py"
       - "scripts/wu101/verify_remote_failure_injection.py"
       - ".github/workflows/wu101-failure-injection.yml"
@@ -51,6 +52,7 @@ jobs:
           python scripts/wu101/test_candidate.py
           python scripts/wu101/test_chat_memory_isolation.py
           python scripts/wu101/test_sheets_type_safe.py
+          python scripts/wu101/test_contract_signals.py
           python scripts/wu101/test_failure_injection_candidate.py
           python scripts/wu101/test_regression_parity.py
 
@@ -93,6 +95,7 @@ jobs:
           set -euo pipefail
           mkdir -p n8n/generated
           python scripts/wu101/build_failure_injection_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
+          python scripts/wu101/test_contract_signals.py
           python scripts/wu101/test_failure_injection_candidate.py
           python scripts/wu101/test_regression_parity.py
           actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
