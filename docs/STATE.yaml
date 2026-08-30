@@ -1,6 +1,6 @@
 project: SPM Sales AI Agent
 repository: SuccessPathMentors/SPM-Sales-AI
-state_version: 2
+state_version: 3
 source_of_truth: MIGRATION_IN_PROGRESS
 engineering_target_source_of_truth: github
 runtime_target: n8n
@@ -14,12 +14,24 @@ migration:
   rule: GitHub becomes sole engineering source of truth only after migration manifest reconciliation, artifact identity verification, PR review, and owner approval.
 
 release:
-  current_mode: PRE_CANARY_BLOCKED
+  current_mode: RC3_PRE_CANARY_BLOCKED
   production_activation: APPROVAL_REQUIRED
   production_cutover_authorized: false
-  frozen_candidate_claim: SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json
-  frozen_candidate_verification: PENDING_DRIVE_IDENTITY_AND_CHECKSUM_RECONCILIATION
+  verified_release_candidate_name: SPM_E2E_Sales_Agent_RC3_CERTIFIED_LEAD_ADAPTER_2026-08-25
+  verified_release_candidate_scope:
+    lead_crm_adapter: CERTIFIED_6_OF_6_PASS
+    scheduling_booking_execution: EXCLUDED
+    human_handoff_live_execution: EXCLUDED
+    payment_execution: EXCLUDED
+    external_followup_execution: EXCLUDED
+    production_redis_namespace: spm:prod:sales:*
+    production_static_qa: PASS
+  later_frozen_candidate_reference: SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json
+  later_frozen_candidate_reference_status: UNVERIFIED_IN_DRIVE_MIGRATION_SEARCH
   rollback_baseline: ChatBotMSE v2 - R2.5 Release Candidate Stable Efficient
+  rollback_baseline_sha256: 8450550bf2e33ee161a034deea4be0f0d6667959716e891166d0da6bb149dbd2
+  rollback_drill: PASS
+  rollback_drill_n8n_execution_id: 2276
 
 baseline:
   historical_locked_through: WU-84
@@ -33,89 +45,96 @@ working_units:
     name: Greenfield Architecture & Contracts
     status: BASELINED_COMPLETE
     mutable: false
-
   WU-88:
     name: 62-Intent Classifier & Routing
     status: IMPLEMENTATION_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
-
   WU-89:
     name: Entity Extraction & Normalization
     status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
-
   WU-90:
     name: Durable Sales State & Journey
     status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
-
   WU-91:
     name: Knowledge Retrieval & Source Gates
     status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
-
   WU-92:
     name: Consultative Sales Agent Core
     status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
-
   WU-93:
     name: Pricing / Offers / Objections
     status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
-
   WU-94:
     name: Trial / Scheduling Truth Layer
-    status: PROTOTYPE_COMPLETE_LIVE_ADAPTER_AND_RUNTIME_EVIDENCE_REQUIRED
+    status: CERTIFIED_BEHAVIOR_WITH_LIVE_EXECUTION_EXCLUDED_FROM_RC3
     mutable: false
-
   WU-95:
     name: Deterministic Lead Conversion
-    status: PROTOTYPE_COMPLETE_REAL_WRITE_HANDOFF_RUNTIME_EVIDENCE_REQUIRED
+    status: RC3_LEAD_CRM_ADAPTER_CERTIFIED_6_OF_6_PASS
     mutable: false
-
   WU-96:
     name: Nurture / Follow-Up / Opt-Out / Support Overrides
-    status: PROTOTYPE_COMPLETE_RUNTIME_ADAPTER_EVIDENCE_REQUIRED
+    status: CERTIFICATION_EVIDENCE_PASS_WITH_EXTERNAL_EXECUTION_EXCLUSIONS
     mutable: false
-
   WU-97:
     name: Reliability / Retries / Observability / Privacy / Security
-    status: PROTOTYPE_STATIC_PASS_RUNTIME_RECONCILIATION_REQUIRED
+    status: CERTIFICATION_EVIDENCE_PASS
     mutable: false
-
   WU-98:
     name: Multilingual & Conversation Regression / Red-Team Expansion
-    status: OFFLINE_PACK_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
+    status: CERTIFICATION_EVIDENCE_PASS
     mutable: false
-
   WU-99:
     name: Full Runtime / E2E Certification
-    status: RUNTIME_EXECUTION_COMPLETE_FINAL_EVIDENCE_CONSOLIDATION_PENDING
+    status: RUNTIME_SUITE_PASS_FINAL_DURABLE_EVIDENCE_RECONCILIATION_PENDING
     mutable: false
     evidence_summary:
       automated_runtime: 96/96_PASS
+      planned_invocations: 106/106_COMPLETE
       failure_injection: 15/15_PASS
       protected_r1_regression: 10/10_PASS
-      manual_semantic_remediation: CLOSED
-    blockers:
-      - evidence ledger and execution identifiers must be complete
-      - documented FI-003/FI-007/FI-008 behavioral method deviations require acceptance if owner approval is required
-      - runtime-testable SUT is TEST-only and cannot be promoted directly
+      manual_semantic_review: COMPLETE
+      multilingual_parity: ACCEPTED
+      open_p0_p1: 0
+      false_success_regressions: 0
+      sticky_opt_out: VERIFIED
+    historical_note: The older WU99 runbook still says PREPARED/NOT_RUN and is retained verbatim as historical evidence; later task/checklist evidence supersedes that status.
 
   WU-100:
     name: Canary Release / Production Certification / Lock
-    status: RELEASE_PACKAGE_COMPLETE_EXECUTION_BLOCKED
+    status: RC3_READY_FOR_FINAL_TARGETED_REGRESSION_THEN_OWNER_CANARY_APPROVAL
     mutable: false
     preparation_qa: 12/12_PASS
-    proposed_canary_profile: 5%->20%->50%->100%
-    proposed_canary_approved: false
-    blockers:
-      - clean immutable production RC not yet verified in migration
-      - rollback drill not yet reconciled as PASS evidence
-      - owner approval not recorded in migrated source
-      - operational latency/cost/error/volume/duration thresholds remain TBD
-      - canary and production cutover remain unauthorized
+    lead_crm_adapter_certification: 6/6_PASS
+    rc3_static_qa: PASS
+    rollback_drill: PASS
+    canary_thresholds_owner_approved_on: 2026-08-25
+    approved_canary_profile:
+      stage_5_percent: 20_successful_conversations_and_24_hours
+      stage_20_percent: 50_successful_conversations_and_24_hours
+      stage_50_percent: 100_successful_conversations_and_24_hours
+      stage_100_percent: 48_hours_close_monitoring
+    approved_operational_thresholds:
+      max_runtime_error_rate_per_stage: 2_percent
+      max_p95_response_latency: 20_seconds
+      max_openai_average_cost_per_conversation_usd: 0.05
+      openai_single_conversation_review_threshold_usd: 0.10
+      redis_state_persistence_failure_rate: 0_percent
+      open_p0_p1: 0
+    remaining_gates:
+      - final targeted RC3 regression 6/6 must PASS with execution evidence
+      - final RC3 freeze and SHA-256 must be recorded
+      - explicit owner approval to activate 5 percent canary must be recorded
+      - 5 percent canary PASS
+      - 20 percent canary PASS
+      - 50 percent canary PASS
+      - 100 percent promotion approval and 48-hour monitoring PASS
+      - approved release tag/lock and durable state/changelog update
 
 future_work:
   numbering_starts_at: WU-101
@@ -154,9 +173,9 @@ orchestration:
     - affected workflow/node ownership does not overlap
     - shared contracts are frozen before worker execution
   next_action:
-    - complete Drive-to-GitHub authoritative artifact migration
-    - reconcile WU99 final evidence identifiers and documented method deviations
-    - verify exact frozen production RC identity and SHA before any release claim
-    - inventory current n8n workflows and workflow IDs
+    - continue exact Drive-to-GitHub migration of checklists, evidence, changelog, Spec Kit and workflows
+    - locate exact RC3/any later frozen RC workflow export and record file identity/hash
+    - reconcile final targeted RC3 regression evidence if it exists after the 2026-08-25 plan
+    - inventory current n8n workflow IDs and active/inactive state under MIG-001
     - define non-production staging deployment path
     - keep production activation blocked until explicit owner approval
