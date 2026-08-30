@@ -1,16 +1,28 @@
 # Drive Artifact Inventory — Migration Control
 
-Status: ACTIVE MIGRATION INVENTORY
+Status: ACTIVE MIGRATION INVENTORY — MIG-002 EXACT TRANSPORT COMPLETE
 Audit date: 2026-08-30
-Purpose: Track Drive-native engineering/release artifacts that must be mirrored or explicitly retained as external/archive references before GitHub source-of-truth cutover.
+Purpose: Track Drive-native engineering/release artifacts mirrored into GitHub and distinguish current runtime authority from historical/archive evidence.
 
-## Large/text transport exceptions
+## Exact transport summary
+
+The MIG-002 batch transported **30 provider-original artifacts / 3,273,938 bytes**. All 30 matched the locally computed Git blob SHA-1 and byte length after GitHub upload. Final placement commit: `86ec918bb75e919df67d167ae3e3e67c040c633c`. Detailed SHA-256 and Git blob identities are recorded in `docs/MIG-002_EXACT_TRANSPORT_MANIFEST_2026-08-30.csv`.
+
+The current live n8n production export was transported separately and is also exact-verified:
+- `n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json`
+- n8n workflow ID `CMBMpxX5AqqK2UTn`
+- 330,119 bytes
+- SHA-256 `680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39`
+- Git blob `58d1e9cc45085909dff91d7a9d07138486e72c76`
+- status: `MIRRORED_EXACT_CURRENT_PRODUCTION_EVIDENCE`
+
+## Large/text artifacts
 | Artifact | Drive ID | Size | Migration |
 |---|---|---:|---|
-| `PROJECT_STATE.md` | `1R7nQEZstCUdHtx3LmH01_O2oHNMpqtZR` | 42,464 B | PENDING_EXACT_TEXT_TRANSPORT — historical snapshot; current reconciled state is `docs/STATE.yaml` |
-| `CHANGELOG.md` | `1frxBHSbh2sk6qniuDyKXfh9o0Qpb5vBz` | 22,376 B | PENDING_EXACT_TEXT_TRANSPORT |
-| `AI_Agent_System_Message_fixed.md` | `1K_r-0A-HTnya8dUyYiz6sQqi_QpP0hIz` | ~21 KB | PENDING_EXACT_TEXT_TRANSPORT |
-| `Success_Path_Mentors_Stage_10_Testing_TEMPLATE.xlsx` | `10VhfqZdNg9s6OtfjUCGBoVf_dTv5X0uT` | 18,768 B | PENDING_BINARY / external evidence exception candidate |
+| `PROJECT_STATE.md` | `1R7nQEZstCUdHtx3LmH01_O2oHNMpqtZR` | 42,464 B | `MIRRORED_EXACT` at `drive-mirror/00_START_HERE/PROJECT_STATE.md`; historical snapshot only; current state is `docs/STATE.yaml` |
+| `CHANGELOG.md` | `1frxBHSbh2sk6qniuDyKXfh9o0Qpb5vBz` | 22,376 B | `MIRRORED_EXACT` at `drive-mirror/06_History_Decisions/CHANGELOG.md` |
+| `AI_Agent_System_Message_fixed.md` | `1K_r-0A-HTnya8dUyYiz6sQqi_QpP0hIz` | 21,315 B | `MIRRORED_EXACT` at `drive-mirror/02_Current_Architecture/AI_Agent_System_Message_fixed.md` |
+| `Success_Path_Mentors_Stage_10_Testing_TEMPLATE.xlsx` | `10VhfqZdNg9s6OtfjUCGBoVf_dTv5X0uT` | 18,768 B | `MIRRORED_EXACT`; XLSX structure validated |
 
 ## 011 Greenfield core documents
 | Artifact | Drive ID | Migration |
@@ -23,75 +35,68 @@ Purpose: Track Drive-native engineering/release artifacts that must be mirrored 
 | `wu88-analysis.md` | `12_XjLs2RcFrDADC9wzcfdTHCdpIwNNaQp_WSkZMkQyE` | MIRRORED |
 
 ## WU87–WU98 QA / evidence
-| Artifact | Drive ID | Migration |
-|---|---|---|
-| `wu87-static-qa.md` | `1Yi0_rZjAgQjm3DMp7HxurtXISnEPa0wApBUYTnQhozw` | MIRRORED |
-| `wu88-classifier-qa.md` | `1RTSvSCYQwHE1ZMZ1h38hj8d-GP20ZfQ_fHn9B7fczAQ` | MIRRORED — canonical |
-| `wu88-classifier-static-qa.md` | `1EH1TzpHk-40Viev-l5jmataADeZoaAtIOcmjQ-cyxXc` | MIRRORED under `checklists/history/` |
-| alternate `wu88-classifier-qa.md` | `1GJqRI-SW3mz9w6CiYnL1IU7lSKANvSJvszxbKalEvDc` | MIRRORED under `checklists/history/` |
-| `wu89-entity-normalization-static-qa.md` | `1X0gFKmEqCv_3nFBKMm5L-Xi0i8Q5OEE5_aFFJzdU1Gw` | MIRRORED |
-| `wu90-state-journey-static-qa.md` | `1fsNdnbBVkN0S-7LSioBh6sJn87cpRIaSWPeFcn1rj2E` | MIRRORED |
-| `wu91-knowledge-source-gates-qa.md` | `1rB3AVTdoOvkHjRLZdYw9hfE9LKY0V5zEitoa6RRQANA` | MIRRORED |
-| `wu92-sales-agent-core-qa.md` | `1vEyjtobl0j12G4TZGRMn5KHvEv5c32_NScPPCLd9_yM` | MIRRORED |
-| `wu93-commercial-objections-qa.md` | `1HZtO7bfKYQt_QBsoyzVT805-CZsCsVW5oyFzno1-bHs` | MIRRORED |
-| `wu94-trial-scheduling-truth-layer-qa.md` | `1-ZX80Gxueh2hNpiCuoc6af6d_r_QG6S785LDHzzCwaI` | MIRRORED |
-| `wu95-deterministic-lead-conversion-qa.md` | `1qnyucYlTfZVjnCQZ69IJi5G4tNCCJ_qEMiINtC9wMxc` | MIRRORED |
-| `wu96-nurture-optout-support-qa.md` | `1RS1rDKmOW1OtC2PhO0qxkRZ2hgTIK8wT7UnF9GKT750` | MIRRORED |
-| `wu97-reliability-privacy-security-qa.md` | `176uT41iHywIpKggDETZdkXUeuL-5ADNAFDXqfyPTHdc` | MIRRORED |
-| `SPM_WU98_Offline_Regression_Report_2026-08-21.md` | `1N0qTBaYqUxg7IAByD2rIokvGrY7Ms23H` | MIRRORED |
-| `SPM_WU98_Offline_QA_2026-08-21.json` | `1L2Ae-HC2-Q5lWxa15NozZohFI9Zjr7et` | MIRRORED |
+Canonical QA/evidence remains mirrored under `drive-mirror/09_Spec_Kit_SDD/specs/011-e2e-sales-agent-greenfield/checklists/`:
+- WU87 static QA
+- WU88 classifier QA plus historical alternates under `checklists/history/`
+- WU89–WU97 static/contract QA
+- WU98 offline regression report and offline QA JSON
 
-Older alternate QA documents discovered outside the canonical checklist set are retained for historical review or will be mirrored under `checklists/history/`; they must not override the canonical artifact or later dated release evidence.
+Historical duplicates never override canonical or later dated release evidence.
 
-## Greenfield candidate / release artifacts
+## Greenfield candidate / runtime-test artifacts
+All identified retained candidate/runtime artifacts below are now `MIRRORED_EXACT` under `drive-mirror/09_Spec_Kit_SDD/specs/011-e2e-sales-agent-greenfield/candidate/`:
+
 | Artifact | Drive ID | Size | Migration |
 |---|---|---:|---|
-| `SPM_E2E_Sales_Agent_Greenfield_WU90_Durable_State_Journey_2026-08-20.json` | `12HSIY0QI1hEfc-BIrF3PgT-TolmQ7FUX` | ~73 KB | PENDING_TRANSPORT |
-| `SPM_E2E_Sales_Agent_Greenfield_WU91_Knowledge_Source_Gates_2026-08-20.json` | `1QLZVacJRLYp51rOk3ZVJkqDQHMx2rFxu` | ~106 KB | PENDING_TRANSPORT |
-| `SPM_E2E_Sales_Agent_Greenfield_WU92_Consultative_Sales_Agent_Core_2026-08-20.json` | `1VVcihcEgq0WYSPv2sWUV2FutIl_XFx_L` | ~126 KB | PENDING_TRANSPORT |
-| `SPM_E2E_Sales_Agent_Greenfield_WU93_Commercial_Objections_2026-08-20.json` | `1SvjJvCAXZHu5cs30QGJ7Eg7bndXuEn1O` | ~143 KB | PENDING_TRANSPORT |
-| `SPM_E2E_Sales_Agent_Greenfield_WU94_Trial_Scheduling_Truth_Layer_2026-08-20.json` | `1F_jrTDDgwz6t_IzJsgb3YAPvz2dKt6Yp` | ~156 KB | PENDING_TRANSPORT |
-| `SPM_E2E_Sales_Agent_Greenfield_WU95_Deterministic_Lead_Conversion_2026-08-20.json` | `1CWlgLs4cdU2L7JkKK7X8hP_CzIGwe7dL` | ~199 KB | PENDING_TRANSPORT |
-| `SPM_E2E_Sales_Agent_Greenfield_WU96_Nurture_OptOut_Support_Overrides_2026-08-20.json` | `19LK97ZBtwqgOR9431ELLmYbulA0XKQcj` | ~220 KB | PENDING_TRANSPORT |
-| `SPM_E2E_Sales_Agent_Greenfield_WU97_Reliability_Privacy_Security_2026-08-21.json` | `1W6oT_XNGqL9YlUS85kKM7m424avdUYzW` | ~236 KB | PENDING_TRANSPORT |
-| `SPM_WU98_Multilingual_RedTeam_Expansion_64_2026-08-21.json` | `1NRIcMLbpXNEDimWm0MzMn1TaVicIJb6W` | ~42 KB | PENDING_TRANSPORT |
-| `SPM_WU98_Multilingual_RedTeam_Expansion_64_2026-08-21.csv` | `1jLddk-CAzqtTRzltvzoJeI9-MNaam6By` | ~17 KB | PENDING_TRANSPORT |
-| `SPM_E2E_Sales_Agent_Greenfield_WU99_Runtime_Testable_2026-08-21.json` | `18fONdO3ZCs7z0QALTrfVftbz-VpKnTTH` | ~237 KB | PENDING_TRANSPORT — TEST ONLY |
-| `SPM_WU99_Runtime_Certification_Harness_96_2026-08-21.json` | `1luSgx1Kod1kDGpXWuQM4Iq9u8lKUCyHY` | ~107 KB | PENDING_TRANSPORT |
-| `SPM_WU99_Runtime_Certification_Plan_96_2026-08-21.json` | `1Bijgsn5VqvVXQW58J3YvEI3PJCXtGTur` | ~73 KB | PENDING_TRANSPORT |
-| `SPM_WU100_Release_Manifest_TEMPLATE_2026-08-21.json` | `1AjtFtWmt1uWmfeR_8q3QxQIEvS9aOdMv` | ~2.5 KB | MIRRORED |
-| `SPM_WU100_Canary_Release_Plan_2026-08-21.md` | `1aGzxesZROle9btwHPkq8_BqG3HjQ3gO6` | ~3.7 KB | MIRRORED |
-| `SPM_WU100_RC3_Final_Targeted_Regression_Plan_2026-08-25.md` | `1KEoAq4Uzk85rGlTQwF6P4Uiyyq4DLBLK` | ~2.6 KB | MIRRORED |
+| `SPM_E2E_Sales_Agent_Greenfield_WU87_Skeleton_2026-08-20.json` | `18jIsNNGPsAXkWcbcawy4f40WGn7mjFa4` | 18,913 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU88_62Intent_Classifier_2026-08-20.json` | canonical retained copy; duplicate Drive copies byte-identical | 36,595 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU88_Classifier_2026-08-20.json` | `1FNRkyVZ0l8dg9G2d-vw31iH4dGopOmR2` | 33,172 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU89_Entities_2026-08-20.json` | `1Jgv1aPq66_Dxq5HNpaJww3goFhXNhuWx` | 56,109 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU89_Entities_Normalization_2026-08-20.json` | `1G6yax_umfZNI7sqgjK4jUxbLUb2Qrdvf` | 60,659 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU90_State_Journey_2026-08-20.json` | `1xcyh__04InbTQspnGaYG2X8eSHXYyFzU` | 66,532 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU90_Durable_State_Journey_2026-08-20.json` | `12HSIY0QI1hEfc-BIrF3PgT-TolmQ7FUX` | 73,222 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU91_Source_Gates_2026-08-20.json` | `1l8ntvnLO5nbLRxZk4YqKZKFkTC84Jo_H` | 81,411 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU91_Knowledge_Source_Gates_2026-08-20.json` | `1QLZVacJRLYp51rOk3ZVJkqDQHMx2rFxu` | 106,407 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU92_Sales_Agent_Core_2026-08-20.json` | `1-CEjsNDHsBz5SuQbh4NXg5AwPsLJI8HA` | 103,529 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU92_Consultative_Sales_Agent_Core_2026-08-20.json` | `1VVcihcEgq0WYSPv2sWUV2FutIl_XFx_L` | 126,274 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU93_Commercial_Objections_2026-08-20.json` | `1SvjJvCAXZHu5cs30QGJ7Eg7bndXuEn1O` | 142,822 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU94_Trial_Scheduling_Truth_Layer_2026-08-20.json` | `1F_jrTDDgwz6t_IzJsgb3YAPvz2dKt6Yp` | 155,758 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU95_Deterministic_Lead_Conversion_2026-08-20.json` | `1CWlgLs4cdU2L7JkKK7X8hP_CzIGwe7dL` | 199,434 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU96_Nurture_OptOut_Support_Overrides_2026-08-20.json` | `19LK97ZBtwqgOR9431ELLmYbulA0XKQcj` | 220,277 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU97_Reliability_Privacy_Security_2026-08-21.json` | `1W6oT_XNGqL9YlUS85kKM7m424avdUYzW` | 235,801 B | MIRRORED_EXACT |
+| `SPM_WU98_Multilingual_RedTeam_Expansion_64_2026-08-21.json` | `1NRIcMLbpXNEDimWm0MzMn1TaVicIJb6W` | 42,226 B | MIRRORED_EXACT |
+| `SPM_WU98_Multilingual_RedTeam_Expansion_64_2026-08-21.csv` | `1jLddk-CAzqtTRzltvzoJeI9-MNaam6By` | 16,916 B | MIRRORED_EXACT |
+| `SPM_E2E_Sales_Agent_Greenfield_WU99_Runtime_Testable_2026-08-21.json` | `18fONdO3ZCs7z0QALTrfVftbz-VpKnTTH` | 236,748 B | MIRRORED_EXACT — TEST ONLY |
+| `SPM_WU99_Runtime_Certification_Harness_96_2026-08-21.json` | `1luSgx1Kod1kDGpXWuQM4Iq9u8lKUCyHY` | 106,626 B | MIRRORED_EXACT — TEST ONLY |
+| `SPM_WU99_Runtime_Certification_Plan_96_2026-08-21.json` | `1Bijgsn5VqvVXQW58J3YvEI3PJCXtGTur` | 73,121 B | MIRRORED_EXACT |
 
-## WU99 / WU100 checklists and evidence
-| Artifact | Drive ID | Migration |
-|---|---|---|
-| `SPM_WU99_Runtime_Certification_Runbook_2026-08-21.md` | `1DWptnSM-0wL7GAnJ2BJ5ldbIAWrmp31i` | MIRRORED |
-| `SPM_WU99_Preflight_QA_2026-08-21.json` | `1pFZdMCPmpoKMsvonksUjLqB1MvYHB8Ne` | MIRRORED — historical pre-runtime state |
-| `SPM_WU99_Runtime_Evidence_Ledger_96_2026-08-21.csv` | `11HFxZ7exOhjJHnmgMrenhiPzbEd_tLOT` | MIRRORED — historical NOT_RUN template; later aggregate completion comes from later release docs |
-| `SPM_WU99_Failure_Injection_Matrix_2026-08-21.csv` | `1C4MgHOyEL3fzVEQtd7d1dkwZiP5LGh0d` | MIRRORED — historical NOT_RUN template; later docs report 15/15 PASS |
-| `SPM_WU100_Rollback_Runbook_2026-08-21.md` | `1zI6NHEPUjOBC0nkH4GDiRbGqN3F0emyG` | MIRRORED — historical runbook wording retained |
-| `SPM_WU100_Canary_Monitoring_Gates_2026-08-21.csv` | `1RVQ-SJWSdjQqTNMqkOuMPzgG1VithdMT` | MIRRORED — older TBD threshold template; later owner-approved plan supersedes thresholds |
-| `SPM_WU100_Preparation_QA_2026-08-21.json` | `1zYXVri42DhEQLa9ZwKXYIWeKzZPJTXlI` | MIRRORED |
-| `SPM_WU100_Production_Approval_Checklist_2026-08-21.md` | `1cfE5Q6znBrzNRp-JPJ5QdtFrJZiDwceo` | MIRRORED — updated 2026-08-25 |
-| `greenfield-release-gate.md` | `1LrzuDkFaJgRa8ie2DAinC-PUMs7hFFpJRgBCx7AWJF4` | MIRRORED |
+WU100 release/canary plans, QA, checklists, monitoring gates, and release-manifest template were already mirrored before the exact-transport batch.
 
 ## Legacy/current workflow artifacts
+All five identified Drive workflows are now exact-mirrored under `drive-mirror/03_Workflows_Current/`:
+
 | Artifact | Drive ID | Migration |
 |---|---|---|
-| `ChatBotMSE_v2_R1_LOCKED_2026-08-17.json` | `1UhOb7V7zLRa6ZXJrjMiDBZbJTH_LXIhe` | PENDING_TRANSPORT — LOCKED BASELINE |
-| `ChatBotMSE_v2_R2_TOKEN_OPTIMIZED_2026-08-18.json` | `1Xb7KL-SxcZODbf7zlIohdwqOzj1` | PENDING_TRANSPORT |
-| `ChatBotMSE_v2_Refactor_Working_Copy_2_PAUSED_2026-08-17.json` | `18wFMuXpMFTA-ZRt8_88OljwrspuX0ej9` | PENDING_TRANSPORT — DIAGNOSTIC |
-| `ChatBotMSE_v2_FIXED.json` | `11NTBtzeNYfcODGQ-w8uHCDCnw-Tq61LL` | PENDING_TRANSPORT — SUPERSEDED REFERENCE |
-| `Validated_Human_Handoff_FIXED.json` | `1WNifl9kf8Lv9zTvgy6OcoMt8BcDc6W08` | PENDING_TRANSPORT |
+| `ChatBotMSE_v2_R1_LOCKED_2026-08-17.json` | `1UhOb7V7zLRa6ZXJrjMiDBZbJTH_LXIhe` | MIRRORED_EXACT — LOCKED HISTORICAL BASELINE |
+| `ChatBotMSE_v2_R2_TOKEN_OPTIMIZED_2026-08-18.json` | `1Xb7KL-SxcZODbf7zlHrbtlIohdwqOzj1` | MIRRORED_EXACT — HISTORICAL |
+| `ChatBotMSE_v2_Refactor_Working_Copy_2_PAUSED_2026-08-17.json` | `18wFMuXpMFTA-ZRt8_88OljwrspuX0ej9` | MIRRORED_EXACT — DIAGNOSTIC/HISTORICAL |
+| `ChatBotMSE_v2_FIXED.json` | `11NTBtzeNYfcODGQ-w8uHCDCnw-Tq61LL` | MIRRORED_EXACT — SUPERSEDED REFERENCE |
+| `Validated_Human_Handoff_FIXED.json` | `1WNifl9kf8Lv9zTvgy6OcoMt8BcDc6W08` | MIRRORED_EXACT — STANDALONE HISTORICAL HANDOFF WORKFLOW |
 
-## Cutover-critical unresolved release artifact
-`SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json` is referenced by later bootstrap/state material but was not found by exact Drive-name searches during this audit. Treat it as `UNVERIFIED_REFERENCE` until the actual artifact is located and its identity/hash is reconciled.
+Note: R1 locked and the paused refactor export are byte-identical in Drive despite their different historical labels; both filenames are retained because their roles differ.
 
-## Transfer policy
+## WU99 / WU100 evidence documents
+The existing historical runbooks, preflight QA, runtime evidence ledger template, failure-injection template, WU100 approval checklist, rollback runbook, monitoring gates, preparation QA, and greenfield release gate remain mirrored verbatim. Historical `NOT_RUN` templates must not be rewritten to fabricate later execution results; later dated release/runtime evidence governs current status.
+
+## Current release identity vs unresolved historical reference
+The current production runtime identity is now independently verified as **RC4.3.3**, workflow ID `CMBMpxX5AqqK2UTn`, and its exact export is versioned in GitHub.
+
+`SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json` remains an `UNVERIFIED_HISTORICAL_REFERENCE`: exact Drive searches did not locate that named artifact. It must not override or block the separately verified RC4.3.3 current runtime identity.
+
+## Transfer / safety policy
 - Never recreate workflow JSON from screenshots, chat excerpts, or partial connector output.
-- Copy the provider export exactly, then record hash/version identity.
-- Do not commit secrets, tokens, API keys, private keys, credential payloads, or Redis connection strings.
-- n8n credential references/names/IDs may appear in exported workflow metadata; actual secret material remains in the runtime credential store.
-- TEST-only WU99 SUT must never be promoted directly to production.
-- Historical templates are preserved, but later dated release evidence takes precedence for status reconciliation.
+- Provider exports are copied exactly and identity verified before becoming evidence.
+- Do not commit tokens, API keys, private keys, credential payloads, passwords, or Redis connection strings.
+- Credential references/names/IDs in workflow metadata are allowed; secret values remain in the runtime credential store.
+- WU99 Runtime-Testable SUT and harness are TEST ONLY and cannot be promoted directly to production.
+- Historical templates/evidence are preserved; later dated current-state evidence takes precedence for status reconciliation.
