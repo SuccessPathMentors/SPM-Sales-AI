@@ -1,0 +1,39 @@
+name: WU-101 Sheets type-safety validation
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/wu101/build_candidate_sheets_type_safe.py"
+      - "scripts/wu101/test_sheets_type_safe.py"
+      - ".github/workflows/wu101-sheets-fix-validation.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: WU101 Sheets type-safe candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build repaired deterministic candidate
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu101/build_candidate_sheets_type_safe.py \
+            --baseline n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json \
+            --output n8n/generated/SPM_WU101_STAGING_ANALYTICS_CANDIDATE.json
+      - name: Run existing WU-101 tests
+        run: |
+          set -euo pipefail
+          python scripts/wu101/test_candidate.py
+          python scripts/wu101/test_chat_memory_isolation.py
+          python scripts/wu101/test_sheets_type_safe.py
+      - name: Report repaired candidate SHA
+        run: |
+          set -euo pipefail
+          sha256sum n8n/generated/SPM_WU101_STAGING_ANALYTICS_CANDIDATE.json
