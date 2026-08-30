@@ -1,0 +1,95 @@
+name: Repository guard
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-guard:
+    name: Repository guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate deployment safety tests
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/n8n/deploy_nonprod.py
+          python scripts/n8n/test_deploy_nonprod.py
+
+      - name: Validate governed JSON and production baseline
+        env:
+          RC433_SHA256: 680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import hashlib
+          import json
+          import pathlib
+          import re
+          import sys
+
+          roots = [
+              pathlib.Path('contracts'),
+              pathlib.Path('n8n/deployment'),
+              pathlib.Path('n8n/workflows'),
+          ]
+
+          parsed = 0
+          for root in roots:
+              if not root.exists():
+                  continue
+              for path in root.rglob('*.json'):
+                  try:
+                      json.loads(path.read_text(encoding='utf-8'))
+                  except Exception as exc:
+                      print(f'FAIL_JSON: {path}: {exc}', file=sys.stderr)
+                      raise SystemExit(1)
+                  parsed += 1
+
+          prod = pathlib.Path('n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json')
+          if not prod.exists():
+              raise SystemExit('FAIL: locked RC4.3.3 production baseline is missing')
+          sha = hashlib.sha256(prod.read_bytes()).hexdigest()
+          expected = __import__('os').environ['RC433_SHA256']
+          if sha != expected:
+              raise SystemExit(f'FAIL: locked RC4.3.3 baseline changed: {sha}')
+
+          state = pathlib.Path('docs/STATE.yaml').read_text(encoding='utf-8')
+          required_state = [
+              'production_auto_deploy: false',
+              'github_driven_production_activation_authorized: false',
+          ]
+          for marker in required_state:
+              if marker not in state:
+                  raise SystemExit(f'FAIL: production safety marker missing: {marker}')
+
+          suspicious = [
+              re.compile(r'-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----'),
+              re.compile(r'\bsk-[A-Za-z0-9_-]{20,}\b'),
+              re.compile(r'(?i)\bBearer\s+[A-Za-z0-9._~+/-]{20,}={0,2}\b'),
+          ]
+          scan_roots = [pathlib.Path('contracts'), pathlib.Path('n8n/deployment')]
+          for root in scan_roots:
+              if not root.exists():
+                  continue
+              for path in root.rglob('*'):
+                  if not path.is_file() or path.stat().st_size > 2_000_000:
+                      continue
+                  try:
+                      text = path.read_text(encoding='utf-8')
+                  except UnicodeDecodeError:
+                      continue
+                  for rx in suspicious:
+                      if rx.search(text):
+                          raise SystemExit(f'FAIL: possible secret material in {path}')
+
+          print(f'PASS: repository guard; parsed_json={parsed}; rc4_3_3_sha256={sha}')
+          PY
