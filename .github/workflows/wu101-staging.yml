@@ -65,6 +65,7 @@ jobs:
           python scripts/wu101/test_candidate.py
           python scripts/wu101/test_chat_memory_isolation.py
           python scripts/wu101/test_sheets_type_safe.py
+          python scripts/wu101/test_regression_parity.py
 
       - name: Verify exact candidate SHA-256
         run: |
@@ -116,6 +117,7 @@ jobs:
           python scripts/wu101/test_candidate.py
           python scripts/wu101/test_chat_memory_isolation.py
           python scripts/wu101/test_sheets_type_safe.py
+          python scripts/wu101/test_regression_parity.py
           actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
           test "$actual" = "$EXPECTED_SHA256"
 
