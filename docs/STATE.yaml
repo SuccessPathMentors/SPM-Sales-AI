@@ -1,6 +1,6 @@
 project: SPM Sales AI Agent
 repository: SuccessPathMentors/SPM-Sales-AI
-state_version: 4
+state_version: 5
 source_of_truth: MIGRATION_IN_PROGRESS
 engineering_target_source_of_truth: github
 runtime_target: n8n
@@ -11,79 +11,119 @@ migration:
   status: IN_PROGRESS
   drive_archive_authority: true
   github_cutover_approved: false
-  active_gate: MIG-001
-  rule: GitHub becomes sole engineering source of truth only after migration manifest reconciliation, artifact identity verification, PR review, and owner approval.
+  active_gate: MIG-003
+  rule: GitHub becomes sole engineering source of truth only after migration reconciliation, PR integration/review, and explicit owner cutover approval.
   tasks:
     MIG-001:
       issue: 5
-      name: Reconcile n8n runtime identities and prepare safe WU99 execution
-      status: IN_PROGRESS_BLOCKING
-      required_before:
-        - any GitHub-driven n8n deployment
-        - WU99 harness binding
-        - production workflow update or activation
-      known_runtime_evidence:
-        validated_handoff_workflow_id: swhmNa0Goo0uYm1k
-        validated_handoff_historical_state: active_true_reverify_required
-        r2_5_candidate_workflow_id: vSc7cMIMFMEUdi7z
-        r2_5_candidate_state: active_false
-        active_main_workflow_id: UNKNOWN_BLOCKING
+      name: Reconcile current n8n runtime identity and dependencies
+      status: PASS
+      current_main:
+        workflow_name: SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+        workflow_id: CMBMpxX5AqqK2UTn
+        environment: production
+        runtime_state: LIVE_PUBLISHED_VERIFIED
+        execution_evidence_id: 2539
+        n8n_version_id: ee6d40dc-440a-4b3e-9948-090a73ae9222
+        node_count: 114
+        disabled_nodes: 0
+        execute_workflow_outbound: NONE_FOUND
+        github_artifact: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+        bytes: 330119
+        sha256: 680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39
+        exact_transport: PASS
+      adapter_scope:
+        lead_crm_write: ENABLED_CURRENT_SCOPE
+        human_handoff_contract: PRESENT
+        human_handoff_execution: DISABLED_NOT_CONFIGURED
+        scheduling_booking_execution: EXCLUDED
+        payment_execution: EXCLUDED
+        external_followup_execution: EXCLUDED
+      historical_standalone_handoff:
+        workflow_id: swhmNa0Goo0uYm1k
+        exact_artifact: drive-mirror/03_Workflows_Current/Validated_Human_Handoff_FIXED.json
+        current_main_dependency: false
+        revalidation_required_if_reconnected: true
       control_doc: docs/MIG-001_N8N_RUNTIME_INVENTORY.md
+
     MIG-002:
       issue: 6
       name: Exact artifact transport and checksum reconciliation
-      status: IN_PROGRESS
+      status: PASS
+      batch_artifact_count: 30
+      batch_total_bytes: 3273938
+      exact_match_count: 30
+      mismatch_count: 0
+      staging_upload_commit: 5531c377208bd7d1cc5572533fa5760713bcefa0
+      final_placement_commit: 86ec918bb75e919df67d167ae3e3e67c040c633c
+      temporary_staging_removed: true
+      manifest: docs/MIG-002_EXACT_TRANSPORT_MANIFEST_2026-08-30.csv
       integrity_register: docs/ARTIFACT_INTEGRITY_REGISTER.yaml
       verified_raw_inputs:
         PROJECT_STATE_md:
           bytes: 42464
           sha256: 7bb8f8ba4388e78585610232ff46e1bdc14d999db5e8019b98e4d4d711ded0a9
           authority: HISTORICAL_SNAPSHOT_ONLY
-          github_exact_commit: PENDING
+          github_exact_commit: PASS
+          github_path: drive-mirror/00_START_HERE/PROJECT_STATE.md
         CHANGELOG_md:
           bytes: 22376
           sha256: 3508df7c63582059f94f01dcefdacacf43620fe7dda0fdb5cc68075d25346eb6
-          github_exact_commit: PENDING
+          github_exact_commit: PASS
+          github_path: drive-mirror/06_History_Decisions/CHANGELOG.md
         WU99_Runtime_Testable:
           bytes: 236748
           sha256: a74b6443151eca02d3cc0b28126be96344a68326a389f6ac2951f54bcce0c6fc
           checksum_matches_recorded_evidence: true
           json_parse: PASS
           runtime_role: TEST_ONLY
-          github_exact_commit: PENDING
-      preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
+          github_exact_commit: PASS
+          github_path: drive-mirror/09_Spec_Kit_SDD/specs/011-e2e-sales-agent-greenfield/candidate/SPM_E2E_Sales_Agent_Greenfield_WU99_Runtime_Testable_2026-08-21.json
+      preliminary_secret_scan: PASS_NO_OBVIOUS_SECRET_VALUES
+
     MIG-003:
       issue: 7
-      name: Add automated n8n deployment path after runtime identity reconciliation
-      status: BLOCKED
-      blocked_by: [MIG-001, MIG-002]
+      name: Add automated GitHub to n8n deployment path
+      status: READY_NON_PRODUCTION_ONLY
+      blocked_by: []
       first_release_scope: NON_PRODUCTION_ONLY
       production_activation_allowed: false
+      prerequisites_passed: [MIG-001, MIG-002]
+
     MIG-004:
       issue: 8
       name: Reconcile stale historical release state against later evidence
       status: IN_PROGRESS
-      rule: Historical snapshots remain immutable evidence and never override docs/STATE.yaml.
+      rule: Historical snapshots remain immutable evidence and never override docs/STATE.yaml or verified current runtime evidence.
 
 release:
-  current_mode: RC3_PRE_CANARY_BLOCKED
-  production_activation: APPROVAL_REQUIRED
-  production_cutover_authorized: false
-  verified_release_candidate_name: SPM_E2E_Sales_Agent_RC3_CERTIFIED_LEAD_ADAPTER_2026-08-25
-  verified_release_candidate_scope:
-    lead_crm_adapter: CERTIFIED_6_OF_6_PASS
-    scheduling_booking_execution: EXCLUDED
-    human_handoff_live_execution: EXCLUDED
-    payment_execution: EXCLUDED
-    external_followup_execution: EXCLUDED
-    production_redis_namespace: spm:prod:sales:*
-    production_static_qa: PASS
-  later_frozen_candidate_reference: SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json
-  later_frozen_candidate_reference_status: UNVERIFIED_IN_DRIVE_MIGRATION_SEARCH
-  rollback_baseline: ChatBotMSE v2 - R2.5 Release Candidate Stable Efficient
-  rollback_baseline_sha256: 8450550bf2e33ee161a034deea4be0f0d6667959716e891166d0da6bb149dbd2
-  rollback_drill: PASS
-  rollback_drill_n8n_execution_id: 2276
+  current_runtime:
+    workflow_name: SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+    workflow_id: CMBMpxX5AqqK2UTn
+    status: LIVE_PUBLISHED_VERIFIED
+    runtime_execution_evidence_id: 2539
+    github_exact_artifact: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+    sha256: 680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39
+    exact_transport: PASS
+    scope:
+      lead_crm_adapter: ENABLED_CURRENT_SCOPE
+      scheduling_booking_execution: EXCLUDED
+      human_handoff_live_execution: DISABLED_NOT_CONFIGURED
+      payment_execution: EXCLUDED
+      external_followup_execution: EXCLUDED
+      production_static_and_runtime_identity: VERIFIED
+  github_driven_production_activation_authorized: false
+  future_production_changes_require_owner_approval: true
+  production_auto_deploy: false
+  release_history_reconciliation: REQUIRED_UNDER_MIG-004
+  historical_references:
+    rc3_candidate: SPM_E2E_Sales_Agent_RC3_CERTIFIED_LEAD_ADAPTER_2026-08-25
+    rc4_2_reference: SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json
+    rc4_2_reference_status: UNVERIFIED_HISTORICAL_REFERENCE
+    rollback_baseline: ChatBotMSE v2 - R2.5 Release Candidate Stable Efficient
+    rollback_baseline_sha256: 8450550bf2e33ee161a034deea4be0f0d6667959716e891166d0da6bb149dbd2
+    rollback_drill: PASS
+    rollback_drill_n8n_execution_id: 2276
 
 baseline:
   historical_locked_through: WU-84
@@ -99,43 +139,43 @@ working_units:
     mutable: false
   WU-88:
     name: 62-Intent Classifier & Routing
-    status: IMPLEMENTATION_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
+    status: BASELINED_IN_RELEASE_LINEAGE
     mutable: false
   WU-89:
     name: Entity Extraction & Normalization
-    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
+    status: BASELINED_IN_RELEASE_LINEAGE
     mutable: false
   WU-90:
     name: Durable Sales State & Journey
-    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
+    status: BASELINED_IN_RELEASE_LINEAGE
     mutable: false
   WU-91:
     name: Knowledge Retrieval & Source Gates
-    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
+    status: BASELINED_IN_RELEASE_LINEAGE
     mutable: false
   WU-92:
     name: Consultative Sales Agent Core
-    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
+    status: BASELINED_IN_RELEASE_LINEAGE
     mutable: false
   WU-93:
     name: Pricing / Offers / Objections
-    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
+    status: BASELINED_IN_RELEASE_LINEAGE
     mutable: false
   WU-94:
     name: Trial / Scheduling Truth Layer
-    status: CERTIFIED_BEHAVIOR_WITH_LIVE_EXECUTION_EXCLUDED_FROM_RC3
+    status: BEHAVIOR_PRESENT_LIVE_EXECUTION_EXCLUDED
     mutable: false
   WU-95:
     name: Deterministic Lead Conversion
-    status: RC3_LEAD_CRM_ADAPTER_CERTIFIED_6_OF_6_PASS
+    status: LIVE_RELEASE_LINEAGE_LEAD_ADAPTER_ENABLED
     mutable: false
   WU-96:
     name: Nurture / Follow-Up / Opt-Out / Support Overrides
-    status: CERTIFICATION_EVIDENCE_PASS_WITH_EXTERNAL_EXECUTION_EXCLUSIONS
+    status: LIVE_RELEASE_LINEAGE_WITH_EXTERNAL_EXECUTION_EXCLUSIONS
     mutable: false
   WU-97:
     name: Reliability / Retries / Observability / Privacy / Security
-    status: CERTIFICATION_EVIDENCE_PASS
+    status: LIVE_RELEASE_LINEAGE
     mutable: false
   WU-98:
     name: Multilingual & Conversation Regression / Red-Team Expansion
@@ -143,7 +183,7 @@ working_units:
     mutable: false
   WU-99:
     name: Full Runtime / E2E Certification
-    status: RUNTIME_SUITE_PASS_FINAL_DURABLE_EVIDENCE_RECONCILIATION_PENDING
+    status: RUNTIME_SUITE_PASS_HISTORICAL_EVIDENCE_RECONCILED_AT_AGGREGATE_LEVEL
     mutable: false
     evidence_summary:
       automated_runtime: 96/96_PASS
@@ -155,38 +195,16 @@ working_units:
       open_p0_p1: 0
       false_success_regressions: 0
       sticky_opt_out: VERIFIED
-    historical_note: The older WU99 runbook and PROJECT_STATE snapshot say PREPARED/NOT_RUN and are retained as historical evidence; later dated execution/release evidence must be used for current state after reconciliation.
-
+    test_artifacts_exact_mirrored: true
+    direct_production_promotion_allowed: false
   WU-100:
     name: Canary Release / Production Certification / Lock
-    status: RC3_READY_FOR_FINAL_TARGETED_REGRESSION_THEN_OWNER_CANARY_APPROVAL
+    status: CURRENT_PRODUCTION_RUNTIME_LIVE_RELEASE_HISTORY_RECONCILIATION_REQUIRED
     mutable: false
-    preparation_qa: 12/12_PASS
-    lead_crm_adapter_certification: 6/6_PASS
-    rc3_static_qa: PASS
-    rollback_drill: PASS
-    canary_thresholds_owner_approved_on: 2026-08-25
-    approved_canary_profile:
-      stage_5_percent: 20_successful_conversations_and_24_hours
-      stage_20_percent: 50_successful_conversations_and_24_hours
-      stage_50_percent: 100_successful_conversations_and_24_hours
-      stage_100_percent: 48_hours_close_monitoring
-    approved_operational_thresholds:
-      max_runtime_error_rate_per_stage: 2_percent
-      max_p95_response_latency: 20_seconds
-      max_openai_average_cost_per_conversation_usd: 0.05
-      openai_single_conversation_review_threshold_usd: 0.10
-      redis_state_persistence_failure_rate: 0_percent
-      open_p0_p1: 0
-    remaining_gates:
-      - final targeted RC3 regression 6/6 must PASS with execution evidence
-      - final RC3 freeze and SHA-256 must be recorded
-      - explicit owner approval to activate 5 percent canary must be recorded
-      - 5 percent canary PASS
-      - 20 percent canary PASS
-      - 50 percent canary PASS
-      - 100 percent promotion approval and 48-hour monitoring PASS
-      - approved release tag/lock and durable state/changelog update
+    rc4_3_3_runtime_live_verified: true
+    exact_runtime_export_in_github: true
+    historical_canary_thresholds_owner_approved_on: 2026-08-25
+    note: Do not infer undocumented canary stage history from the fact that RC4.3.3 is live; MIG-004 must preserve and reconcile evidence without fabricating missing release records.
 
 future_work:
   numbering_starts_at: WU-101
@@ -202,7 +220,7 @@ future_work:
     WU-108: WhatsApp Staff Notification
     WU-109: Conversation Outcome KPIs
     WU-110: Optimization Regression Pack
-  rule: Do not start WU-101+ until Release 1 is completed through WU-100, frozen/certified, SHA recorded, and explicit production approval is complete.
+  rule: Do not start WU-101+ until Release 1 completion/certification history and source-of-truth cutover prerequisites are formally reconciled and approved.
 
 state_machine:
   normal:
@@ -226,13 +244,13 @@ orchestration:
     - affected workflow/node ownership does not overlap
     - shared contracts are frozen before worker execution
   migration_execution_order:
-    - MIG-001
-    - MIG-002
-    - MIG-003
+    - MIG-001: PASS
+    - MIG-002: PASS
+    - MIG-003: READY_NON_PRODUCTION_ONLY
+    - MIG-004: IN_PROGRESS
   next_action:
-    - execute MIG-001 by reading the current n8n runtime workflow inventory and active/inactive identities
-    - reverify validated handoff identity and identify the actually active main chatbot workflow
-    - keep WU99 SUT/harness imports inactive and test-only
-    - continue MIG-002 exact artifact transport with post-commit checksum verification
-    - start MIG-003 only after MIG-001 and MIG-002 gates pass
-    - keep production activation blocked until explicit owner approval
+    - close MIG-001 and MIG-002 issues after recording final evidence comments
+    - begin MIG-003 using a non-production-only deployment/import path
+    - keep production auto-deploy disabled
+    - continue MIG-004 historical release reconciliation independently without rewriting historical evidence
+    - do not approve GitHub source-of-truth cutover until PR integration/review and explicit owner approval
