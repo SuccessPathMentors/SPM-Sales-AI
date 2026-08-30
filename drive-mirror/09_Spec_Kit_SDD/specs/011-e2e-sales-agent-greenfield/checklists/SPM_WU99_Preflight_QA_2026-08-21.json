@@ -1,0 +1,32 @@
+{
+  "schema": "SPM_WU99_PREFLIGHT_QA_V1",
+  "date": "2026-08-21",
+  "sut": {
+    "nodes": 109,
+    "unique_names": true,
+    "unique_ids": true,
+    "dangling": [],
+    "active": false,
+    "execute_workflow_trigger_present": true,
+    "sha256": "a74b6443151eca02d3cc0b28126be96344a68326a389f6ac2951f54bcce0c6fc"
+  },
+  "harness": {
+    "nodes": 5,
+    "unique_names": true,
+    "unique_ids": true,
+    "dangling": [],
+    "active": false,
+    "execute_sut_node_disabled": true,
+    "target_workflow_id_configured": false,
+    "sha256": "965ae82f03cd8e3f7cfbf0bcd12ac859cf5618373c25590b861e02858f6f06ab"
+  },
+  "test_plan": {
+    "cases": 96,
+    "invocations": 106,
+    "unique_test_ids": 96,
+    "intent_coverage": 62,
+    "critical_cases": 77
+  },
+  "runtime_certification_status": "BLOCKED_NOT_RUN",
+  "production_cutover_authorized": false
+}

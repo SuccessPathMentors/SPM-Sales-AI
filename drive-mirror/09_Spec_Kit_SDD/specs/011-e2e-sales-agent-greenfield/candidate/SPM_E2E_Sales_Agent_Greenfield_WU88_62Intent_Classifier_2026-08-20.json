@@ -1,0 +1,815 @@
+{
+  "name": "SPM E2E Sales Agent Greenfield — WU88 62-Intent Classifier",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "options": {
+          "allowedOrigins": "https://successpathmentors.net",
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -2200,
+        0
+      ],
+      "id": "75bb1c75-7a98-5e1a-8f51-4015898021a5",
+      "name": "Greenfield Chat Trigger",
+      "webhookId": "8c88c9a6-6fa2-53e0-ae4f-94c90a322ff8"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\nconst raw = String(input.chatInput ?? input.message ?? '').trim();\nconst sessionId = String(input.sessionId ?? input.session_id ?? '').trim();\nconst meta = (input.metadata && typeof input.metadata === 'object') ? input.metadata : {};\nconst explicitTest = input.spm_test_mode === true || meta.spm_test_mode === true;\nconst syntheticPrefix = /^(test_|wu87_|synthetic_)/i.test(sessionId);\nconst testMode = Boolean(explicitTest || syntheticPrefix);\nconst now = new Date().toISOString();\nconst correlationId = String(input.correlation_id ?? `wu87-${Date.now()}-${Math.random().toString(36).slice(2,10)}`);\nconst safeSession = sessionId || `anonymous-${correlationId}`;\nreturn [{json:{\n  schema_version:'SPM_E2E_V1',\n  workflow_release:'WU87_GREENFIELD_SKELETON',\n  workflow_mode:'TEST_ONLY',\n  correlation_id:correlationId,\n  session_id:safeSession,\n  sales_state_key:`spm:sales:${safeSession}`,\n  received_at:now,\n  started_ms:Date.now(),\n  test_mode:testMode,\n  synthetic_session:syntheticPrefix,\n  channel:'website_chat',\n  language_hint:String(input.language ?? input.locale ?? meta.language ?? '').toLowerCase() || null,\n  message:{raw, length:raw.length},\n  client_context:{origin:meta.origin ?? null},\n  contract_status:'SESSION_ENVELOPE_OK'\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1950,
+        0
+      ],
+      "id": "ed0f7315-4c99-5c23-bc13-f278df68f77c",
+      "name": "Build Canonical Session Envelope"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1dae5e8e-9233-599e-8dec-cf38127053d6",
+              "leftValue": "={{ $json.test_mode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1700,
+        0
+      ],
+      "id": "b988f99a-3432-5854-b6ba-98cfb67e107b",
+      "name": "Is Greenfield Test Session?"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "sales_state_raw",
+        "key": "={{ $json.sales_state_key }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1450,
+        -120
+      ],
+      "id": "e5fda4a0-f826-5218-9629-d4826a978467",
+      "name": "Load Sales State [DISABLED UNTIL WU90]",
+      "disabled": true,
+      "notesInFlow": true,
+      "notes": "WU87 architecture placeholder only. Disabled: no Redis credential or runtime dependency until WU90."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "588971e1-6c28-5044-b13c-f43e8bbe106c",
+              "name": "output",
+              "value": "WU87 Greenfield candidate is TEST-ONLY. Production traffic is blocked; no business action was executed.",
+              "type": "string"
+            },
+            {
+              "id": "e8e7239b-b15a-5869-ab0d-628542874010",
+              "name": "status",
+              "value": "BLOCKED_NON_TEST",
+              "type": "string"
+            },
+            {
+              "id": "d223ba88-af8b-5af9-b533-7fa682ec85ff",
+              "name": "correlation_id",
+              "value": "={{ $json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1450,
+        260
+      ],
+      "id": "a0a44c73-daad-5381-b529-1f7f85101bad",
+      "name": "Block Non-Test Execution"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json || {};\nconst defaults = {\n  schema_version:'SPM_SALES_STATE_V1',\n  session_id:j.session_id,\n  lead_id:null,\n  preferred_language:j.language_hint,\n  journey:{stage:'discovery',previous_stage:null,next_best_action:'understand_need',override:null},\n  classifier:{spm_intent:null,secondary_spm_intent:null,confidence:0,threshold:0.85,ambiguous:true,source_gate:null,risk_tier:null,sales_stage:null},\n  entities:{global:{},students:[]},\n  commercial:{package:null,currency:null,authorized_offer:false},\n  trial:{status:'not_started'},\n  scheduling:{timezone:null,availability_checked:false,booking_status:'not_started',booking_id:null},\n  conversion:{registration_status:'not_started',consent:false,lead_write_status:'not_started'},\n  support:{handoff_requested:false,handoff_status:'not_started',complaint:false},\n  nurture:{opt_out:false,follow_up_eligible:false},\n  recovery:{state:null,last_error_code:null},\n  flags:{test_mode:Boolean(j.test_mode),synthetic_session:Boolean(j.synthetic_session)},\n  updated_at:new Date().toISOString()\n};\nfunction merge(base, extra){\n  if (!extra || typeof extra !== 'object' || Array.isArray(extra)) return base;\n  const out={...base};\n  for (const [k,v] of Object.entries(extra)) {\n    if (v === undefined) continue;\n    if (v && typeof v === 'object' && !Array.isArray(v) && base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) out[k]=merge(base[k],v);\n    else out[k]=v;\n  }\n  return out;\n}\nlet existing={};\nif (j.sales_state_raw) {\n  try { existing = typeof j.sales_state_raw === 'string' ? JSON.parse(j.sales_state_raw) : j.sales_state_raw; } catch { existing={}; }\n}\nconst state=merge(defaults,existing);\nstate.session_id=j.session_id;\nstate.flags={...(state.flags||{}),test_mode:Boolean(j.test_mode),synthetic_session:Boolean(j.synthetic_session)};\nstate.updated_at=new Date().toISOString();\nreturn [{json:{...j,sales_state:state,sales_state_contract:'SPM_SALES_STATE_V1',state_merge_mode:'NON_DESTRUCTIVE'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        -120
+      ],
+      "id": "82c29d54-6391-5722-9a4c-5a4061041850",
+      "name": "Initialize + Merge Sales State Contract"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1JJu6eNurnNbBdikOnOe1u7OvUjcTS8Q14TPHjUiT3lM",
+          "mode": "list",
+          "cachedResultName": "Success_Path_Mentors_AI_KB_V2_SPM_2026-08-18",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JJu6eNurnNbBdikOnOe1u7OvUjcTS8Q14TPHjUiT3lM/edit"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1480952793,
+          "mode": "list",
+          "cachedResultName": "SPM_INTENTS_V2",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1JJu6eNurnNbBdikOnOe1u7OvUjcTS8Q14TPHjUiT3lM/edit#gid=1480952793"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "status",
+              "lookupValue": "ACTIVE"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        -950,
+        -120
+      ],
+      "id": "644f569d-a1d3-5162-a34b-68db92cd3d42",
+      "name": "Load SPM V2 62 Intent Catalog",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "k57sEBp5UiDsjtRE",
+          "name": "Google Sheets account"
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 1000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const rows = $input.all().map(i => i.json || {});\nconst base = $('Initialize + Merge Sales State Contract').first().json || {};\nconst clean = v => String(v ?? '').trim();\nconst parseList = v => clean(v).split(/[,،;|\\n]/).map(x=>x.trim()).filter(Boolean);\nconst active = rows\n  .filter(r => clean(r.status).toUpperCase() === 'ACTIVE')\n  .map(r => ({\n    intent_id: clean(r.intent_id),\n    spm_intent: clean(r.spm_intent_name),\n    category: clean(r.category),\n    required_entities: parseList(r.required_entities),\n    legacy_route_intent: clean(r.legacy_route_intent),\n    legacy_next_action: clean(r.legacy_next_action),\n    risk_tier: clean(r.risk_tier),\n    source_gate: clean(r.source_gate),\n    sales_stage: clean(r.sales_stage),\n    min_confidence: Number.isFinite(Number(r.min_confidence)) ? Number(r.min_confidence) : 0.85,\n    languages: parseList(r.languages),\n    status: clean(r.status)\n  }))\n  .filter(r => r.intent_id && r.spm_intent);\nconst names = new Set(active.map(x=>x.spm_intent));\nconst unique = names.size === active.length;\nconst catalogValid = active.length === 62 && unique;\nconst compact = active.map(r=>({\n  id:r.intent_id,\n  intent:r.spm_intent,\n  category:r.category,\n  required:r.required_entities,\n  risk:r.risk_tier,\n  gate:r.source_gate,\n  stage:r.sales_stage,\n  threshold:r.min_confidence\n}));\nreturn [{json:{\n  ...base,\n  classifier_contract:{\n    schema:'SPM_CLASSIFIER_OUTPUT_V2',\n    taxonomy:'SPM_V2_62_INTENTS',\n    taxonomy_count:active.length,\n    required:['spm_intent','confidence','ambiguous'],\n    optional:['secondary_spm_intent','language','rationale_code'],\n    authoritative_fields:['required_entities','source_gate','risk_tier','sales_stage','threshold'],\n    confidence_range:[0,1],\n    low_confidence_rule:'NO_IRREVERSIBLE_ACTION'\n  },\n  intent_catalog:active,\n  intent_catalog_text:JSON.stringify(compact),\n  intent_catalog_count:active.length,\n  intent_catalog_valid:catalogValid,\n  intent_catalog_error:catalogValid ? '' : `Expected 62 unique ACTIVE intents; received ${active.length} rows / ${names.size} unique names`,\n  irreversible_action_allowed:false\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        -120
+      ],
+      "id": "ab562bdf-39cc-5244-9f74-f870e5fbb7af",
+      "name": "Prepare 62 Intent Classifier Context"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "93d62574-d3dd-58bb-8b81-74d143507b32",
+              "leftValue": "={{ $json.intent_catalog_valid }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -450,
+        -120
+      ],
+      "id": "b7fddbbc-44bd-55a1-88ba-48c80a3c4fee",
+      "name": "Is 62 Intent Catalog Valid?"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "responsesApiEnabled": false,
+        "options": {
+          "temperature": 0,
+          "timeout": 60000,
+          "maxRetries": 1
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -200,
+        -420
+      ],
+      "id": "4daf963c-a806-5dfd-8d08-280b96019477",
+      "name": "OpenAI Classifier Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "0z7X4Vvjtj8sSHRB",
+          "name": "OpenAI account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=CURRENT CUSTOMER MESSAGE:\n{{ $json.customer_message }}\n\nLANGUAGE HINT:\n{{ $json.language_hint }}\n\nPREVIOUS SALES STATE:\n{{ JSON.stringify($json.sales_state) }}\n\nACTIVE_INTENT_CATALOG:\n{{ $json.intent_catalog_text }}",
+        "messages": {
+          "messageValues": [
+            {
+              "message": "You are the semantic intent classifier for Success Path Mentors. You classify only; never answer the customer and never invent business facts.\n\nAUTHORITATIVE TAXONOMY\n- Select spm_intent ONLY from ACTIVE_INTENT_CATALOG.\n- secondary_spm_intent is optional and must also exist in the catalog and differ from the primary intent.\n- Return confidence from 0 to 1 and ambiguous true/false.\n- Do NOT decide source_gate, risk_tier, sales_stage, threshold, required_entities, or business action. The workflow derives those fields deterministically from the catalog.\n- Use previous sales_state only to interpret context such as a short reply; do not copy old values into the current message.\n- If intent is unclear, choose the closest valid intent, lower confidence, set ambiguous=true, and use rationale_code=AMBIGUOUS_INTENT.\n- Detect language as ar, en, or fr.\n\nDISAMBIGUATION RULES\n- pricing = asking price/package facts; price_objection = expressing that price is too high/poor value.\n- teacher_quality = asking factual quality/vetting; teacher_quality_objection = expressing doubt/concern about tutor quality.\n- free_trial = asking/requesting a free trial; trial_details = asking how the trial works/details without a clear request to start it.\n- teacher_availability = asks whether a suitable tutor is available; availability = general slot availability; schedule_request = asks for a specific day/time/window.\n- registration = asks about registration process; ready_to_register = explicit readiness to proceed now; contact_share = shares phone/email as contact details.\n- need_to_think = wants time/hesitates; not_interested = explicitly declines or asks to stop sales follow-up.\n- human_handoff = explicitly asks for a person/team; complaint = expresses complaint; technical_issue/account_login/update_contact_info use their specific support intents.\n- payment_problem = transaction/payment issue; payment_methods = asks accepted payment methods; refund_policy/cancellation_policy are policy questions.\n- multiple_children = explicitly discusses more than one student/child as the primary need.\n- out_of_scope = request is unrelated to Success Path Mentors tutoring/service scope.\n\nSHORT CONTEXTUAL REPLIES\nIf the message is a short yes/no or short answer, use sales_state.awaiting_entity, journey stage, and prior question only to determine the current intent. Do not infer unstated facts.\n\nOUTPUT\nReturn exactly one JSON object, no markdown:\n{\"spm_intent\":\"<catalog intent>\",\"secondary_spm_intent\":\"\",\"confidence\":0.0,\"ambiguous\":false,\"language\":\"en\",\"rationale_code\":\"CLEAR_SEMANTIC_MATCH\"}\n"
+            }
+          ]
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.7,
+      "position": [
+        -200,
+        -180
+      ],
+      "id": "a729aac0-1837-572a-8f48-30590e7f2c08",
+      "name": "Classify SPM V2 Intent"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{};\nreturn [{json:{...j,classification:{schema:'SPM_CLASSIFIER_OUTPUT_V2',spm_intent:'out_of_scope',secondary_spm_intent:'',confidence:0,threshold:1,ambiguous:true,required_entities:[],source_gate:'APPROVED_KB_OR_LOGIC',risk_tier:'A',sales_stage:'none',language:j.language_hint||'',rationale_code:'INTENT_CATALOG_INVALID'},classifier_route:'fallback',classifier_gate_passed:false,customer_clarification_required:true,irreversible_action_allowed:false,classifier_error_code:'INTENT_CATALOG_INVALID'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        180
+      ],
+      "id": "1dcf8f80-e7b7-5770-8caf-23869e64d1b8",
+      "name": "Build Catalog Failure Classification"
+    },
+    {
+      "parameters": {
+        "jsCode": "const ctx = $('Prepare 62 Intent Classifier Context').first().json || {};\nconst catalog = Array.isArray(ctx.intent_catalog) ? ctx.intent_catalog : [];\nconst byName = new Map(catalog.map(r=>[String(r.spm_intent||'').trim(),r]));\nconst clean=v=>String(v??'').trim();\nfunction parse(v){\n if(v && typeof v==='object' && !Array.isArray(v)) return v;\n let t=clean(v).replace(/^```(?:json)?\\s*/i,'').replace(/\\s*```$/,'').trim();\n try{return JSON.parse(t)}catch{}\n const a=t.indexOf('{'),b=t.lastIndexOf('}');\n if(a>=0&&b>a){try{return JSON.parse(t.slice(a,b+1))}catch{}}\n return {};\n}\nconst raw=parse($json.output ?? $json.text ?? $json.response ?? $json);\nlet primary=clean(raw.spm_intent || raw.primary_intent);\nlet secondary=clean(raw.secondary_spm_intent || raw.secondary_intent);\nlet confidence=Number(raw.confidence);\nif(!Number.isFinite(confidence)||confidence<0||confidence>1) confidence=0;\nconst ambiguous=raw.ambiguous===true || clean(raw.ambiguous).toLowerCase()==='true';\nconst language=['ar','en','fr'].includes(clean(raw.language).toLowerCase()) ? clean(raw.language).toLowerCase() : (ctx.language_hint||'');\nconst matched=byName.get(primary);\nconst validIntent=Boolean(matched);\nif(!validIntent){ primary='out_of_scope'; }\nconst authoritative=byName.get(primary) || {spm_intent:'out_of_scope',required_entities:[],source_gate:'APPROVED_KB_OR_LOGIC',risk_tier:'A',sales_stage:'none',min_confidence:0.85};\nif(!byName.has(secondary) || secondary===primary) secondary='';\nconst threshold=Number.isFinite(Number(authoritative.min_confidence)) ? Number(authoritative.min_confidence) : 0.85;\nlet route='direct';\nif(!validIntent || confidence<0.60) route='fallback';\nelse if(ambiguous || confidence<threshold) route='clarify';\nconst direct=route==='direct';\nconst result={\n schema:'SPM_CLASSIFIER_OUTPUT_V2',\n spm_intent:primary,\n secondary_spm_intent:secondary,\n confidence,\n threshold,\n ambiguous: ambiguous || !validIntent,\n required_entities:Array.isArray(authoritative.required_entities)?authoritative.required_entities:[],\n source_gate:clean(authoritative.source_gate),\n risk_tier:clean(authoritative.risk_tier),\n sales_stage:clean(authoritative.sales_stage),\n language,\n rationale_code:clean(raw.rationale_code) || (validIntent?'MODEL_CLASSIFICATION':'INVALID_MODEL_INTENT_RECOVERED'),\n intent_valid:validIntent,\n classifier_gate_passed:direct\n};\nconst state={...(ctx.sales_state||{})};\nstate.classifier={...(state.classifier||{}),...result};\nreturn [{json:{...ctx,sales_state:state,classification:result,classifier_route:route,classifier_gate_passed:direct,customer_clarification_required:route!=='direct',irreversible_action_allowed:false,classifier_validation_errors:validIntent?[]:['MODEL_INTENT_NOT_IN_ACTIVE_CATALOG']}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        50,
+        -180
+      ],
+      "id": "1888ff04-66df-5769-8507-31d88d9151ff",
+      "name": "Validate SPM V2 Classifier Output"
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "1e73d1e6-441d-55cd-adcc-bfa05d7fed70",
+                    "leftValue": "={{ $json.classifier_route }}",
+                    "rightValue": "direct",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "id": "319bb281-245c-54e1-b294-ef7fe1968c4d",
+                    "leftValue": "={{ $json.classifier_route }}",
+                    "rightValue": "clarify",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra"
+        }
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        300,
+        -180
+      ],
+      "id": "ed45952e-ba34-548e-8512-1b75d8676543",
+      "name": "Route Classifier Confidence"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{}; return [{json:{...j,classifier_route:'direct',customer_clarification_required:false,irreversible_action_allowed:false}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        550,
+        -320
+      ],
+      "id": "47c60656-6fba-500a-8d27-1ffb6125649d",
+      "name": "Mark Direct Classification"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{}; return [{json:{...j,classifier_route:'clarify',customer_clarification_required:true,irreversible_action_allowed:false,classifier_safe_action:'ASK_ONE_CLARIFYING_QUESTION'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        550,
+        -160
+      ],
+      "id": "373cd00c-756e-5170-b3bf-21c05723065b",
+      "name": "Mark Clarification Required"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json||{}; return [{json:{...j,classifier_route:'fallback',customer_clarification_required:true,irreversible_action_allowed:false,classifier_safe_action:'SAFE_FALLBACK_OR_CLARIFY'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        550,
+        20
+      ],
+      "id": "0d5c9a5c-98f0-5f38-9e50-d763a6c5f7ec",
+      "name": "Mark Classifier Fallback"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst contract={\n schema:'SPM_ENTITY_OUTPUT_V1',\n record_shape:{entity:'string',raw:'any',canonical:'any',confidence:'0..1',source:'customer|system|live_source',status:'valid|needs_validation|rejected'},\n privacy:'PII must not be copied into telemetry',\n multi_student:'students[] are separate profiles; never merge grades/subjects across children',\n correction_precedence:'latest explicit customer correction wins unless a live/system source owns the field',\n critical_rules:{timezone:'never derive from country alone',booking_id:'system-only; required for booking confirmation',opt_out:'true is sticky until approved opt-in'}\n};\nreturn [{json:{...j,entity_contract:contract,entity_extraction:{entities:[],student_profiles:[],status:'WU89_NOT_IMPLEMENTED'}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1050,
+        -120
+      ],
+      "id": "6e16303e-b357-50f5-a54b-604c19fd2e5b",
+      "name": "Entity + Normalization Contract [WU89 STUB]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst state=j.sales_state||{};\nconst contract={schema:'SPM_NEXT_BEST_ACTION_V1',stages:['none','discovery','need','consideration','pricing','trial','scheduling','conversion','objection','nurturing','support','recovery'],override_precedence:['opt_out','support','human_handoff','recovery','sales_journey'],question_policy:'ask one purposeful missing-field question; never re-ask known data'};\nconst decision={stage:state?.journey?.stage||'discovery',goal:'understand_customer_need',next_best_action:'understand_need',required_missing_fields:[],support_override:false,opt_out_override:Boolean(state?.nurture?.opt_out),handoff_override:Boolean(state?.support?.handoff_requested),status:'WU90_NOT_IMPLEMENTED'};\nreturn [{json:{...j,journey_contract:contract,journey_decision:decision}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        -120
+      ],
+      "id": "42636fd0-eb1e-550e-9f92-dd4e2c4e2359",
+      "name": "Journey Stage + Next Best Action Contract [WU90 STUB]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst allowed=['APPROVED_KB_OR_LOGIC','APPROVED_CURRICULUM_SOURCE','PACKAGES_LIVE_CONFIG','AUTHORIZED_OFFER_REQUIRED','MARKET_PAYMENT_CONFIG','PAYMENT_LIVE','POLICY_AND_LIVE_STATE','VERIFIED_TEACHER_OR_POLICY','SCHEDULING_LIVE','CRM_VALIDATION'];\nconst gate=j.classification?.source_gate||null;\nconst result={gate,allowed_gates:allowed,can_answer:false,can_execute:false,source_refs:[],reason_code:gate?'WU91_SOURCE_NOT_CONNECTED':'CLASSIFICATION_NOT_READY',status:'WU91_NOT_IMPLEMENTED'};\nreturn [{json:{...j,source_gate_contract:{schema:'SPM_SOURCE_GATE_V1',truth_rule:'commercial/operational facts require approved or live source; unsupported claims are blocked'},source_gate_result:result}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1550,
+        -120
+      ],
+      "id": "38b21fb5-f7ae-59f3-92a7-4661728ff7dd",
+      "name": "Source + Tool Gate Contract [WU91 STUB]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst contract={\n schema:'SPM_SALES_AGENT_OUTPUT_V1',\n role:'consultative_sales_agent_not_faq_bot',\n fields:['answer_text','purpose','recommendation','purposeful_question','proposed_action','action_requires_gateway','claims_source_refs','handoff_requested','stop_nurture'],\n behavior:['answer_first','acknowledge_context','ask_one_purposeful_question','do_not_repeat_known_fields','no_pressure','no_unsupported_promise'],\n hard_boundary:'Agent may propose actions but cannot directly perform irreversible business actions.'\n};\nconst output={answer_text:'WU87 architecture test reached the Sales Agent contract. The sales model is intentionally not connected yet.',purpose:'architecture_test',recommendation:null,purposeful_question:null,proposed_action:'none',action_requires_gateway:false,claims_source_refs:[],handoff_requested:false,stop_nurture:false,status:'WU92_NOT_IMPLEMENTED'};\nreturn [{json:{...j,sales_agent_contract:contract,sales_agent_output:output}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1800,
+        -120
+      ],
+      "id": "06fd7adc-ea07-567b-9f15-72586225f948",
+      "name": "Sales Agent Structured Output Contract [WU92 STUB]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst requested=String(j.sales_agent_output?.proposed_action||'none');\nconst irreversible=['lead_upsert','booking_create','booking_change','payment_action','human_handoff_create','contact_update','opt_out_write'];\nconst result={requested_action:requested,executed:false,status:'NOOP_WU87',business_reference:null,reason_code:'ACTION_GATEWAY_SKELETON_ONLY',irreversible_action:false};\nif (irreversible.includes(requested)) result.irreversible_action=true;\nreturn [{json:{...j,action_gateway_contract:{schema:'SPM_ACTION_GATEWAY_V1',rule:'all irreversible actions require deterministic validation + explicit tool success before success may be reported',allowed_in_wu87:['none']},action_result:result}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2050,
+        -120
+      ],
+      "id": "7ecc8647-e191-556f-9b34-e912481086f8",
+      "name": "Deterministic Action Gateway [NO WRITES]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst duration=Math.max(0,Date.now()-Number(j.started_ms||Date.now()));\nconst telemetry={schema_version:'SPM_TELEMETRY_V1',timestamp:new Date().toISOString(),correlation_id:j.correlation_id,session_id:j.session_id,workflow_release:j.workflow_release,test_mode:Boolean(j.test_mode),intent:j.classification?.spm_intent||null,confidence:j.classification?.confidence??null,journey_stage:j.journey_decision?.stage||null,source_gate:j.source_gate_result?.gate||null,proposed_action:j.sales_agent_output?.proposed_action||null,action_status:j.action_result?.status||null,action_executed:Boolean(j.action_result?.executed),duration_ms:duration,pii_redacted:true};\nreturn [{json:{...j,telemetry}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2300,
+        -120
+      ],
+      "id": "443af9d2-efbc-5711-b410-ebaa4dadb747",
+      "name": "Build Telemetry Envelope"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b552c7c6-0a9d-579b-85df-01cf945e96ac",
+              "name": "output",
+              "value": "={{ $json.sales_agent_output.answer_text }}",
+              "type": "string"
+            },
+            {
+              "id": "b540ed2d-d362-5f24-a97c-313b398fee1b",
+              "name": "status",
+              "value": "WU87_ARCHITECTURE_PASS_THROUGH",
+              "type": "string"
+            },
+            {
+              "id": "539cb35f-cf8a-5376-b13a-993eff60c816",
+              "name": "correlation_id",
+              "value": "={{ $json.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "94fcad79-fdf1-5838-b91d-236d83075417",
+              "name": "action_executed",
+              "value": "={{ $json.action_result.executed }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        2550,
+        -120
+      ],
+      "id": "7b51835d-5528-5715-bcc2-4fbd96858acc",
+      "name": "WU87 Test Response"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Greenfield Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Canonical Session Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Canonical Session Envelope": {
+      "main": [
+        [
+          {
+            "node": "Is Greenfield Test Session?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Greenfield Test Session?": {
+      "main": [
+        [
+          {
+            "node": "Load Sales State [DISABLED UNTIL WU90]",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Block Non-Test Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Sales State [DISABLED UNTIL WU90]": {
+      "main": [
+        [
+          {
+            "node": "Initialize + Merge Sales State Contract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize + Merge Sales State Contract": {
+      "main": [
+        [
+          {
+            "node": "Load SPM V2 62 Intent Catalog",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entity + Normalization Contract [WU89 STUB]": {
+      "main": [
+        [
+          {
+            "node": "Journey Stage + Next Best Action Contract [WU90 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Journey Stage + Next Best Action Contract [WU90 STUB]": {
+      "main": [
+        [
+          {
+            "node": "Source + Tool Gate Contract [WU91 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Source + Tool Gate Contract [WU91 STUB]": {
+      "main": [
+        [
+          {
+            "node": "Sales Agent Structured Output Contract [WU92 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Agent Structured Output Contract [WU92 STUB]": {
+      "main": [
+        [
+          {
+            "node": "Deterministic Action Gateway [NO WRITES]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deterministic Action Gateway [NO WRITES]": {
+      "main": [
+        [
+          {
+            "node": "Build Telemetry Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Telemetry Envelope": {
+      "main": [
+        [
+          {
+            "node": "WU87 Test Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load SPM V2 62 Intent Catalog": {
+      "main": [
+        [
+          {
+            "node": "Prepare 62 Intent Classifier Context",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Catalog Failure Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare 62 Intent Classifier Context": {
+      "main": [
+        [
+          {
+            "node": "Is 62 Intent Catalog Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is 62 Intent Catalog Valid?": {
+      "main": [
+        [
+          {
+            "node": "Classify SPM V2 Intent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Catalog Failure Classification",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Classifier Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Classify SPM V2 Intent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify SPM V2 Intent": {
+      "main": [
+        [
+          {
+            "node": "Validate SPM V2 Classifier Output",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate SPM V2 Classifier Output": {
+      "main": [
+        [
+          {
+            "node": "Route Classifier Confidence",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Classifier Confidence": {
+      "main": [
+        [
+          {
+            "node": "Mark Direct Classification",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Clarification Required",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Mark Classifier Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Direct Classification": {
+      "main": [
+        [
+          {
+            "node": "Entity + Normalization Contract [WU89 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Clarification Required": {
+      "main": [
+        [
+          {
+            "node": "Entity + Normalization Contract [WU89 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mark Classifier Fallback": {
+      "main": [
+        [
+          {
+            "node": "Entity + Normalization Contract [WU89 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Catalog Failure Classification": {
+      "main": [
+        [
+          {
+            "node": "Entity + Normalization Contract [WU89 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}

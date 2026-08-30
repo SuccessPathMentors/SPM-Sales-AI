@@ -1,0 +1,70 @@
+{
+  "schema": "SPM_WU100_RELEASE_MANIFEST_V1",
+  "date": "2026-08-21",
+  "feature": "011-e2e-sales-agent-greenfield",
+  "status": "PREPARED_BLOCKED",
+  "production_cutover_authorized": false,
+  "reason_blocked": "WU99 actual n8n runtime executions/manual semantic review are NOT_RUN.",
+  "wu99_inputs": [
+    {
+      "file": "SPM_E2E_Sales_Agent_Greenfield_WU99_Runtime_Testable_2026-08-21.json",
+      "sha256": "a74b6443151eca02d3cc0b28126be96344a68326a389f6ac2951f54bcce0c6fc",
+      "role": "runtime-testable SUT; MUST NOT be promoted directly because it contains TEST-only trigger"
+    },
+    {
+      "file": "SPM_WU99_Runtime_Certification_Harness_96_2026-08-21.json",
+      "sha256": "965ae82f03cd8e3f7cfbf0bcd12ac859cf5618373c25590b861e02858f6f06ab",
+      "role": "test harness only; never production"
+    },
+    {
+      "file": "SPM_WU99_Runtime_Certification_Plan_96_2026-08-21.json",
+      "sha256": "d1d03341603d8a3dfbbe6861a120d8ed13d15395f066c8b7eb6c592acdad7ad3",
+      "role": "runtime test plan only"
+    }
+  ],
+  "final_release_candidate": {
+    "file": null,
+    "workflow_id": null,
+    "version_id": null,
+    "sha256": null,
+    "created_after_wu99_pass": false,
+    "must_remove_test_trigger": true,
+    "must_remove_harness_paths": true,
+    "must_remove_or_replace_test_redis_namespace": true,
+    "static_qa_status": "NOT_RUN",
+    "runtime_status": "NOT_RUN"
+  },
+  "release_gates": {
+    "wu99_96_cases": "NOT_RUN",
+    "wu99_106_invocations": "NOT_RUN",
+    "failure_injection_15": "NOT_RUN",
+    "r1_regression_10": "NOT_RUN_ON_GREENFIELD",
+    "manual_semantic_review": "NOT_RUN",
+    "p0_p1_open": null,
+    "owner_approval": false,
+    "rollback_drill": "NOT_RUN",
+    "canary": "NOT_RUN"
+  },
+  "canary_profile": {
+    "status": "PROPOSED_NOT_APPROVED",
+    "traffic_percent_stages": [5,20,50,100],
+    "observation_duration": "TBD",
+    "minimum_conversations_per_stage": "TBD"
+  },
+  "hard_stop_zero_tolerance": [
+    "P0_P1",
+    "FALSE_LEAD_SUCCESS",
+    "DUPLICATE_CONFIRMED_LEAD",
+    "WRONG_LEAD_CORRECTION",
+    "OPTOUT_PROMO_VIOLATION",
+    "FALSE_AVAILABILITY_OR_BOOKING",
+    "BOOKING_WITHOUT_SUCCESS_AND_BOOKING_ID",
+    "PII_SECRET_LEAK",
+    "TEST_TRAFFIC_PRODUCTION_WRITE",
+    "UNAUTHORIZED_OFFER_OR_ACTION",
+    "CROSS_STUDENT_DATA_CORRUPTION"
+  ],
+  "rollback_target": "R1 approved and locked baseline unless superseded by explicit later approval",
+  "release_tag": null,
+  "lock_status": "NOT_LOCKED"
+}
