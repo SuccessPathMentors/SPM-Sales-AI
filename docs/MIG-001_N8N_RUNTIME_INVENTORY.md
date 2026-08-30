@@ -1,63 +1,87 @@
-# MIG-001 — n8n Runtime Identity Inventory
+# MIG-001 — n8n Runtime Identity & Dependency Inventory
 
-Status: OPEN / BLOCKING
+Status: **PASS — CURRENT MAIN IDENTITY AND RC4.3.3 DEPENDENCIES RECONCILED**
 GitHub issue: #5
-Purpose: Resolve exact n8n runtime identities before any GitHub-driven import, update, runtime certification, or production activation.
+Verified date: 2026-08-30
 
-## Authority rule
-GitHub artifacts describe the intended workflow. n8n runtime identity must be evidenced from n8n itself. An exported JSON with `active=false` does not prove the currently active production workflow identity.
+## Purpose
+Record the actually live n8n production workflow from runtime evidence and map it to an exact GitHub artifact before any GitHub-driven deployment work.
 
-## Known evidence
-| Role | Workflow | n8n ID | Active state evidence | Status |
-|---|---|---|---|---|
-| Validated handoff | `Validated Human Handoff` | `swhmNa0Goo0uYm1k` | previously verified `active=true` from runtime export evidence | REVERIFY IN MIG-001 |
-| R2.5 main candidate/reference | `ChatBotMSE v2 - R2.5 Release Candidate Stable Efficient` | `vSc7cMIMFMEUdi7z` | verified export `active=false` | NOT PROOF OF ACTIVE MAIN |
-| WU99 Runtime-Testable SUT | Greenfield WU99 test SUT | TBD after import | must remain inactive when imported | TEST ONLY |
-| WU99 Harness | Runtime Certification Harness 96 | TBD after import | must remain inactive when imported | TEST ONLY |
-| Current active main chatbot | UNKNOWN | UNKNOWN | must be read/exported from n8n | BLOCKING |
+The original MIG-001 bootstrap plan proposed importing the historical WU99 test SUT/harness because, at that point, the active production workflow was unknown. Later runtime evidence superseded that assumption: WU99 execution had already been completed in the release lineage and RC4.3.3 is now live. Importing old WU99 test artifacts is therefore **not required for current runtime identity reconciliation** and must not be performed merely to satisfy an obsolete bootstrap step.
 
-## Runtime record schema
-For each relevant workflow record capture:
+## Current production workflow — verified
 
 ```yaml
-workflow_name: ""
-workflow_id: ""
-environment: test|staging|production
-active: false
-role: production|test|harness|reference|rollback
-n8n_updated_at: ""
-github_artifact: ""
-artifact_sha256: ""
-credential_references: []   # names/IDs only; no secret values
-execute_workflow_outbound: []
-execute_workflow_inbound: []
-evidence_source: ""
-verified_at: ""
-verified_by: ""
+workflow_name: SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+workflow_id: CMBMpxX5AqqK2UTn
+environment: production
+published: true
+active_export_flag: true
+role: current_production
+n8n_version_id: ee6d40dc-440a-4b3e-9948-090a73ae9222
+node_count: 114
+disabled_nodes: 0
+github_artifact: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+artifact_bytes: 330119
+artifact_sha256: 680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39
+git_blob_sha1: 58d1e9cc45085909dff91d7a9d07138486e72c76
+exact_transport: PASS
+execute_workflow_outbound: NONE_FOUND
+runtime_execution_evidence: 2539
+verified_at: 2026-08-30
 ```
 
-## Safe WU99 import sequence
-1. Identify/export the actually ACTIVE main chatbot workflow in n8n. Do not infer from Drive or GitHub.
-2. Reverify `Validated Human Handoff` identity/state and its callers.
-3. Import `SPM_E2E_Sales_Agent_Greenfield_WU99_Runtime_Testable_2026-08-21.json` as a NEW workflow and keep it inactive.
-4. Verify the imported SUT is the expected 109-node testable artifact and contains the TEST-only Execute Workflow Trigger.
-5. Resolve only TEST credential references for Google Sheets, Redis, and OpenAI.
-6. Import `SPM_WU99_Runtime_Certification_Harness_96_2026-08-21.json` as a NEW inactive workflow.
-7. Bind only `Execute Greenfield SUT [CONFIGURE TARGET THEN ENABLE]` to the newly imported WU99 SUT ID, then enable only that node for test execution.
-8. Do not overwrite or activate production workflows during MIG-001.
+### Trigger/runtime evidence
+- Embedded/public chat trigger is configured for the SPM website origin.
+- Successful n8n execution `2539` ran the RC4.3.3 path in the production state namespace.
+- The exact export and GitHub copy are byte-identical by Git blob identity and size.
 
-## WU99 immutable input identities
-- Runtime-Testable SUT expected SHA-256: `a74b6443151eca02d3cc0b28126be96344a68326a389f6ac2951f54bcce0c6fc`.
-- Runtime harness expected SHA-256: `965ae82f03cd8e3f7cfbf0bcd12ac859cf5618373c25590b861e02858f6f06ab`.
-- Runtime plan expected SHA-256: `d1d03341603d8a3dfbbe6861a120d8ed13d15395f066c8b7eb6c592acdad7ad3`.
+## Dependency / adapter map
 
-## Hard-stop rules
-- Ambiguous active main workflow identity → STOP.
-- Ambiguous environment → STOP.
-- Import would overwrite an existing production workflow → STOP.
-- Target SUT ID in harness does not match newly imported TEST SUT → STOP.
-- Secret material appears in any GitHub artifact/log → STOP and remove before proceeding.
-- WU99 test SUT is proposed for direct production promotion → STOP.
+| Area | RC4.3.3 evidence | Current conclusion |
+|---|---|---|
+| Native `Execute Workflow` nodes | Full 114-node export contains `0` | `NONE_FOUND` |
+| Lead / CRM write | Production-certified upsert/read-back path present in RC4.3.3 | ENABLED IN CURRENT SCOPE |
+| Human handoff contract | Contract logic present | PRESENT |
+| Human handoff execution | contract states execution disabled/not configured; no Execute Workflow caller exists | DISABLED / NOT CONFIGURED |
+| Scheduling / booking execution | release scope excludes live execution | EXCLUDED |
+| Payment execution | excluded | EXCLUDED |
+| External follow-up execution | excluded | EXCLUDED |
+| Redis state | production namespace path present | ENABLED CURRENT RUNTIME DEPENDENCY |
+| Google Sheets / knowledge / lead references | credential references only; secret values not committed | RUNTIME CREDENTIAL DEPENDENCY |
+| OpenAI | credential reference only; secret value not committed | RUNTIME CREDENTIAL DEPENDENCY |
 
-## Exit gate
-MIG-001 may close only when the runtime inventory is complete, the active main identity is evidenced, WU99 SUT/harness identities are captured after safe import, dependency links are recorded, and `docs/STATE.yaml` plus the migration manifest are updated from evidence rather than inference.
+There are therefore **no outbound n8n sub-workflow IDs to resolve for the current RC4.3.3 main workflow**.
+
+## Standalone historical handoff workflow
+
+Exact historical Drive artifact is preserved at:
+`drive-mirror/03_Workflows_Current/Validated_Human_Handoff_FIXED.json`
+
+Historical n8n identity previously recorded:
+- workflow ID: `swhmNa0Goo0uYm1k`
+- historical state evidence: active at the earlier checkpoint
+
+This standalone workflow is **not a dependency of current RC4.3.3**, because RC4.3.3 contains no native Execute Workflow call and its handoff execution contract is disabled/not configured. Re-verifying the standalone workflow's present active toggle is therefore not required to identify or safely version the current main production workflow. If WU107 later reconnects human handoff, its exact runtime identity and contract must be revalidated as part of that controlled change.
+
+## Historical references
+- R2.5 workflow ID `vSc7cMIMFMEUdi7z` remains a historical rollback/candidate reference, not proof of current main identity.
+- WU99 Runtime-Testable SUT, harness, and plan are now exact-mirrored as TEST ONLY evidence. They must not be imported or promoted into production merely for migration bookkeeping.
+- `RC4_2 FINAL FROZEN` remains an unresolved historical artifact reference; it does not override verified RC4.3.3 runtime evidence.
+
+## Credential safety
+The exact RC4.3.3 export and MIG-002 batch were scanned for common populated secret/API-key/private-key patterns. No obvious secret values were detected. Credential names/IDs may appear as references; credential payloads remain in n8n. This preliminary scan does not replace repository secret scanning or human security review.
+
+## MIG-001 exit gate
+- [x] Current active/published main workflow identity evidenced from n8n runtime.
+- [x] Exact current production export mapped to GitHub path and checksum.
+- [x] Native Execute Workflow dependency inventory completed (`NONE_FOUND`).
+- [x] Human handoff current-main status reconciled as disabled/not configured.
+- [x] Lead/CRM and excluded adapter scope recorded.
+- [x] No production workflow overwritten or activated by MIG-001.
+- [x] Credential references recorded without intentional secret-value commits.
+- [x] Runtime inventory committed.
+- [x] Migration manifest reconciled to RC4.3.3.
+- [ ] `docs/STATE.yaml` final reconciliation commit (performed as the next state update in the same migration sequence).
+
+Once `docs/STATE.yaml` is updated, MIG-001 can be closed and MIG-003 may begin in **non-production only**. Production auto-deploy remains forbidden.
