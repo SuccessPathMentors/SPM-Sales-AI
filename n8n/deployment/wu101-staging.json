@@ -1,0 +1,33 @@
+{
+  "schema": "SPM_WU101_STAGING_DEPLOYMENT_V1",
+  "status": "READY_FOR_DRY_RUN",
+  "environment": "staging",
+  "baseline_artifact": "n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json",
+  "baseline_sha256": "680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39",
+  "candidate_builder": "scripts/wu101/build_candidate.py",
+  "candidate_output": "n8n/generated/SPM_WU101_STAGING_ANALYTICS_CANDIDATE.json",
+  "candidate_expected_sha256": "45f82c338eb3535f6ed72e4081aced19b4319da377ae02374a07855e52258c41",
+  "production_workflow_id_denied": "CMBMpxX5AqqK2UTn",
+  "target_workflow_id": null,
+  "target_must_be_inactive": true,
+  "publish_or_activate_allowed": false,
+  "analytics_sink": {
+    "spreadsheet_id": "1JJu6eNurnNbBdikOnOe1u7OvUjcTS8Q14TPHjUiT3lM",
+    "sheet_name": "WU101_ANALYTICS_STAGING",
+    "sheet_id": 2026101001,
+    "production_analytics_sheet_used": false
+  },
+  "lead_regression_sink": {
+    "spreadsheet_id": "1JJu6eNurnNbBdikOnOe1u7OvUjcTS8Q14TPHjUiT3lM",
+    "sheet_name": "WU101_LEADS_STAGING",
+    "sheet_id": 2026101002,
+    "production_leads_sheet_used": false
+  },
+  "redis_namespace": "spm:staging:sales:*",
+  "production_redis_namespace_allowed": false,
+  "notes": [
+    "First apply must create a new inactive STAGING workflow; it must not reuse the MIG-003 canary target.",
+    "The GitHub Actions workflow explicitly overrides N8N_TARGET_WORKFLOW_ID with the manual target_workflow_id input, including blank on first create.",
+    "Production deployment, publication and activation are outside WU-101 implementation scope."
+  ]
+}
