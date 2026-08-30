@@ -1,0 +1,123 @@
+name: WU-101 analytics failure injection
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/wu101/build_failure_injection_candidate.py"
+      - "scripts/wu101/test_failure_injection_candidate.py"
+      - "scripts/wu101/verify_remote_failure_injection.py"
+      - ".github/workflows/wu101-failure-injection.yml"
+  workflow_dispatch:
+    inputs:
+      confirm_failure_injection:
+        description: "Type WU101_FAIL_OPEN_TEST to deliberately make only the STAGING analytics sink fail"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wu101-failure-injection
+  cancel-in-progress: false
+
+env:
+  BASELINE: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+  CANDIDATE: n8n/generated/SPM_WU101_STAGING_FAILURE_INJECTION_CANDIDATE.json
+  EXPECTED_SHA256: TO_LOCK_AFTER_FIRST_CI
+  TARGET_WORKFLOW_ID: mMZVFxJIxE7a9SSW
+
+jobs:
+  validate:
+    name: Validate WU101 failure injection
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build controlled failure candidate
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu101/build_failure_injection_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
+
+      - name: Prove isolation and fail-open contract
+        run: |
+          set -euo pipefail
+          python scripts/wu101/test_candidate.py
+          python scripts/wu101/test_chat_memory_isolation.py
+          python scripts/wu101/test_sheets_type_safe.py
+          python scripts/wu101/test_failure_injection_candidate.py
+
+      - name: Report or verify exact candidate SHA
+        run: |
+          set -euo pipefail
+          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+          echo "failure_injection_candidate_sha256=$actual"
+          if [[ "$EXPECTED_SHA256" != "TO_LOCK_AFTER_FIRST_CI" ]]; then
+            test "$actual" = "$EXPECTED_SHA256"
+          fi
+
+  deploy-failure-injection:
+    name: Apply fail-open test to inactive WU101 STAGING
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      N8N_TARGET_WORKFLOW_ID: mMZVFxJIxE7a9SSW
+      SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Hard-stop confirmation and target checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${{ inputs.confirm_failure_injection }}" = "WU101_FAIL_OPEN_TEST"
+          test "$TARGET_WORKFLOW_ID" = "mMZVFxJIxE7a9SSW"
+          test "$TARGET_WORKFLOW_ID" != "CMBMpxX5AqqK2UTn"
+          test "$EXPECTED_SHA256" != "TO_LOCK_AFTER_FIRST_CI"
+
+      - name: Rebuild and verify exact failure candidate
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu101/build_failure_injection_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
+          python scripts/wu101/test_failure_injection_candidate.py
+          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+          test "$actual" = "$EXPECTED_SHA256"
+
+      - name: Apply only to existing inactive WU101 STAGING
+        run: |
+          set -euo pipefail
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact "$CANDIDATE" \
+            --environment staging \
+            --expected-sha256 "$EXPECTED_SHA256" \
+            --mode apply \
+            --target-workflow-id "$TARGET_WORKFLOW_ID" \
+            --result-file wu101-failure-injection-deployment.json
+
+      - name: Remote read-back of deliberate failure configuration
+        run: |
+          set -euo pipefail
+          python scripts/wu101/verify_remote_failure_injection.py
+
+      - name: Upload evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu101-failure-injection-evidence
+          path: |
+            n8n/generated/SPM_WU101_STAGING_FAILURE_INJECTION_CANDIDATE.json
+            wu101-failure-injection-deployment.json
+          if-no-files-found: ignore
+          retention-days: 30
