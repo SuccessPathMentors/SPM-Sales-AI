@@ -12,6 +12,26 @@ policy:
   allow_secret_values: false
 
 artifacts:
+  rc4_3_3_production_workflow:
+    source: n8n_production_export
+    n8n_workflow_name: SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+    n8n_workflow_id: CMBMpxX5AqqK2UTn
+    file_name: SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+    github_path: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+    bytes: 330119
+    sha256: 680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39
+    git_blob_sha1_local: 58d1e9cc45085909dff91d7a9d07138486e72c76
+    git_blob_sha1_github: 58d1e9cc45085909dff91d7a9d07138486e72c76
+    git_blob_match: true
+    json_parse: PASS
+    node_count: 114
+    preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
+    github_exact_transport: PASS
+    github_branch: migration/rc4-3-3-exact-artifact
+    placement_commit: e7f070e6c82fa224bd26b490ad531c0ed08d1a11
+    runtime_role: CURRENT_LIVE_PRODUCTION_EVIDENCE
+    authority_status: VERIFIED_EXACT_ARTIFACT_PENDING_MIGRATION_BRANCH_INTEGRATION
+
   project_state_historical_snapshot:
     source: google_drive
     drive_id: 1R7nQEZstCUdHtx3LmH01_O2oHNMpqtZR
@@ -50,6 +70,8 @@ artifacts:
     production_promotion_allowed: false
 
 notes:
+  - RC4.3.3 exact-byte transport was verified by matching Git's blob SHA-1 computed from the original local bytes against the GitHub blob SHA; both are 58d1e9cc45085909dff91d7a9d07138486e72c76, with identical 330119-byte length.
+  - The authoritative SHA-256 for RC4.3.3 remains 680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39.
   - Preliminary secret scan checks common API-key, bearer-token, private-key, and populated secret/password-field patterns. It is not a substitute for repository secret scanning or human review.
   - Historical state artifacts are immutable audit evidence and must not override later reconciled current-state evidence.
-  - Exact commit is incomplete until the GitHub copy is retrieved and its SHA-256 is verified against this register.
+  - Exact commit is incomplete for other pending artifacts until the GitHub copy is retrieved and its identity is verified against this register.
