@@ -1,6 +1,6 @@
 # MIG-003 — GitHub → n8n Non-Production Deployment
 
-Status: IMPLEMENTED / LIVE API TEST PENDING
+Status: IMPLEMENTED / API SMOKE + DRY-RUN PASS / LIVE STAGING CANARY WRITE PENDING
 Issue: #7
 Branch: `migration/mig-003-nonprod-deploy`
 
@@ -22,6 +22,7 @@ The ID is hard-coded in the deployer deny-list and duplicated in `n8n/deployment
 - `scripts/n8n/deploy_nonprod.py` — stdlib-only deployment client and safety gate.
 - `scripts/n8n/test_deploy_nonprod.py` — unit tests for hard-stop behavior.
 - `n8n/deployment/nonprod-policy.json` — machine-readable policy.
+- `n8n/workflows/staging/MIG003_STAGING_CANARY.json` — side-effect-free live API canary.
 - `deployment-result.json` — generated evidence file, uploaded as a GitHub Actions artifact.
 
 ## n8n Public API contract used
@@ -60,17 +61,23 @@ An apply operation stops unless all applicable conditions pass:
 14. The script contains no publish/activate/deactivate API call.
 
 ## Source artifact behavior
-A verified production export may be used as the *source bytes* for a STAGING copy. The source workflow ID does not become the destination ID. The write payload:
+A verified production export may be used as *read-only validation input* during dry-run. It is **not** used for the first live write because it contains runtime credential references and business side-effect nodes.
 
-- strips server-managed fields;
-- prefixes the workflow name with `[DEV]` or `[STAGING]`;
-- forces `availableInMCP=false` if present as true;
-- does not include secret values;
-- retains n8n credential references, which must resolve in the target runtime before runtime certification.
+The first live n8n write uses `MIG003_STAGING_CANARY.json`, which contains only a Manual Trigger and no credentials, webhook, Redis, Google Sheets, OpenAI, lead write, booking, payment, handoff, or external-follow-up action.
 
-## Local dry-run evidence — 2026-08-30
-The deployer was executed in `dry-run` mode against the exact RC4.3.3 artifact:
+After the deployment mechanism is proven with the canary, any real STAGING copy of RC4.3.3 requires a separate environment-hardening step that replaces/isolates production runtime dependencies before runtime execution.
 
+## Live validation evidence — 2026-08-30
+### API smoke — PASS
+GitHub Actions run `33326561623`:
+- n8n API authentication: PASS
+- workflow read permission: PASS
+- protected production ID returned exactly: `CMBMpxX5AqqK2UTn`
+- production active state observed: `true`
+- write performed: `false`
+
+### RC4.3.3 dry-run — PASS
+GitHub Actions run `33326906101`:
 - SHA-256: `680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39` — PASS
 - Nodes: 114 — PASS
 - Connection source nodes: 112 — PASS
@@ -80,63 +87,42 @@ The deployer was executed in `dry-run` mode against the exact RC4.3.3 artifact:
 - Operation performed: `NONE`
 - Published/activated: `false`
 - Result: `PASS_DRY_RUN`
-
-This proves local artifact validation and safety transformation. It does **not** prove n8n API connectivity; that is the remaining MIG-003 live gate.
+- Evidence artifact ID: `9736488268`
+- Evidence artifact digest: `sha256:3dbe1d39e9dfaf2895b3d61994019cf648239e1d4049716332157f6a991146b0`
 
 ## GitHub Environment setup
-Create two GitHub Environments:
+`n8n-staging` is configured with environment-scoped secrets:
+- `N8N_API_BASE_URL`
+- `N8N_API_KEY`
 
-- `n8n-dev`
-- `n8n-staging`
-
-For each environment, configure secrets directly in GitHub. Never paste them into issues, workflow files, commits, or chat transcripts.
-
-Required for `apply`:
-- `N8N_API_BASE_URL` — for n8n Cloud: `https://<instance>.app.n8n.cloud/api/v1`
-- `N8N_API_KEY` — API key scoped to the minimum required workflow permissions where supported.
-
-Optional after the first deliberate creation:
-- `N8N_TARGET_WORKFLOW_ID` — exact inactive DEV/STAGING workflow ID. Once configured, future applies update only this explicit target.
-
-Recommended API-key scopes where granular scopes are available:
-- `workflow:create` only if first creation is required
+The API key is intentionally limited to:
+- `workflow:create`
 - `workflow:read`
 - `workflow:update`
 
-Do **not** grant `workflow:activate` for MIG-003.
+It does **not** include workflow activate/deactivate/delete privileges.
 
-## First STAGING sequence
-1. Configure GitHub Environment `n8n-staging` with `N8N_API_BASE_URL` and `N8N_API_KEY`.
-2. Run `n8n non-production deploy` manually with:
-   - environment: `staging`
-   - artifact: RC4.3.3 GitHub artifact
-   - expected SHA: the recorded RC4.3.3 SHA
-   - mode: `dry-run`
-   - allow_create: `false`
-3. Confirm the Action result is `PASS_DRY_RUN`.
-4. Run again with mode `apply`, `allow_create=true` for the one-time creation.
-5. Confirm the created workflow name starts `[STAGING]` and remains inactive/unpublished.
-6. Record the returned target workflow ID as the `N8N_TARGET_WORKFLOW_ID` secret in `n8n-staging`.
-7. Future runs use `apply`, `allow_create=false`; they can only update that known inactive STAGING workflow.
-8. Perform runtime regression manually/in staging; do not promote automatically to production.
+After first canary creation, record the returned inactive STAGING ID as:
+- `N8N_TARGET_WORKFLOW_ID`
+
+## First STAGING write sequence
+1. Run `MIG-003 nonprod bootstrap` with mode `create-canary`.
+2. The action verifies exact canary SHA-256 `f49a1610a26974684b3469cd803f116e3c8ab1ffd45e66df0c4478c7df654bb9`.
+3. The deployer creates a new workflow named `[STAGING] MIG003_STAGING_CANARY`.
+4. It immediately GETs the returned ID and fails unless `active=false` and the `[STAGING]` prefix is preserved.
+5. Record that ID as the `N8N_TARGET_WORKFLOW_ID` secret in the `n8n-staging` GitHub Environment.
+6. Run mode `update-canary` to prove deterministic update of only that known inactive workflow.
+7. Verify production ID `CMBMpxX5AqqK2UTn` remains untouched.
 
 ## Rollback / restore for non-production
-Before an update, the GitHub artifact itself remains the immutable desired version. If a STAGING change is bad:
-
-1. Select the previously accepted GitHub workflow artifact and exact SHA.
-2. Run the same Action in `dry-run` mode.
-3. Run `apply` against the same inactive `N8N_TARGET_WORKFLOW_ID`.
-4. Re-run STAGING regression.
-
-Production rollback is outside MIG-003 and remains governed by the production release/approval process.
+For a STAGING canary or later approved STAGING artifact, the GitHub artifact and exact SHA are the desired version. A restore uses the same explicit inactive target ID. Production rollback is outside MIG-003 and remains governed by the production release/approval process.
 
 ## Remaining exit gate
 MIG-003 can close only after:
-- GitHub Environment secrets are configured without exposing them;
-- Action safety tests pass in GitHub;
-- one GitHub Action dry-run passes;
-- one controlled STAGING create or update passes through the n8n API;
+- one controlled STAGING canary create passes;
 - returned target ID is recorded;
+- one deterministic update of that same inactive target passes;
 - target is reverified inactive;
 - execution evidence is attached to issue #7;
+- PR #9 is reviewed/merged into the migration branch;
 - no production workflow was modified or published.
