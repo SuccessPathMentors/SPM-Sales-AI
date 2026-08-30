@@ -1,6 +1,6 @@
 project: SPM Sales AI Agent
 repository: SuccessPathMentors/SPM-Sales-AI
-state_version: 6
+state_version: 7
 source_of_truth: MIGRATION_IN_PROGRESS
 engineering_target_source_of_truth: github
 runtime_target: n8n
@@ -11,7 +11,7 @@ migration:
   status: IN_PROGRESS
   drive_archive_authority: true
   github_cutover_approved: false
-  active_gate: MIG-004
+  active_gate: CUTOVER_REVIEW
   rule: GitHub becomes sole engineering source of truth only after migration reconciliation, PR integration/review, and explicit owner cutover approval.
   tasks:
     MIG-001:
@@ -112,7 +112,11 @@ migration:
     MIG-004:
       issue: 8
       name: Reconcile stale historical release state against later evidence
-      status: IN_PROGRESS
+      status: PASS
+      control_doc: docs/MIG-004_RELEASE_EVIDENCE_PRECEDENCE.md
+      historical_snapshot_authority: AUDIT_ONLY
+      current_state_authority: docs/STATE.yaml
+      non_inference_rule: true
       rule: Historical snapshots remain immutable evidence and never override docs/STATE.yaml or verified current runtime evidence.
 
 release:
@@ -134,7 +138,7 @@ release:
   github_driven_production_activation_authorized: false
   future_production_changes_require_owner_approval: true
   production_auto_deploy: false
-  release_history_reconciliation: REQUIRED_UNDER_MIG-004
+  release_history_reconciliation: PASS_WITH_NON_INFERENCE_GAPS_PRESERVED
   historical_references:
     rc3_candidate: SPM_E2E_Sales_Agent_RC3_CERTIFIED_LEAD_ADAPTER_2026-08-25
     rc4_2_reference: SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json
@@ -218,12 +222,12 @@ working_units:
     direct_production_promotion_allowed: false
   WU-100:
     name: Canary Release / Production Certification / Lock
-    status: CURRENT_PRODUCTION_RUNTIME_LIVE_RELEASE_HISTORY_RECONCILIATION_REQUIRED
+    status: CURRENT_PRODUCTION_RUNTIME_LIVE_HISTORY_RECONCILED_WITH_UNDOCUMENTED_STAGE_GAPS_PRESERVED
     mutable: false
     rc4_3_3_runtime_live_verified: true
     exact_runtime_export_in_github: true
     historical_canary_thresholds_owner_approved_on: 2026-08-25
-    note: Do not infer undocumented canary stage history from the fact that RC4.3.3 is live; MIG-004 must preserve and reconcile evidence without fabricating missing release records.
+    note: Do not infer undocumented canary stage history from the fact that RC4.3.3 is live. Historical checklist gaps remain preserved under the MIG-004 non-inference rule.
 
 future_work:
   numbering_starts_at: WU-101
@@ -239,7 +243,7 @@ future_work:
     WU-108: WhatsApp Staff Notification
     WU-109: Conversation Outcome KPIs
     WU-110: Optimization Regression Pack
-  rule: Do not start WU-101+ until Release 1 completion/certification history and source-of-truth cutover prerequisites are formally reconciled and approved.
+  rule: Do not start WU-101+ until source-of-truth cutover prerequisites are formally reviewed and approved.
 
 state_machine:
   normal:
@@ -266,10 +270,11 @@ orchestration:
     - MIG-001: PASS
     - MIG-002: PASS
     - MIG-003: PASS
-    - MIG-004: IN_PROGRESS
+    - MIG-004: PASS
+    - CUTOVER_REVIEW: ACTIVE
   next_action:
-    - continue MIG-004 historical release reconciliation without rewriting historical evidence
-    - reconcile remaining migration PR integration and cutover prerequisites
-    - keep production auto-deploy disabled
-    - prepare explicit owner review for GitHub source-of-truth cutover only after MIG-004 and migration PR reconciliation are complete
-    - do not start WU-101+ until release-history and source-of-truth cutover prerequisites are formally reconciled and approved
+    - review remaining migration PR and branch integration without losing exact artifact history
+    - confirm no unresolved source-authority, release-state, or WU-numbering conflict remains
+    - keep production auto-deploy disabled and STAGING as the only automated n8n write path
+    - prepare explicit owner decision for GitHub engineering source-of-truth cutover
+    - do not start WU-101+ until the cutover decision is recorded
