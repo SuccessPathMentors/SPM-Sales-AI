@@ -6,10 +6,29 @@ policy:
   raw_provider_export_only: true
   reconstruct_from_chat_or_screenshot: false
   verify_sha256_before_commit: true
-  verify_sha256_after_commit: true
+  verify_git_blob_identity_after_transport: true
   secret_scan_required: true
   allow_credential_references_only: true
   allow_secret_values: false
+
+mig_002_exact_transport_batch:
+  status: PASS
+  source: google_drive_raw_provider_exports
+  artifact_count: 30
+  total_bytes: 3273938
+  pre_transport_validation:
+    json_parse: PASS_ALL_JSON_ARTIFACTS
+    xlsx_structure: PASS
+    preliminary_secret_scan: PASS_NO_OBVIOUS_SECRET_VALUES
+  github_branch: migration/rc4-3-3-exact-artifact
+  staging_upload_commit: 5531c377208bd7d1cc5572533fa5760713bcefa0
+  final_placement_commit: 86ec918bb75e919df67d167ae3e3e67c040c633c
+  staging_path_removed: true
+  verification_method: local_original_git_blob_sha1_equals_github_blob_sha1_and_byte_length
+  exact_match_count: 30
+  mismatch_count: 0
+  detailed_manifest: docs/MIG-002_EXACT_TRANSPORT_MANIFEST_2026-08-30.csv
+  note: SHA-256 values are recorded per artifact in the detailed manifest; Git blob identity proves the transported repository object uses the same bytes as the locally verified provider export.
 
 artifacts:
   rc4_3_3_production_workflow:
@@ -27,20 +46,20 @@ artifacts:
     node_count: 114
     preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
     github_exact_transport: PASS
-    github_branch: migration/rc4-3-3-exact-artifact
-    placement_commit: e7f070e6c82fa224bd26b490ad531c0ed08d1a11
     runtime_role: CURRENT_LIVE_PRODUCTION_EVIDENCE
-    authority_status: VERIFIED_EXACT_ARTIFACT_PENDING_MIGRATION_BRANCH_INTEGRATION
+    authority_status: VERIFIED_EXACT_ARTIFACT
 
   project_state_historical_snapshot:
     source: google_drive
     drive_id: 1R7nQEZstCUdHtx3LmH01_O2oHNMpqtZR
     file_name: PROJECT_STATE.md
+    github_path: drive-mirror/00_START_HERE/PROJECT_STATE.md
     bytes: 42464
     sha256: 7bb8f8ba4388e78585610232ff46e1bdc14d999db5e8019b98e4d4d711ded0a9
-    json_parse: not_applicable
+    git_blob_sha1_local: cd828502d75302d6d16cb0f16b0e387fe2abe2be
+    git_blob_sha1_github: cd828502d75302d6d16cb0f16b0e387fe2abe2be
+    github_exact_transport: PASS
     preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
-    github_status: PENDING_EXACT_COMMIT
     authority: HISTORICAL_SNAPSHOT_ONLY
     current_state_authority: docs/STATE.yaml
 
@@ -48,30 +67,52 @@ artifacts:
     source: google_drive
     drive_id: 1frxBHSbh2sk6qniuDyKXfh9o0Qpb5vBz
     file_name: CHANGELOG.md
+    github_path: drive-mirror/06_History_Decisions/CHANGELOG.md
     bytes: 22376
     sha256: 3508df7c63582059f94f01dcefdacacf43620fe7dda0fdb5cc68075d25346eb6
-    json_parse: not_applicable
+    git_blob_sha1_local: 40ba419e90b9a138447b9661c8c5b80efb3193d6
+    git_blob_sha1_github: 40ba419e90b9a138447b9661c8c5b80efb3193d6
+    github_exact_transport: PASS
     preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
-    github_status: PENDING_EXACT_COMMIT
     authority: HISTORICAL_CHANGE_EVIDENCE
+
+  ai_agent_system_message_fixed:
+    source: google_drive
+    drive_id: 1K_r-0A-HTnya8dUyYiz6sQqi_QpP0hIz
+    github_path: drive-mirror/02_Current_Architecture/AI_Agent_System_Message_fixed.md
+    bytes: 21315
+    sha256: 9ec894d5ae95c28fb978f27ec387ade06534d49b65df93edf31b8113d2d9b044
+    git_blob_sha1: 01615ba378def70d3f5d7d1c39dc90067b45a0c1
+    github_exact_transport: PASS
+    authority: HISTORICAL_ARCHITECTURE_INPUT
 
   wu99_runtime_testable_sut:
     source: google_drive
     drive_id: 18fONdO3ZCs7z0QALTrfVftbz-VpKnTTH
     file_name: SPM_E2E_Sales_Agent_Greenfield_WU99_Runtime_Testable_2026-08-21.json
+    github_path: drive-mirror/09_Spec_Kit_SDD/specs/011-e2e-sales-agent-greenfield/candidate/SPM_E2E_Sales_Agent_Greenfield_WU99_Runtime_Testable_2026-08-21.json
     bytes: 236748
     sha256: a74b6443151eca02d3cc0b28126be96344a68326a389f6ac2951f54bcce0c6fc
-    expected_sha256: a74b6443151eca02d3cc0b28126be96344a68326a389f6ac2951f54bcce0c6fc
-    checksum_match: true
+    git_blob_sha1_local: 780e211492138328d2b892f9920be23a5ea7d2a7
+    git_blob_sha1_github: 780e211492138328d2b892f9920be23a5ea7d2a7
+    github_exact_transport: PASS
     json_parse: PASS
     preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
-    github_status: PENDING_EXACT_COMMIT
     runtime_role: TEST_ONLY
     production_promotion_allowed: false
 
+  stage_10_testing_template:
+    source: google_drive
+    drive_id: 10VhfqZdNg9s6OtfjUCGBoVf_dTv5X0uT
+    github_path: drive-mirror/05_Testing_QA/Success_Path_Mentors_Stage_10_Testing_TEMPLATE.xlsx
+    bytes: 18768
+    sha256: 4c6a9b3d32a1de6ede685a855428c6546247c6957171cc6e25fbc090596e4d0c
+    git_blob_sha1: 996217b247673437a8f723d39aba43a1af346bcd
+    github_exact_transport: PASS
+    xlsx_structure: PASS
+
 notes:
-  - RC4.3.3 exact-byte transport was verified by matching Git's blob SHA-1 computed from the original local bytes against the GitHub blob SHA; both are 58d1e9cc45085909dff91d7a9d07138486e72c76, with identical 330119-byte length.
-  - The authoritative SHA-256 for RC4.3.3 remains 680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39.
-  - Preliminary secret scan checks common API-key, bearer-token, private-key, and populated secret/password-field patterns. It is not a substitute for repository secret scanning or human review.
-  - Historical state artifacts are immutable audit evidence and must not override later reconciled current-state evidence.
-  - Exact commit is incomplete for other pending artifacts until the GitHub copy is retrieved and its identity is verified against this register.
+  - Detailed identity for all 30 MIG-002 batch artifacts is in docs/MIG-002_EXACT_TRANSPORT_MANIFEST_2026-08-30.csv.
+  - RC4.3.3 was transported separately and is also exact-byte verified.
+  - Preliminary secret scanning checks common API-key, bearer-token, private-key, and populated secret/password-field patterns. It is not a substitute for GitHub secret scanning or human review.
+  - Historical snapshots remain immutable audit evidence and do not override later reconciled current-state evidence.
