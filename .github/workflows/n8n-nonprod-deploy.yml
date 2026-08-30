@@ -1,0 +1,99 @@
+name: n8n non-production deploy
+
+on:
+  pull_request:
+    paths:
+      - "scripts/n8n/**"
+      - "n8n/deployment/**"
+      - ".github/workflows/n8n-nonprod-deploy.yml"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Non-production target"
+        required: true
+        type: choice
+        options:
+          - dev
+          - staging
+      artifact_path:
+        description: "Versioned n8n workflow JSON path in this repository"
+        required: true
+        type: string
+        default: "n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json"
+      expected_sha256:
+        description: "Exact SHA-256 expected for artifact_path"
+        required: true
+        type: string
+        default: "680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39"
+      mode:
+        description: "dry-run performs no n8n writes; apply may create/update only inactive non-production"
+        required: true
+        type: choice
+        default: dry-run
+        options:
+          - dry-run
+          - apply
+      allow_create:
+        description: "One-time explicit create if the environment has no N8N_TARGET_WORKFLOW_ID yet"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: n8n-nonprod-${{ github.event_name == 'workflow_dispatch' && inputs.environment || 'validation' }}
+  cancel-in-progress: false
+
+jobs:
+  safety-tests:
+    name: Safety tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Python syntax and unit tests
+        run: |
+          python -m py_compile scripts/n8n/deploy_nonprod.py
+          python scripts/n8n/test_deploy_nonprod.py
+
+  deploy-nonprod:
+    name: ${{ inputs.mode }} to ${{ inputs.environment }}
+    if: github.event_name == 'workflow_dispatch'
+    needs: safety-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: n8n-${{ inputs.environment }}
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      N8N_TARGET_WORKFLOW_ID: ${{ secrets.N8N_TARGET_WORKFLOW_ID }}
+      SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate and deploy safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --artifact "${{ inputs.artifact_path }}"
+            --environment "${{ inputs.environment }}"
+            --expected-sha256 "${{ inputs.expected_sha256 }}"
+            --mode "${{ inputs.mode }}"
+            --result-file deployment-result.json
+          )
+          if [[ "${{ inputs.allow_create }}" == "true" ]]; then
+            args+=(--allow-create)
+          fi
+          python scripts/n8n/deploy_nonprod.py "${args[@]}"
+
+      - name: Publish non-secret deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: n8n-${{ inputs.environment }}-${{ inputs.mode }}-result
+          path: deployment-result.json
+          if-no-files-found: ignore
+          retention-days: 30

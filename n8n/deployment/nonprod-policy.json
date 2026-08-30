@@ -1,0 +1,46 @@
+{
+  "schema": "SPM_N8N_NONPROD_POLICY_V1",
+  "status": "MIG-003_NON_PRODUCTION_ONLY",
+  "allowed_environments": ["dev", "staging"],
+  "protected_production_workflows": [
+    {
+      "id": "CMBMpxX5AqqK2UTn",
+      "name": "SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json",
+      "sha256": "680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39",
+      "policy": "DENY_ALL_MIG_003_WRITES"
+    }
+  ],
+  "allowed_api_operations": [
+    "GET /api/v1/workflows/{id}",
+    "POST /api/v1/workflows for explicit one-time non-production create",
+    "PUT /api/v1/workflows/{id}?publishIfActive=false for inactive non-production target"
+  ],
+  "forbidden_api_operations": [
+    "publish",
+    "activate",
+    "deactivate",
+    "unpublish",
+    "delete production workflow",
+    "update any published/active workflow"
+  ],
+  "required_controls": {
+    "exact_sha256_required_for_apply": true,
+    "https_api_base_required": true,
+    "api_base_must_end_with": "/api/v1",
+    "production_target_deny_list_required": true,
+    "existing_target_must_be_inactive": true,
+    "environment_name_prefix_required": true,
+    "implicit_create_allowed": false,
+    "production_publish_allowed": false,
+    "credential_secret_values_in_repo_allowed": false
+  },
+  "github_environments": {
+    "dev": "n8n-dev",
+    "staging": "n8n-staging"
+  },
+  "required_environment_secrets_for_apply": [
+    "N8N_API_BASE_URL",
+    "N8N_API_KEY"
+  ],
+  "optional_environment_secret_after_first_create": "N8N_TARGET_WORKFLOW_ID"
+}
