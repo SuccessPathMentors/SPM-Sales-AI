@@ -43,14 +43,44 @@ LOCK Working Unit
 Recalculate dependency graph
 ```
 
+## Current migration lane — MUST complete before deployment automation
+
+```text
+MIG-001 Runtime Identity Reconciliation
+        ↓
+MIG-002 Exact Artifact Transport + SHA Verification
+        ↓
+MIG-003 GitHub → n8n Non-Production Deployment Automation
+        ↓
+Staging Import / Dry Run
+        ↓
+Runtime Evidence
+        ↓
+Human Approval Gate
+        ↓
+Production Promotion (separate release action only)
+```
+
+### MIG-001 — IN PROGRESS / BLOCKING
+GitHub issue #5. Identify the actually active n8n main workflow and reverify the validated-handoff identity. Record workflow IDs, active state, environment, dependencies, artifact path/hash, and credential references without secret values. WU99 SUT/harness must be imported only as new inactive TEST workflows.
+
+### MIG-002 — IN PROGRESS
+GitHub issue #6. Transfer remaining raw Drive artifacts exactly, secret-scan them, verify SHA-256 before and after GitHub commit, and keep historical state artifacts explicitly non-authoritative for current release state.
+
+### MIG-003 — BLOCKED BY MIG-001 + MIG-002
+GitHub issue #7. Add the repeatable GitHub-controlled non-production import/update path to n8n only after runtime identity and exact artifact inputs are reconciled. Initial automation must not activate production.
+
+### MIG-004 — RECONCILIATION CONTROL
+GitHub issue #8. Preserve historical WU99/WU100 NOT_RUN snapshots as audit evidence while preventing them from overriding later reconciled release evidence in `docs/STATE.yaml`.
+
 ## Locking policy
 A downstream agent may read a locked artifact but must not edit it. If a locked dependency needs change, create a Change Request, version the affected artifact, rerun impacted tests, and relock the new version.
 
 ## Baseline position
 - WU-01 → WU-84: protected historical predecessors.
 - WU-87 → WU-98: greenfield implementation/static/offline baseline exists.
-- WU-99: full semantic runtime/E2E certification evidence gate.
-- WU-100: frozen pre-canary candidate exists; production activation remains a separate approval gate.
+- WU-99: full semantic runtime/E2E certification evidence gate; historical preparation snapshots and later execution evidence must be chronology-reconciled.
+- WU-100: release/canary control layer; production activation remains a separate approval gate.
 - New planned feature work begins at WU-101 unless explicitly mapped to unresolved certification/canary work.
 
 ## GitHub lifecycle
@@ -59,7 +89,7 @@ A downstream agent may read a locked artifact but must not edit it. If a locked 
 Use `BLOCKED` as a side state. Do not reopen a locked predecessor silently.
 
 ## n8n lifecycle
-`GitHub artifact → staging/test import/deploy → smoke test → regression → runtime evidence → approval → production promotion`
+`GitHub artifact → identity check → staging/test import/deploy → smoke test → regression → runtime evidence → approval → production promotion`
 
 Production is not a working canvas. Any production-bound change must exist first as a versioned GitHub artifact and pass the applicable gates.
 
@@ -81,9 +111,11 @@ Parallel work is allowed only if:
 
 ## Stop conditions
 Stop automation and set `BLOCKED` when:
+- runtime workflow identity or environment is ambiguous;
 - a locked business rule must change;
 - production credentials/actions would be enabled without approval;
 - runtime evidence required for certification is unavailable;
 - a worker exceeds two material repair cycles;
 - two parallel tasks would modify the same ownership boundary;
-- a test detects false lead/booking/payment/handoff success, PII leakage, corrupted state, or other hard-stop invariant.
+- a test detects false lead/booking/payment/handoff success, PII leakage, corrupted state, or other hard-stop invariant;
+- the WU99 TEST-only SUT is proposed for direct production promotion.
