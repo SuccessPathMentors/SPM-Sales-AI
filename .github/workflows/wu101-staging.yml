@@ -42,7 +42,7 @@ concurrency:
 env:
   BASELINE: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
   CANDIDATE: n8n/generated/SPM_WU101_STAGING_ANALYTICS_CANDIDATE.json
-  EXPECTED_SHA256: 23d30ebb215205b1fdfc299302e86d98f2ff7f94ec2ad2339f988cbe3e6a49ed
+  EXPECTED_SHA256: af981a3691dbdc01c3624932310211ea810e9a844035e44358e04706a1ab65b9
 
 jobs:
   validate:
@@ -57,13 +57,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p n8n/generated
-          python scripts/wu101/build_candidate_chat_memory_isolated.py --baseline "$BASELINE" --output "$CANDIDATE"
+          python scripts/wu101/build_candidate_sheets_type_safe.py --baseline "$BASELINE" --output "$CANDIDATE"
 
-      - name: Run WU-101 static/privacy/isolation tests
+      - name: Run WU-101 static/privacy/isolation/type-safety tests
         run: |
           set -euo pipefail
           python scripts/wu101/test_candidate.py
           python scripts/wu101/test_chat_memory_isolation.py
+          python scripts/wu101/test_sheets_type_safe.py
 
       - name: Verify exact candidate SHA-256
         run: |
@@ -113,9 +114,10 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p n8n/generated
-          python scripts/wu101/build_candidate_chat_memory_isolated.py --baseline "$BASELINE" --output "$CANDIDATE"
+          python scripts/wu101/build_candidate_sheets_type_safe.py --baseline "$BASELINE" --output "$CANDIDATE"
           python scripts/wu101/test_candidate.py
           python scripts/wu101/test_chat_memory_isolation.py
+          python scripts/wu101/test_sheets_type_safe.py
           actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
           test "$actual" = "$EXPECTED_SHA256"
 
