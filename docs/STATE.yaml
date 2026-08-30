@@ -1,6 +1,6 @@
 project: SPM Sales AI Agent
 repository: SuccessPathMentors/SPM-Sales-AI
-state_version: 3
+state_version: 4
 source_of_truth: MIGRATION_IN_PROGRESS
 engineering_target_source_of_truth: github
 runtime_target: n8n
@@ -11,7 +11,59 @@ migration:
   status: IN_PROGRESS
   drive_archive_authority: true
   github_cutover_approved: false
+  active_gate: MIG-001
   rule: GitHub becomes sole engineering source of truth only after migration manifest reconciliation, artifact identity verification, PR review, and owner approval.
+  tasks:
+    MIG-001:
+      issue: 5
+      name: Reconcile n8n runtime identities and prepare safe WU99 execution
+      status: IN_PROGRESS_BLOCKING
+      required_before:
+        - any GitHub-driven n8n deployment
+        - WU99 harness binding
+        - production workflow update or activation
+      known_runtime_evidence:
+        validated_handoff_workflow_id: swhmNa0Goo0uYm1k
+        validated_handoff_historical_state: active_true_reverify_required
+        r2_5_candidate_workflow_id: vSc7cMIMFMEUdi7z
+        r2_5_candidate_state: active_false
+        active_main_workflow_id: UNKNOWN_BLOCKING
+      control_doc: docs/MIG-001_N8N_RUNTIME_INVENTORY.md
+    MIG-002:
+      issue: 6
+      name: Exact artifact transport and checksum reconciliation
+      status: IN_PROGRESS
+      integrity_register: docs/ARTIFACT_INTEGRITY_REGISTER.yaml
+      verified_raw_inputs:
+        PROJECT_STATE_md:
+          bytes: 42464
+          sha256: 7bb8f8ba4388e78585610232ff46e1bdc14d999db5e8019b98e4d4d711ded0a9
+          authority: HISTORICAL_SNAPSHOT_ONLY
+          github_exact_commit: PENDING
+        CHANGELOG_md:
+          bytes: 22376
+          sha256: 3508df7c63582059f94f01dcefdacacf43620fe7dda0fdb5cc68075d25346eb6
+          github_exact_commit: PENDING
+        WU99_Runtime_Testable:
+          bytes: 236748
+          sha256: a74b6443151eca02d3cc0b28126be96344a68326a389f6ac2951f54bcce0c6fc
+          checksum_matches_recorded_evidence: true
+          json_parse: PASS
+          runtime_role: TEST_ONLY
+          github_exact_commit: PENDING
+      preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
+    MIG-003:
+      issue: 7
+      name: Add automated n8n deployment path after runtime identity reconciliation
+      status: BLOCKED
+      blocked_by: [MIG-001, MIG-002]
+      first_release_scope: NON_PRODUCTION_ONLY
+      production_activation_allowed: false
+    MIG-004:
+      issue: 8
+      name: Reconcile stale historical release state against later evidence
+      status: IN_PROGRESS
+      rule: Historical snapshots remain immutable evidence and never override docs/STATE.yaml.
 
 release:
   current_mode: RC3_PRE_CANARY_BLOCKED
@@ -103,7 +155,7 @@ working_units:
       open_p0_p1: 0
       false_success_regressions: 0
       sticky_opt_out: VERIFIED
-    historical_note: The older WU99 runbook still says PREPARED/NOT_RUN and is retained verbatim as historical evidence; later task/checklist evidence supersedes that status.
+    historical_note: The older WU99 runbook and PROJECT_STATE snapshot say PREPARED/NOT_RUN and are retained as historical evidence; later dated execution/release evidence must be used for current state after reconciliation.
 
   WU-100:
     name: Canary Release / Production Certification / Lock
@@ -166,16 +218,21 @@ state_machine:
   side_states:
     - BLOCKED
     - CHANGE_REQUEST
+    - RECONCILIATION_REQUIRED
 
 orchestration:
   parallelize_only_when:
     - dependencies are LOCKED or BASELINED
     - affected workflow/node ownership does not overlap
     - shared contracts are frozen before worker execution
+  migration_execution_order:
+    - MIG-001
+    - MIG-002
+    - MIG-003
   next_action:
-    - continue exact Drive-to-GitHub migration of checklists, evidence, changelog, Spec Kit and workflows
-    - locate exact RC3/any later frozen RC workflow export and record file identity/hash
-    - reconcile final targeted RC3 regression evidence if it exists after the 2026-08-25 plan
-    - inventory current n8n workflow IDs and active/inactive state under MIG-001
-    - define non-production staging deployment path
+    - execute MIG-001 by reading the current n8n runtime workflow inventory and active/inactive identities
+    - reverify validated handoff identity and identify the actually active main chatbot workflow
+    - keep WU99 SUT/harness imports inactive and test-only
+    - continue MIG-002 exact artifact transport with post-commit checksum verification
+    - start MIG-003 only after MIG-001 and MIG-002 gates pass
     - keep production activation blocked until explicit owner approval
