@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 from build_candidate_chat_memory_isolated import build as build_before
-from build_candidate_sheets_type_safe import build
+from build_candidate_sheets_type_safe import BOOLEAN_FIELDS, build
 
 BASE = Path('n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json')
 
@@ -29,6 +29,12 @@ schema = {f['id']: f for f in columns['schema']}
 for field in ('turn_index', 'confidence', 'duration_ms'):
     assert schema[field]['type'] == 'number'
 
+for field in BOOLEAN_FIELDS:
+    assert schema[field]['type'] == 'string', (field, schema[field])
+    assert columns['value'][field] == (
+        f"={{ $json.wu101_analytics_event.{field} === true ? 'true' : 'false' }}"
+    ), (field, columns['value'][field])
+
 # Prove this repair changes only the analytics Sheets column configuration.
 before_copy = json.loads(json.dumps(before))
 after_copy = json.loads(json.dumps(after))
@@ -45,5 +51,7 @@ print('WU101_SHEETS_TYPE_SAFE_PASS')
 print(json.dumps({
     'attemptToConvertTypes': columns['attemptToConvertTypes'],
     'numeric_fields': ['turn_index', 'confidence', 'duration_ms'],
+    'boolean_sink_fields': list(BOOLEAN_FIELDS),
+    'boolean_sink_encoding': 'canonical_string_true_false',
     'active': after.get('active'),
 }, indent=2))
