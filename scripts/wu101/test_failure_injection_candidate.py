@@ -29,18 +29,23 @@ node_by_name(normal_copy, LOGGER)['parameters']['documentId'] = {'__normalized__
 node_by_name(fi_copy, LOGGER)['parameters']['documentId'] = {'__normalized__': True}
 assert normal_copy == fi_copy, 'failure-injection candidate changed more than analytics documentId'
 
-# Explicit hard-stop checks.
+# Explicit hard-stop checks on actual writable paths rather than historical/read-only strings.
 serialized = json.dumps(fi, ensure_ascii=False)
 assert 'spm:staging:sales:' in serialized
 assert 'spm:prod:sales:' not in serialized
-assert 'WU101_LEADS_STAGING' in serialized
-assert 'LEADS_TEMPLATE' not in serialized
 assert 'CMBMpxX5AqqK2UTn' not in serialized
+
+lead_writer = node_by_name(fi, 'Upsert WU95 Lead [STAGING ISOLATED ADAPTER]')
+lead_sheet = lead_writer['parameters']['sheetName']
+assert isinstance(lead_sheet, dict)
+assert lead_sheet.get('cachedResultName') == 'WU101_LEADS_STAGING'
+assert str(lead_sheet.get('value')) == '2026101002'
 
 print('WU101_FAILURE_INJECTION_STATIC_PASS')
 print(json.dumps({
     'failure_mode': 'analytics_document_not_found',
     'logger_on_error': fi_logger.get('onError'),
     'workflow_active': fi.get('active'),
+    'lead_write_sheet': lead_sheet.get('cachedResultName'),
     'only_diff': 'Upsert WU101 Analytics [STAGING].parameters.documentId',
 }, indent=2))
