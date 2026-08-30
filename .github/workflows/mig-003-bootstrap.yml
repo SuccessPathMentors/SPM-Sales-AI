@@ -1,0 +1,81 @@
+name: MIG-003 nonprod bootstrap
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "Safe bootstrap mode"
+        required: true
+        type: choice
+        default: api-smoke
+        options:
+          - api-smoke
+          - dry-run
+
+env:
+  MIG003_SOURCE_REF: migration/mig-003-nonprod-deploy
+  PROTECTED_PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
+
+jobs:
+  bootstrap:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: n8n-staging
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout MIG-003 implementation branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.MIG003_SOURCE_REF }}
+
+      - name: Safety tests
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/n8n/deploy_nonprod.py
+          python scripts/n8n/test_deploy_nonprod.py
+
+      - name: API smoke test - read only
+        if: inputs.mode == 'api-smoke'
+        env:
+          N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os, urllib.request
+          base=os.environ['N8N_API_BASE_URL'].rstrip('/')
+          key=os.environ['N8N_API_KEY']
+          wid=os.environ['PROTECTED_PRODUCTION_WORKFLOW_ID']
+          if not base.startswith('https://') or not base.endswith('/api/v1'):
+              raise SystemExit('FAIL: unexpected N8N_API_BASE_URL shape')
+          req=urllib.request.Request(f"{base}/workflows/{wid}", headers={'X-N8N-API-KEY':key,'Accept':'application/json'})
+          with urllib.request.urlopen(req, timeout=20) as r:
+              data=json.loads(r.read().decode('utf-8'))
+          if str(data.get('id')) != wid:
+              raise SystemExit('FAIL: returned workflow id mismatch')
+          print(json.dumps({'result':'PASS_API_SMOKE_READ_ONLY','workflow_id':wid,'active':bool(data.get('active',False)),'write_performed':False}, separators=(',',':')))
+          PY
+
+      - name: MIG-003 deployer dry-run - zero writes
+        if: inputs.mode == 'dry-run'
+        env:
+          N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+        run: |
+          set -euo pipefail
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json \
+            --environment staging \
+            --expected-sha256 680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39 \
+            --mode dry-run \
+            --result-file deployment-result.json
+
+      - name: Upload dry-run evidence
+        if: inputs.mode == 'dry-run'
+        uses: actions/upload-artifact@v4
+        with:
+          name: mig-003-bootstrap-dry-run
+          path: deployment-result.json
+          retention-days: 30
