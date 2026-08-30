@@ -4,9 +4,9 @@
   "environment": "staging",
   "baseline_artifact": "n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json",
   "baseline_sha256": "680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39",
-  "candidate_builder": "scripts/wu101/build_candidate_chat_memory_isolated.py",
+  "candidate_builder": "scripts/wu101/build_candidate_sheets_type_safe.py",
   "candidate_output": "n8n/generated/SPM_WU101_STAGING_ANALYTICS_CANDIDATE.json",
-  "candidate_expected_sha256": "23d30ebb215205b1fdfc299302e86d98f2ff7f94ec2ad2339f988cbe3e6a49ed",
+  "candidate_expected_sha256": "af981a3691dbdc01c3624932310211ea810e9a844035e44358e04706a1ab65b9",
   "production_workflow_id_denied": "CMBMpxX5AqqK2UTn",
   "target_workflow_id": "mMZVFxJIxE7a9SSW",
   "target_must_be_inactive": true,
@@ -15,7 +15,9 @@
     "spreadsheet_id": "1JJu6eNurnNbBdikOnOe1u7OvUjcTS8Q14TPHjUiT3lM",
     "sheet_name": "WU101_ANALYTICS_STAGING",
     "sheet_id": 2026101001,
-    "production_analytics_sheet_used": false
+    "production_analytics_sheet_used": false,
+    "attempt_to_convert_types": true,
+    "numeric_fields_explicitly_coerced": ["turn_index", "confidence", "duration_ms"]
   },
   "lead_regression_sink": {
     "spreadsheet_id": "1JJu6eNurnNbBdikOnOe1u7OvUjcTS8Q14TPHjUiT3lM",
@@ -29,6 +31,7 @@
   "notes": [
     "Existing WU-101 STAGING workflow mMZVFxJIxE7a9SSW must be updated in place and remain inactive.",
     "Redis Chat Memory is explicitly isolated from Production by a STAGING-prefixed Session Key.",
+    "Runtime Test #1 found Google Sheets input validation rejecting turn_index; the repaired candidate enables type conversion and explicit numeric mappings at the analytics sink.",
     "GitHub Actions denies the Production workflow ID and the legacy MIG-003 canary target.",
     "Production deployment, publication and activation are outside WU-101 implementation scope."
   ]
