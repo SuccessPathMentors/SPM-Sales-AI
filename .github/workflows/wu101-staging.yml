@@ -102,8 +102,6 @@ jobs:
     env:
       N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
       N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-      # Deliberately override the environment's legacy MIG-003 target secret.
-      # Blank input on first create MUST remain blank so the old canary is never overwritten.
       N8N_TARGET_WORKFLOW_ID: ${{ inputs.target_workflow_id }}
       SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
     steps:
@@ -156,6 +154,18 @@ jobs:
             args+=(--allow-create)
           fi
           python scripts/n8n/deploy_nonprod.py "${args[@]}"
+
+      - name: Verify remote WU-101 STAGING content after apply
+        if: inputs.mode == 'apply'
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="$(python - <<'PY'
+          import json
+          print(json.load(open('wu101-deployment-result.json'))['target_workflow_id'])
+          PY
+          )"
+          N8N_TARGET_WORKFLOW_ID="$target" python scripts/wu101/verify_remote_staging.py
 
       - name: Upload deployment evidence
         if: always()
