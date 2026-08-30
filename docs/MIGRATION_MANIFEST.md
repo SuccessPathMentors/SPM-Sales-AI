@@ -1,168 +1,132 @@
 # Google Drive → GitHub Migration Manifest
 
-Status: **IN PROGRESS — MIG-001/002/003 PASS — MIG-004 RECONCILED — CUTOVER NOT YET APPROVED**
-Audit date: 2026-08-30
-Drive project root: `Success_Path_Mentors_AI_Sales_Chatbot`
-Target repo: `SuccessPathMentors/SPM-Sales-AI`
-Current exact-artifact branch: `migration/rc4-3-3-exact-artifact`
+Status: **COMPLETE — GITHUB ENGINEERING SOURCE-OF-TRUTH CUTOVER APPROVED**  
+Cutover date: 2026-08-30  
+Repository: `SuccessPathMentors/SPM-Sales-AI`  
+Cutover PR: #4  
+Cutover merge commit: `561788510bea13d9a9fea85d5ce0841b846c8432`
 
-## Authority model after sign-off
-- **GitHub**: versioned engineering source of truth for specs, roadmaps, Working Units, gates, prompts, workflow JSON, tests, decisions, release evidence, and change history.
-- **n8n**: runtime/deployment environment, not an independent version-control authority.
-- **Google Sheets**: live mutable knowledge/operational data where runtime mutability is required; GitHub stores governance/schema/version references, not credentials.
-- **Google Drive**: archive/secondary reference after cutover approval.
+## Authority model after cutover
+- **GitHub `main`** — approved engineering source of truth for versioned specs, state, Working Units, workflow JSON, tests, decisions, release evidence, deployment policy and change history.
+- **n8n** — runtime/deployment target. It is not the engineering version-control authority.
+- **Google Drive** — archive/secondary historical reference. Historical files remain useful evidence but do not override GitHub current state.
+- **Google Sheets** — live mutable operational/knowledge data where runtime mutability is required; GitHub stores governance/schema/version references, not credentials.
 
-Cutover is **not** yet approved. Exact transport completion and non-production deployment automation do not themselves authorize production deployment or make GitHub the sole approved authority.
+Cutover changes engineering authority only. It does **not** authorize n8n Production activation, production auto-deploy, or direct AI/GitHub → Production changes.
 
-## Current production runtime identity — verified
-The current live production workflow is no longer unknown:
+## Migration gates
+| Gate | Result | Primary evidence |
+|---|---|---|
+| MIG-001 — runtime identity/dependencies | PASS / CLOSED | Issue #5; `docs/MIG-001_N8N_RUNTIME_INVENTORY.md` |
+| MIG-002 — exact artifact transport | PASS / CLOSED | Issue #6; `docs/MIG-002_EXACT_TRANSPORT_MANIFEST_2026-08-30.csv` |
+| MIG-003 — GitHub → n8n non-production deploy path | PASS / CLOSED | Issue #7; PR #9; `docs/MIG-003_N8N_NONPROD_DEPLOYMENT.md` |
+| MIG-004 — historical evidence precedence | PASS / CLOSED | Issue #8; `docs/MIG-004_RELEASE_EVIDENCE_PRECEDENCE.md` |
+| Cutover review | APPROVED / COMPLETE | PR #4; `docs/CUTOVER_REVIEW_2026-08-30.md` |
 
-- Workflow/export name: `SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json`
+## Verified current Production runtime
+- Workflow/export: `SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json`
 - n8n workflow ID: `CMBMpxX5AqqK2UTn`
-- Published/live production evidence: verified from n8n plus successful execution `2539`
-- Node count: `114`
+- Runtime evidence: successful execution `2539`
+- Nodes: `114`
 - Disabled nodes: `0`
 - Native `Execute Workflow` nodes: `0`
-- Exact GitHub path: `n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json`
+- Exact GitHub artifact: `n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json`
 - Bytes: `330119`
 - SHA-256: `680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39`
-- Git blob SHA-1: `58d1e9cc45085909dff91d7a9d07138486e72c76`
 - Exact transport: **PASS**
 
-Runtime scope observed in the exact export:
-- Lead/CRM production write adapter: present
+Current Production scope remains explicitly bounded:
+- Lead/CRM write adapter: enabled current scope
 - Scheduling/booking execution: excluded
-- Human handoff execution: disabled/not configured in RC4.3.3
+- Human handoff contract: present
+- Human handoff live execution: disabled/not configured
 - Payment execution: excluded
 - External follow-up execution: excluded
-- Redis production state namespace: production-scoped
 
-The standalone historical `Validated_Human_Handoff_FIXED.json` is preserved as an exact Drive artifact, but current RC4.3.3 contains no native `Execute Workflow` call to it.
+The standalone historical `Validated_Human_Handoff_FIXED.json` remains preserved, but RC4.3.3 contains no native `Execute Workflow` dependency on it.
 
-## MIG-001 — runtime identity reconciliation
-**Status: PASS / CLOSED**
+## Exact artifact migration
+MIG-002 verified the Drive transport batch:
+- artifacts: `30`
+- total bytes: `3,273,938`
+- exact matches: `30/30`
+- mismatches: `0`
+- JSON parsing: PASS for JSON artifacts
+- Stage 10 XLSX structure: PASS
+- preliminary secret-pattern scan: no obvious secret values detected
 
-Durable current runtime state is recorded in `docs/STATE.yaml` and `docs/MIG-001_N8N_RUNTIME_INVENTORY.md`. RC4.3.3 is the verified current production workflow. Current adapter inclusion/exclusion is recorded explicitly and historical standalone workflows do not become current dependencies without revalidation.
+The exact transport includes historical `PROJECT_STATE.md`, `CHANGELOG.md`, legacy/reference workflows, QA material and retained WU87–WU99 artifacts. The WU99 Runtime-Testable SUT remains **TEST ONLY** and cannot be promoted directly to Production.
 
-## MIG-002 — exact artifact transport
-**Status: PASS / CLOSED**
+Detailed integrity references:
+- `docs/ARTIFACT_INTEGRITY_REGISTER.yaml`
+- `docs/MIG-002_EXACT_TRANSPORT_MANIFEST_2026-08-30.csv`
 
-### RC4.3.3 production artifact
-Transported separately and exact-byte verified as described above.
+## Non-production deployment path
+MIG-003 proved the reviewed GitHub → n8n DEV/STAGING path.
 
-### Drive exact-transport batch
-- Artifact count: `30`
-- Total bytes: `3,273,938`
-- Pre-transport JSON parse: PASS for all JSON files
-- Stage 10 XLSX structural validation: PASS
-- Preliminary secret-pattern scan: PASS with no obvious secret values detected
-- Staging upload commit: `5531c377208bd7d1cc5572533fa5760713bcefa0`
-- Exact final placement commit: `86ec918bb75e919df67d167ae3e3e67c040c633c`
-- Local-original Git blob SHA vs GitHub blob: `30/30 MATCH`
-- Mismatches: `0`
-- Temporary `migration-incoming/`: removed after verification
-- Detailed manifest: `docs/MIG-002_EXACT_TRANSPORT_MANIFEST_2026-08-30.csv`
-- Integrity control: `docs/ARTIFACT_INTEGRITY_REGISTER.yaml`
+Evidence includes:
+- API read-only smoke: PASS
+- exact RC4.3.3 dry-run: PASS / zero writes
+- side-effect-free STAGING create: PASS
+- fail-closed missing-target test: PASS
+- deterministic update of the same STAGING target: PASS
 
-The batch completed exact transport for the previously pending:
-- `PROJECT_STATE.md` historical snapshot
-- `CHANGELOG.md`
-- `AI_Agent_System_Message_fixed.md`
-- Stage 10 XLSX QA template
-- five identified `03_Workflows_Current` exports
-- retained WU87–WU99 Greenfield candidate/test artifacts
-- WU98 multilingual red-team JSON/CSV
-- WU99 runtime SUT, harness, and certification plan
+STAGING proof workflow:
+- name: `[STAGING] MIG003_STAGING_CANARY`
+- ID: `BIDVhNCRbj9dvH1t`
+- active: `false`
+- credentials: `0`
+- external side-effect nodes: `0`
 
-The WU99 Runtime-Testable SUT and harness remain **TEST ONLY** and are not production promotion candidates.
+Long-term deployment automation:
+- `.github/workflows/n8n-nonprod-deploy.yml`
+- `scripts/n8n/deploy_nonprod.py`
+- `n8n/deployment/nonprod-policy.json`
 
-## MIG-003 — GitHub → n8n non-production path
-**Status: PASS / CLOSED**
+Safety invariants:
+- DEV/STAGING only
+- Production workflow ID `CMBMpxX5AqqK2UTn` hard-denied
+- active/published targets refused
+- exact SHA-256 required for apply
+- implicit create refused
+- no activate/publish/deactivate/delete endpoint in the deployer
+- post-write GET + inactive validation required
+- API key limited to workflow create/read/update
 
-Implementation PR #9 was reviewed and merged to the migration branch with merge commit `7b10a4490e2668d254bef56355e7f96b4a05171f`.
+## Temporary bootstrap cleanup
+The default-branch MIG-003 bootstrap was only a temporary mechanism for first live API validation. After explicit owner cutover approval:
+- `.github/workflows/mig-003-bootstrap.yml` — removed from `main`
+- `docs/MIG-003_BOOTSTRAP_NOTE.md` — removed from `main`
 
-Verified gates:
-- read-only n8n API smoke PASS;
-- exact RC4.3.3 dry-run PASS with zero writes;
-- protected production workflow ID hard-denied;
-- side-effect-free `[STAGING] MIG003_STAGING_CANARY` created inactive with ID `BIDVhNCRbj9dvH1t`;
-- missing-target update attempt failed closed as designed;
-- deterministic update of the same configured STAGING target passed;
-- API key excludes activation/deactivation/delete permissions;
-- no publish/activate path exists in the deployer.
+The reviewed generic non-production workflow is now the retained automation path.
 
-Production auto-deploy remains disabled. MIG-003 proves only a controlled DEV/STAGING path.
+## Historical release evidence precedence
+Historical Drive snapshots, runbooks and ledgers remain immutable audit evidence. They are not rewritten to imitate later results.
 
-## Mirrored authoritative engineering layers
-### Governance / context
-- `drive-mirror/AGENTS_DRIVE_2026-08-18.md`
-- `drive-mirror/00_START_HERE/`
-- `drive-mirror/01_Governance_Plans/`
-- `drive-mirror/02_Current_Architecture/`
-- governance/reference material under `drive-mirror/04_AI_Knowledge_Sources/`
+Authority rules:
+1. `docs/STATE.yaml` answers current engineering state.
+2. verified current n8n runtime identity/exact export answers what is live now.
+3. later dated verified evidence may supersede older preparation-state claims for current-state use.
+4. older `NOT_RUN`, preparation-only or unknown-runtime statements remain valid historical checkpoints only.
+5. unsupported chronology is not inferred.
 
-### Workflows / QA / decisions / reports
-- exact historical/current Drive workflow exports under `drive-mirror/03_Workflows_Current/`
-- QA/release gate and Stage 10 template under `drive-mirror/05_Testing_QA/`
-- decision/history logs and exact `CHANGELOG.md` under `drive-mirror/06_History_Decisions/`
-- active reports/policies under `drive-mirror/07_Reports_Risks_Gaps/`
-- cold-storage policy under `drive-mirror/08_Archive/README.md`
-
-### Spec Kit / SDD
-Mirrored engineering governance includes:
-- constitution
-- quality checklists and release-convergence gates
-- 000 master spec/plan/tasks
-- 001 R2 error-handling spec/clarify/plan/tasks/runtime gate/analysis
-- 011 Greenfield spec/plan/work-units/tasks/contracts
-- WU87–WU98 QA/evidence
-- WU99/WU100 runbooks/checklists/evidence templates
-- retained WU87–WU99 candidate/test artifacts exact-mirrored under `candidate/`
-
-Historical duplicate/revision files do not overwrite canonical material. Duplicate exact bytes may be deduplicated by content while provenance is retained.
-
-## MIG-004 — historical release evidence precedence
-**Status: RECONCILED**
-
-Control document: `docs/MIG-004_RELEASE_EVIDENCE_PRECEDENCE.md`.
-
-Historical RC3/WU99/WU100 documents remain audit evidence and must not be rewritten to pretend later events occurred inside those old files.
-
-Precedence rule:
-1. verified current runtime identity/exact runtime export answers what is live now;
-2. later dated verified release/certification evidence supersedes older preparation-state claims for current-state use;
-3. older `NOT_RUN`, preparation-only, or unknown-runtime files remain immutable historical snapshots;
-4. when chronology is unsupported, state must remain `RECONCILIATION_REQUIRED` rather than inferred.
-
-`drive-mirror/00_START_HERE/PROJECT_STATE.md` is explicitly classified in `docs/ARTIFACT_INTEGRITY_REGISTER.yaml` as `HISTORICAL_SNAPSHOT_ONLY`; current-state authority is `docs/STATE.yaml`.
-
-Known later WU99 execution evidence records:
+Known later WU99 aggregate evidence records:
 - 96/96 automated runtime PASS
 - 106/106 invocations complete
 - 15/15 failure injection PASS
-- protected R1 regression 10/10 PASS
+- R1 protected regression 10/10 PASS
 - manual semantic review complete
 - EN/AR/FR parity accepted
-- zero P0/P1 reported in the later certification layer
+- zero P0/P1 in later certification evidence
 
-`SPM_WU100_Production_Approval_Checklist_2026-08-21.md`, updated 2026-08-25, records later WU99 results, Lead/CRM adapter certification, clean RC3/static QA, rollback drill execution `2276`, and approved canary operational thresholds. Its still-unchecked release/canary items remain historical facts at that checkpoint and are not silently filled in.
+RC4.2 remains an `UNVERIFIED_HISTORICAL_REFERENCE` and cannot override independently verified RC4.3.3.
 
-Historical `NOT_RUN` ledgers/templates/runbooks remain verbatim as historical evidence; they are not rewritten to fabricate individual execution records.
+The fact that RC4.3.3 is live does not prove undocumented intermediate 5%/20%/50%/100% canary-stage history.
 
-### RC4.2 historical reference
-`SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json` remains an `UNVERIFIED_HISTORICAL_REFERENCE` because exact Drive-name/hash searches did not locate the underlying artifact. It must not override the independently verified RC4.3.3 current runtime/export identity.
+## Numbering and next phase
+Migration work used `MIG-*` identifiers and does not consume Phase 2 WU numbers.
 
-### Non-inference rule
-The fact that RC4.3.3 is live does not prove undocumented 5%/20%/50%/100% canary-stage execution history. Missing intermediate release evidence remains missing.
-
-## External runtime decision
-Live Google Sheets knowledge/workbook data remains external mutable runtime truth. GitHub contains governance/schema/reference material. Scheduled snapshots are optional policy work, not a prerequisite to pretend live data is static code.
-
-## Archive rule
-`08_Archive` remains `ARCHIVE_SECONDARY`. Historical transcripts/older exports do not override `docs/STATE.yaml`, approved specs, locked decisions, or verified current runtime evidence. A separate cold-archive export is required only if Drive itself will later be retired/deleted.
-
-## Numbering rule
-Authoritative Phase 2 Working Units remain:
+Authoritative Phase 2 backlog remains:
 - WU-101 Conversation Analytics
 - WU-102 Unanswered Question Queue
 - WU-103 Knowledge Maintenance Loop
@@ -174,14 +138,16 @@ Authoritative Phase 2 Working Units remain:
 - WU-109 Conversation Outcome KPIs
 - WU-110 Optimization Regression Pack
 
-Migration/bootstrap work uses `MIG-*` identifiers and must not consume WU-101.
+Cutover completion makes WU-101 eligible for planning, but no Working Unit starts automatically without an explicit work decision.
 
-## Remaining migration / cutover gates
-MIG-001, MIG-002, and MIG-003 are PASS/CLOSED. MIG-004 evidence precedence is reconciled. Before GitHub becomes the sole approved engineering source of truth:
-1. close MIG-004 after final acceptance check;
-2. review and integrate the remaining migration PR/branch chain without losing exact artifact history;
-3. confirm no unresolved source-authority, release-state, or WU-numbering conflict remains;
-4. confirm production auto-deploy remains disabled and the STAGING path remains the only automated n8n write path;
-5. owner explicitly approves GitHub engineering source-of-truth cutover.
+## Production control after cutover
+The approved path remains:
 
-Production auto-deploy remains disabled. No AI-driven production activation is authorized by this migration manifest.
+`GitHub → DEV/STAGING → validation/runtime tests → human approval → separate Production release process`
+
+The following remain false/unauthorized:
+- `production_auto_deploy`
+- GitHub-driven Production activation
+- direct AI → Production deployment
+
+Future Production changes continue to require explicit owner/release approval.
