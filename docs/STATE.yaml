@@ -1,16 +1,24 @@
 project: SPM Sales AI Agent
 repository: SuccessPathMentors/SPM-Sales-AI
-state_version: 1
-source_of_truth: github
+state_version: 2
+source_of_truth: MIGRATION_IN_PROGRESS
+engineering_target_source_of_truth: github
 runtime_target: n8n
 production_auto_deploy: false
 max_automated_repair_cycles: 2
 
+migration:
+  status: IN_PROGRESS
+  drive_archive_authority: true
+  github_cutover_approved: false
+  rule: GitHub becomes sole engineering source of truth only after migration manifest reconciliation, artifact identity verification, PR review, and owner approval.
+
 release:
-  current_mode: PRE_CANARY_FROZEN
+  current_mode: PRE_CANARY_BLOCKED
   production_activation: APPROVAL_REQUIRED
-  frozen_candidate: SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json
-  frozen_sha256: 46c27db16461ae82a7ab24facb1e65fd23ffa160eac53a950c7cd3d0a8739f7a
+  production_cutover_authorized: false
+  frozen_candidate_claim: SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json
+  frozen_candidate_verification: PENDING_DRIVE_IDENTITY_AND_CHECKSUM_RECONCILIATION
   rollback_baseline: ChatBotMSE v2 - R2.5 Release Candidate Stable Efficient
 
 baseline:
@@ -21,16 +29,6 @@ baseline:
     - Greenfield implementation sequence starts at WU-87.
 
 working_units:
-  WU-85:
-    status: HISTORICAL_RUNTIME_EVIDENCE
-    mutable: false
-    notes: Regression/red-team pack prepared; historical runtime evidence was previously pending.
-
-  WU-86:
-    status: HISTORICAL_CERTIFICATION_GATE
-    mutable: false
-    notes: Historical production certification/control input; retained as evidence.
-
   WU-87:
     name: Greenfield Architecture & Contracts
     status: BASELINED_COMPLETE
@@ -38,76 +36,102 @@ working_units:
 
   WU-88:
     name: 62-Intent Classifier & Routing
-    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    status: IMPLEMENTATION_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
 
   WU-89:
     name: Entity Extraction & Normalization
-    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
 
   WU-90:
     name: Durable Sales State & Journey
-    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
 
   WU-91:
     name: Knowledge Retrieval & Source Gates
-    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
 
   WU-92:
     name: Consultative Sales Agent Core
-    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
 
   WU-93:
     name: Pricing / Offers / Objections
-    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    status: PROTOTYPE_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
 
   WU-94:
     name: Trial / Scheduling Truth Layer
-    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    status: PROTOTYPE_COMPLETE_LIVE_ADAPTER_AND_RUNTIME_EVIDENCE_REQUIRED
     mutable: false
 
   WU-95:
     name: Deterministic Lead Conversion
-    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    status: PROTOTYPE_COMPLETE_REAL_WRITE_HANDOFF_RUNTIME_EVIDENCE_REQUIRED
     mutable: false
 
   WU-96:
     name: Nurture / Follow-Up / Opt-Out / Support Overrides
-    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    status: PROTOTYPE_COMPLETE_RUNTIME_ADAPTER_EVIDENCE_REQUIRED
     mutable: false
 
   WU-97:
     name: Reliability / Retries / Observability / Privacy / Security
-    status: BASELINED_STATIC_COMPLETE
+    status: PROTOTYPE_STATIC_PASS_RUNTIME_RECONCILIATION_REQUIRED
     mutable: false
 
   WU-98:
     name: Multilingual & Conversation Regression / Red-Team Expansion
-    status: BASELINED_OFFLINE_PASS_RUNTIME_REQUIRED
+    status: OFFLINE_PACK_COMPLETE_RUNTIME_EVIDENCE_RECONCILIATION_REQUIRED
     mutable: false
 
   WU-99:
     name: Full Runtime / E2E Certification
-    status: RUNTIME_EVIDENCE_GATE
+    status: RUNTIME_EXECUTION_COMPLETE_FINAL_EVIDENCE_CONSOLIDATION_PENDING
     mutable: false
-    notes: Prepared runbook exists. Treat full semantic runtime evidence as a separate certification gate unless evidence is attached.
+    evidence_summary:
+      automated_runtime: 96/96_PASS
+      failure_injection: 15/15_PASS
+      protected_r1_regression: 10/10_PASS
+      manual_semantic_remediation: CLOSED
+    blockers:
+      - evidence ledger and execution identifiers must be complete
+      - documented FI-003/FI-007/FI-008 behavioral method deviations require acceptance if owner approval is required
+      - runtime-testable SUT is TEST-only and cannot be promoted directly
 
   WU-100:
     name: Canary Release / Production Certification / Lock
-    status: PRE_CANARY_FROZEN_APPROVAL_REQUIRED
+    status: RELEASE_PACKAGE_COMPLETE_EXECUTION_BLOCKED
     mutable: false
-    targeted_regression: 6/6_PASS
-    production_activation: false
+    preparation_qa: 12/12_PASS
+    proposed_canary_profile: 5%->20%->50%->100%
+    proposed_canary_approved: false
+    blockers:
+      - clean immutable production RC not yet verified in migration
+      - rollback drill not yet reconciled as PASS evidence
+      - owner approval not recorded in migrated source
+      - operational latency/cost/error/volume/duration thresholds remain TBD
+      - canary and production cutover remain unauthorized
 
 future_work:
   numbering_starts_at: WU-101
   default_state: BACKLOG
-  rule: New changes after the frozen WU-100 candidate must be created as new Working Units or Change Requests; do not patch locked predecessors in place.
+  authoritative_backlog:
+    WU-101: Conversation Analytics
+    WU-102: Unanswered Question Queue
+    WU-103: Knowledge Maintenance Loop
+    WU-104: Short Query & Ambiguity UX
+    WU-105: Golden Intents Optimization
+    WU-106: Dialect & Language Coverage
+    WU-107: Human Handoff Adapter
+    WU-108: WhatsApp Staff Notification
+    WU-109: Conversation Outcome KPIs
+    WU-110: Optimization Regression Pack
+  rule: Do not start WU-101+ until Release 1 is completed through WU-100, frozen/certified, SHA recorded, and explicit production approval is complete.
 
 state_machine:
   normal:
@@ -130,7 +154,9 @@ orchestration:
     - affected workflow/node ownership does not overlap
     - shared contracts are frozen before worker execution
   next_action:
+    - complete Drive-to-GitHub authoritative artifact migration
+    - reconcile WU99 final evidence identifiers and documented method deviations
+    - verify exact frozen production RC identity and SHA before any release claim
     - inventory current n8n workflows and workflow IDs
-    - import/version the current frozen candidate in GitHub
-    - define staging deployment path
-    - create WU-101+ only from explicit new requirements or unresolved runtime/canary work
+    - define non-production staging deployment path
+    - keep production activation blocked until explicit owner approval
