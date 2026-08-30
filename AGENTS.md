@@ -16,6 +16,15 @@ Deliver bounded, testable changes to the Sales AI Agent without reopening approv
 - If a locked dependency must change, create a Change Request and stop the affected work.
 - An agent may move its own work only to `READY_FOR_REVIEW`; it may not self-approve or self-lock.
 
+## Historical evidence precedence
+- `docs/STATE.yaml` is the reconciled current-state authority during migration.
+- Files under `drive-mirror/**` that are snapshots, old runbooks, ledgers, preparation checklists, or archived exports are historical audit evidence unless a current control document explicitly promotes them.
+- Never use an older `NOT_RUN`, preparation-only, or unknown-runtime statement to override later dated verified evidence.
+- Never rewrite historical evidence to make it agree with a later event. Preserve the old artifact and record supersession only in current control documents.
+- Current runtime identity claims require verified runtime evidence and/or an exact verified runtime export.
+- If chronology or evidence precedence is unclear, set `RECONCILIATION_REQUIRED` instead of guessing.
+- Apply `docs/MIG-004_RELEASE_EVIDENCE_PRECEDENCE.md` when historical release records conflict.
+
 ## Scope rules
 - Implement only the assigned Working Unit.
 - Do not add speculative features, refactors, abstractions, or redesigns.
