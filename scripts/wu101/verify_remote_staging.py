@@ -15,6 +15,19 @@ ALLOWED_TURN = {
 EXPECTED_CONF = "={{ $json.wu101_analytics_event.confidence == null ? null : Number($json.wu101_analytics_event.confidence) }}"
 EXPECTED_DURATION = "={{ Number($json.wu101_analytics_event.duration_ms ?? 0) }}"
 EXPECTED_MEMORY = "={{ 'spm:staging:chat:' + $json.sessionId }}"
+BOOLEAN_FIELDS = (
+    'clarification_used',
+    'fallback_used',
+    'human_requested',
+    'lead_id_present',
+    'opt_out',
+    'degraded',
+    'pii_redacted',
+    'raw_message_logged',
+    'raw_session_logged',
+    'correlation_id_logged',
+    'secret_values_logged',
+)
 
 if not TARGET or not BASE or not KEY:
     raise SystemExit('missing required n8n readback environment')
@@ -39,6 +52,13 @@ cols = logger.get('parameters', {}).get('columns', {})
 vals = cols.get('value', {})
 schema = {f.get('id'): f for f in cols.get('schema', []) if isinstance(f, dict)}
 turn_schema_type = (schema.get('turn_index') or {}).get('type')
+boolean_observed = {
+    field: {
+        'mapping': vals.get(field),
+        'schema_type': (schema.get(field) or {}).get('type'),
+    }
+    for field in BOOLEAN_FIELDS
+}
 observed = {
     'workflow_id': wf.get('id'),
     'workflow_name': wf.get('name'),
@@ -49,6 +69,7 @@ observed = {
     'confidence': vals.get('confidence'),
     'duration_ms': vals.get('duration_ms'),
     'attemptToConvertTypes': cols.get('attemptToConvertTypes'),
+    'boolean_sink_fields': boolean_observed,
     'chat_memory_session_key': memory.get('parameters', {}).get('sessionKey'),
 }
 print(json.dumps(observed, indent=2, ensure_ascii=False))
@@ -66,6 +87,12 @@ if vals.get('duration_ms') != EXPECTED_DURATION:
     errors.append('duration_ms remote value mismatch')
 if cols.get('attemptToConvertTypes') is not True:
     errors.append('attemptToConvertTypes remote value mismatch')
+for field in BOOLEAN_FIELDS:
+    expected = f"={{ $json.wu101_analytics_event.{field} === true ? 'true' : 'false' }}"
+    if vals.get(field) != expected:
+        errors.append(f'{field} remote boolean sink mapping mismatch')
+    if (schema.get(field) or {}).get('type') != 'string':
+        errors.append(f'{field} remote sink schema is not string')
 if memory.get('parameters', {}).get('sessionKey') != EXPECTED_MEMORY:
     errors.append('Redis Chat Memory sessionKey remote value mismatch')
 
