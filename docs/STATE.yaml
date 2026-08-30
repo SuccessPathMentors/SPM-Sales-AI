@@ -1,6 +1,6 @@
 project: SPM Sales AI Agent
 repository: SuccessPathMentors/SPM-Sales-AI
-state_version: 5
+state_version: 6
 source_of_truth: MIGRATION_IN_PROGRESS
 engineering_target_source_of_truth: github
 runtime_target: n8n
@@ -11,7 +11,7 @@ migration:
   status: IN_PROGRESS
   drive_archive_authority: true
   github_cutover_approved: false
-  active_gate: MIG-003
+  active_gate: MIG-004
   rule: GitHub becomes sole engineering source of truth only after migration reconciliation, PR integration/review, and explicit owner cutover approval.
   tasks:
     MIG-001:
@@ -84,11 +84,30 @@ migration:
     MIG-003:
       issue: 7
       name: Add automated GitHub to n8n deployment path
-      status: READY_NON_PRODUCTION_ONLY
-      blocked_by: []
+      status: PASS
       first_release_scope: NON_PRODUCTION_ONLY
       production_activation_allowed: false
       prerequisites_passed: [MIG-001, MIG-002]
+      implementation_pr: 9
+      merge_commit: 7b10a4490e2668d254bef56355e7f96b4a05171f
+      api_smoke_run_id: 33326561623
+      rc4_3_3_dry_run_id: 33326906101
+      rc4_3_3_dry_run_artifact_id: 9736488268
+      staging_canary:
+        workflow_name: "[STAGING] MIG003_STAGING_CANARY"
+        workflow_id: BIDVhNCRbj9dvH1t
+        active: false
+        create_run_id: 33327383863
+        create_artifact_id: 9736620498
+        deterministic_update: PASS
+        deterministic_update_run_number: 5
+        credentials: 0
+        side_effect_nodes: 0
+      fail_closed_missing_target_run_id: 33328863250
+      production_workflow_protected: CMBMpxX5AqqK2UTn
+      production_write_allowed: false
+      production_publish_allowed: false
+      result: NONPROD_DEPLOYMENT_PATH_PROVEN
 
     MIG-004:
       issue: 8
@@ -246,11 +265,11 @@ orchestration:
   migration_execution_order:
     - MIG-001: PASS
     - MIG-002: PASS
-    - MIG-003: READY_NON_PRODUCTION_ONLY
+    - MIG-003: PASS
     - MIG-004: IN_PROGRESS
   next_action:
-    - close MIG-001 and MIG-002 issues after recording final evidence comments
-    - begin MIG-003 using a non-production-only deployment/import path
+    - continue MIG-004 historical release reconciliation without rewriting historical evidence
+    - reconcile remaining migration PR integration and cutover prerequisites
     - keep production auto-deploy disabled
-    - continue MIG-004 historical release reconciliation independently without rewriting historical evidence
-    - do not approve GitHub source-of-truth cutover until PR integration/review and explicit owner approval
+    - prepare explicit owner review for GitHub source-of-truth cutover only after MIG-004 and migration PR reconciliation are complete
+    - do not start WU-101+ until release-history and source-of-truth cutover prerequisites are formally reconciled and approved
