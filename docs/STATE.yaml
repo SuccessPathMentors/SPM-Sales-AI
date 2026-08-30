@@ -1,0 +1,136 @@
+project: SPM Sales AI Agent
+repository: SuccessPathMentors/SPM-Sales-AI
+state_version: 1
+source_of_truth: github
+runtime_target: n8n
+production_auto_deploy: false
+max_automated_repair_cycles: 2
+
+release:
+  current_mode: PRE_CANARY_FROZEN
+  production_activation: APPROVAL_REQUIRED
+  frozen_candidate: SPM_E2E_Sales_Agent_RC4_2_FINAL_FROZEN_2026-08-26.json
+  frozen_sha256: 46c27db16461ae82a7ab24facb1e65fd23ffa160eac53a950c7cd3d0a8739f7a
+  rollback_baseline: ChatBotMSE v2 - R2.5 Release Candidate Stable Efficient
+
+baseline:
+  historical_locked_through: WU-84
+  notes:
+    - WU-01 through WU-84 are protected historical predecessors and must not be silently reopened.
+    - WU-85/WU-86 are retained as historical regression/certification evidence.
+    - Greenfield implementation sequence starts at WU-87.
+
+working_units:
+  WU-85:
+    status: HISTORICAL_RUNTIME_EVIDENCE
+    mutable: false
+    notes: Regression/red-team pack prepared; historical runtime evidence was previously pending.
+
+  WU-86:
+    status: HISTORICAL_CERTIFICATION_GATE
+    mutable: false
+    notes: Historical production certification/control input; retained as evidence.
+
+  WU-87:
+    name: Greenfield Architecture & Contracts
+    status: BASELINED_COMPLETE
+    mutable: false
+
+  WU-88:
+    name: 62-Intent Classifier & Routing
+    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    mutable: false
+
+  WU-89:
+    name: Entity Extraction & Normalization
+    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    mutable: false
+
+  WU-90:
+    name: Durable Sales State & Journey
+    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    mutable: false
+
+  WU-91:
+    name: Knowledge Retrieval & Source Gates
+    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    mutable: false
+
+  WU-92:
+    name: Consultative Sales Agent Core
+    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    mutable: false
+
+  WU-93:
+    name: Pricing / Offers / Objections
+    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    mutable: false
+
+  WU-94:
+    name: Trial / Scheduling Truth Layer
+    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    mutable: false
+
+  WU-95:
+    name: Deterministic Lead Conversion
+    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    mutable: false
+
+  WU-96:
+    name: Nurture / Follow-Up / Opt-Out / Support Overrides
+    status: BASELINED_STATIC_COMPLETE_RUNTIME_EVIDENCE_REQUIRED
+    mutable: false
+
+  WU-97:
+    name: Reliability / Retries / Observability / Privacy / Security
+    status: BASELINED_STATIC_COMPLETE
+    mutable: false
+
+  WU-98:
+    name: Multilingual & Conversation Regression / Red-Team Expansion
+    status: BASELINED_OFFLINE_PASS_RUNTIME_REQUIRED
+    mutable: false
+
+  WU-99:
+    name: Full Runtime / E2E Certification
+    status: RUNTIME_EVIDENCE_GATE
+    mutable: false
+    notes: Prepared runbook exists. Treat full semantic runtime evidence as a separate certification gate unless evidence is attached.
+
+  WU-100:
+    name: Canary Release / Production Certification / Lock
+    status: PRE_CANARY_FROZEN_APPROVAL_REQUIRED
+    mutable: false
+    targeted_regression: 6/6_PASS
+    production_activation: false
+
+future_work:
+  numbering_starts_at: WU-101
+  default_state: BACKLOG
+  rule: New changes after the frozen WU-100 candidate must be created as new Working Units or Change Requests; do not patch locked predecessors in place.
+
+state_machine:
+  normal:
+    - BACKLOG
+    - READY
+    - IN_PROGRESS
+    - READY_FOR_REVIEW
+    - REVIEW
+    - READY_FOR_TEST
+    - TESTING
+    - APPROVAL
+    - LOCKED
+  side_states:
+    - BLOCKED
+    - CHANGE_REQUEST
+
+orchestration:
+  parallelize_only_when:
+    - dependencies are LOCKED or BASELINED
+    - affected workflow/node ownership does not overlap
+    - shared contracts are frozen before worker execution
+  next_action:
+    - inventory current n8n workflows and workflow IDs
+    - import/version the current frozen candidate in GitHub
+    - define staging deployment path
+    - create WU-101+ only from explicit new requirements or unresolved runtime/canary work
