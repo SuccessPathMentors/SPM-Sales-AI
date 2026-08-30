@@ -1,0 +1,17 @@
+﻿metric,hard_stop,threshold/status,authority,action
+P0/P1 defects,YES,0,release gate,rollback immediately
+false lead success,YES,0,greenfield invariant,rollback immediately
+duplicate confirmed lead,YES,0,R1 protected outcome,rollback immediately
+wrong lead/session correction,YES,0,R1 protected outcome,rollback immediately
+opt-out promotional violation,YES,0,greenfield invariant,rollback immediately
+false availability/booking success,YES,0,greenfield invariant,rollback immediately
+booking without success + booking_id,YES,0,greenfield invariant,rollback immediately
+PII/secret leak,YES,0,privacy/security gate,rollback immediately
+test traffic causing production write,YES,0,release safety,rollback immediately
+cross-student data corruption,YES,0,multi-student invariant,rollback immediately
+overall execution error rate,NO,TBD,owner/ops approval required,pause advancement if exceeded
+p95 response latency,NO,TBD,owner/ops approval required,pause advancement if exceeded
+model cost/token budget,NO,TBD,owner/ops approval required,pause advancement if exceeded
+handoff failure rate,NO,TBD,owner/ops approval required,pause advancement if exceeded
+state persistence failure rate,NO,TBD,owner/ops approval required,pause advancement if exceeded
+EN/AR/FR parity exceptions,YES for blocking semantic/business differences,0 blocking,release gate,rollback/pause
