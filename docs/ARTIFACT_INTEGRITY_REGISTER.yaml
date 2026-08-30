@@ -1,0 +1,55 @@
+schema: SPM_ARTIFACT_INTEGRITY_REGISTER_V1
+updated: 2026-08-30
+status: ACTIVE_MIGRATION
+
+policy:
+  raw_provider_export_only: true
+  reconstruct_from_chat_or_screenshot: false
+  verify_sha256_before_commit: true
+  verify_sha256_after_commit: true
+  secret_scan_required: true
+  allow_credential_references_only: true
+  allow_secret_values: false
+
+artifacts:
+  project_state_historical_snapshot:
+    source: google_drive
+    drive_id: 1R7nQEZstCUdHtx3LmH01_O2oHNMpqtZR
+    file_name: PROJECT_STATE.md
+    bytes: 42464
+    sha256: 7bb8f8ba4388e78585610232ff46e1bdc14d999db5e8019b98e4d4d711ded0a9
+    json_parse: not_applicable
+    preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
+    github_status: PENDING_EXACT_COMMIT
+    authority: HISTORICAL_SNAPSHOT_ONLY
+    current_state_authority: docs/STATE.yaml
+
+  changelog_historical:
+    source: google_drive
+    drive_id: 1frxBHSbh2sk6qniuDyKXfh9o0Qpb5vBz
+    file_name: CHANGELOG.md
+    bytes: 22376
+    sha256: 3508df7c63582059f94f01dcefdacacf43620fe7dda0fdb5cc68075d25346eb6
+    json_parse: not_applicable
+    preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
+    github_status: PENDING_EXACT_COMMIT
+    authority: HISTORICAL_CHANGE_EVIDENCE
+
+  wu99_runtime_testable_sut:
+    source: google_drive
+    drive_id: 18fONdO3ZCs7z0QALTrfVftbz-VpKnTTH
+    file_name: SPM_E2E_Sales_Agent_Greenfield_WU99_Runtime_Testable_2026-08-21.json
+    bytes: 236748
+    sha256: a74b6443151eca02d3cc0b28126be96344a68326a389f6ac2951f54bcce0c6fc
+    expected_sha256: a74b6443151eca02d3cc0b28126be96344a68326a389f6ac2951f54bcce0c6fc
+    checksum_match: true
+    json_parse: PASS
+    preliminary_secret_scan: PASS_NO_OBVIOUS_MATCHES
+    github_status: PENDING_EXACT_COMMIT
+    runtime_role: TEST_ONLY
+    production_promotion_allowed: false
+
+notes:
+  - Preliminary secret scan checks common API-key, bearer-token, private-key, and populated secret/password-field patterns. It is not a substitute for repository secret scanning or human review.
+  - Historical state artifacts are immutable audit evidence and must not override later reconciled current-state evidence.
+  - Exact commit is incomplete until the GitHub copy is retrieved and its SHA-256 is verified against this register.
