@@ -1,0 +1,419 @@
+{
+  "name": "SPM E2E Sales Agent — Greenfield WU87 Skeleton",
+  "nodes": [
+    {
+      "parameters": {
+        "public": true,
+        "mode": "webhook",
+        "options": {
+          "allowedOrigins": "https://successpathmentors.net",
+          "responseMode": "lastNode"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.chatTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -2200,
+        0
+      ],
+      "id": "75bb1c75-7a98-5e1a-8f51-4015898021a5",
+      "name": "Greenfield Chat Trigger",
+      "webhookId": "8c88c9a6-6fa2-53e0-ae4f-94c90a322ff8"
+    },
+    {
+      "parameters": {
+        "jsCode": "const input = $input.first().json || {};\nconst raw = String(input.chatInput ?? input.message ?? '').trim();\nconst sessionId = String(input.sessionId ?? input.session_id ?? '').trim();\nconst meta = (input.metadata && typeof input.metadata === 'object') ? input.metadata : {};\nconst explicitTest = input.spm_test_mode === true || meta.spm_test_mode === true;\nconst syntheticPrefix = /^(test_|wu87_|synthetic_)/i.test(sessionId);\nconst testMode = Boolean(explicitTest || syntheticPrefix);\nconst now = new Date().toISOString();\nconst correlationId = String(input.correlation_id ?? `wu87-${Date.now()}-${Math.random().toString(36).slice(2,10)}`);\nconst safeSession = sessionId || `anonymous-${correlationId}`;\nreturn [{json:{\n  schema_version:'SPM_E2E_V1',\n  workflow_release:'WU87_GREENFIELD_SKELETON',\n  workflow_mode:'TEST_ONLY',\n  correlation_id:correlationId,\n  session_id:safeSession,\n  sales_state_key:`spm:sales:${safeSession}`,\n  received_at:now,\n  started_ms:Date.now(),\n  test_mode:testMode,\n  synthetic_session:syntheticPrefix,\n  channel:'website_chat',\n  language_hint:String(input.language ?? input.locale ?? meta.language ?? '').toLowerCase() || null,\n  message:{raw, length:raw.length},\n  client_context:{origin:meta.origin ?? null},\n  contract_status:'SESSION_ENVELOPE_OK'\n}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1950,
+        0
+      ],
+      "id": "ed0f7315-4c99-5c23-bc13-f278df68f77c",
+      "name": "Build Canonical Session Envelope"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "1dae5e8e-9233-599e-8dec-cf38127053d6",
+              "leftValue": "={{ $json.test_mode }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -1700,
+        0
+      ],
+      "id": "b988f99a-3432-5854-b6ba-98cfb67e107b",
+      "name": "Is Greenfield Test Session?"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "588971e1-6c28-5044-b13c-f43e8bbe106c",
+              "name": "output",
+              "value": "WU87 Greenfield candidate is TEST-ONLY. Production traffic is blocked; no business action was executed.",
+              "type": "string"
+            },
+            {
+              "id": "e8e7239b-b15a-5869-ab0d-628542874010",
+              "name": "status",
+              "value": "BLOCKED_NON_TEST",
+              "type": "string"
+            },
+            {
+              "id": "d223ba88-af8b-5af9-b533-7fa682ec85ff",
+              "name": "correlation_id",
+              "value": "={{ $json.correlation_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        -1450,
+        260
+      ],
+      "id": "a0a44c73-daad-5381-b529-1f7f85101bad",
+      "name": "Block Non-Test Execution"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "propertyName": "sales_state_raw",
+        "key": "={{ $json.sales_state_key }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1450,
+        -120
+      ],
+      "id": "e5fda4a0-f826-5218-9629-d4826a978467",
+      "name": "Load Sales State [DISABLED UNTIL WU90]",
+      "disabled": true,
+      "notesInFlow": true,
+      "notes": "WU87 architecture placeholder only. Disabled: no Redis credential or runtime dependency until WU90."
+    },
+    {
+      "parameters": {
+        "jsCode": "const j = $input.first().json || {};\nconst defaults = {\n  schema_version:'SPM_SALES_STATE_V1',\n  session_id:j.session_id,\n  lead_id:null,\n  preferred_language:j.language_hint,\n  journey:{stage:'discovery',previous_stage:null,next_best_action:'understand_need',override:null},\n  classifier:{spm_intent:null,secondary_spm_intent:null,confidence:0,threshold:0.85,ambiguous:true,source_gate:null,risk_tier:null,sales_stage:null},\n  entities:{global:{},students:[]},\n  commercial:{package:null,currency:null,authorized_offer:false},\n  trial:{status:'not_started'},\n  scheduling:{timezone:null,availability_checked:false,booking_status:'not_started',booking_id:null},\n  conversion:{registration_status:'not_started',consent:false,lead_write_status:'not_started'},\n  support:{handoff_requested:false,handoff_status:'not_started',complaint:false},\n  nurture:{opt_out:false,follow_up_eligible:false},\n  recovery:{state:null,last_error_code:null},\n  flags:{test_mode:Boolean(j.test_mode),synthetic_session:Boolean(j.synthetic_session)},\n  updated_at:new Date().toISOString()\n};\nfunction merge(base, extra){\n  if (!extra || typeof extra !== 'object' || Array.isArray(extra)) return base;\n  const out={...base};\n  for (const [k,v] of Object.entries(extra)) {\n    if (v === undefined) continue;\n    if (v && typeof v === 'object' && !Array.isArray(v) && base[k] && typeof base[k] === 'object' && !Array.isArray(base[k])) out[k]=merge(base[k],v);\n    else out[k]=v;\n  }\n  return out;\n}\nlet existing={};\nif (j.sales_state_raw) {\n  try { existing = typeof j.sales_state_raw === 'string' ? JSON.parse(j.sales_state_raw) : j.sales_state_raw; } catch { existing={}; }\n}\nconst state=merge(defaults,existing);\nstate.session_id=j.session_id;\nstate.flags={...(state.flags||{}),test_mode:Boolean(j.test_mode),synthetic_session:Boolean(j.synthetic_session)};\nstate.updated_at=new Date().toISOString();\nreturn [{json:{...j,sales_state:state,sales_state_contract:'SPM_SALES_STATE_V1',state_merge_mode:'NON_DESTRUCTIVE'}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1200,
+        -120
+      ],
+      "id": "82c29d54-6391-5722-9a4c-5a4061041850",
+      "name": "Initialize + Merge Sales State Contract"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst contract={\n  schema:'SPM_CLASSIFIER_OUTPUT_V1',\n  required:['spm_intent','confidence','threshold','ambiguous','source_gate','risk_tier','sales_stage'],\n  optional:['secondary_spm_intent','required_entities','language','rationale_code'],\n  confidence_range:[0,1],\n  default_threshold:0.85,\n  low_confidence_rule:'NO_IRREVERSIBLE_ACTION',\n  intent_catalog:'SPM_V2_62_INTENTS'\n};\nconst classification={spm_intent:null,secondary_spm_intent:null,confidence:0,threshold:0.85,ambiguous:true,required_entities:[],source_gate:null,risk_tier:null,sales_stage:null,language:j.language_hint,rationale_code:'WU88_NOT_IMPLEMENTED'};\nreturn [{json:{...j,classifier_contract:contract,classification}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -950,
+        -120
+      ],
+      "id": "788adff2-a39f-5d84-b36e-481d90fb5f60",
+      "name": "Classifier Output Contract [WU88 STUB]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst contract={\n schema:'SPM_ENTITY_OUTPUT_V1',\n record_shape:{entity:'string',raw:'any',canonical:'any',confidence:'0..1',source:'customer|system|live_source',status:'valid|needs_validation|rejected'},\n privacy:'PII must not be copied into telemetry',\n multi_student:'students[] are separate profiles; never merge grades/subjects across children',\n correction_precedence:'latest explicit customer correction wins unless a live/system source owns the field',\n critical_rules:{timezone:'never derive from country alone',booking_id:'system-only; required for booking confirmation',opt_out:'true is sticky until approved opt-in'}\n};\nreturn [{json:{...j,entity_contract:contract,entity_extraction:{entities:[],student_profiles:[],status:'WU89_NOT_IMPLEMENTED'}}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -700,
+        -120
+      ],
+      "id": "6e16303e-b357-50f5-a54b-604c19fd2e5b",
+      "name": "Entity + Normalization Contract [WU89 STUB]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst state=j.sales_state||{};\nconst contract={schema:'SPM_NEXT_BEST_ACTION_V1',stages:['none','discovery','need','consideration','pricing','trial','scheduling','conversion','objection','nurturing','support','recovery'],override_precedence:['opt_out','support','human_handoff','recovery','sales_journey'],question_policy:'ask one purposeful missing-field question; never re-ask known data'};\nconst decision={stage:state?.journey?.stage||'discovery',goal:'understand_customer_need',next_best_action:'understand_need',required_missing_fields:[],support_override:false,opt_out_override:Boolean(state?.nurture?.opt_out),handoff_override:Boolean(state?.support?.handoff_requested),status:'WU90_NOT_IMPLEMENTED'};\nreturn [{json:{...j,journey_contract:contract,journey_decision:decision}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -450,
+        -120
+      ],
+      "id": "42636fd0-eb1e-550e-9f92-dd4e2c4e2359",
+      "name": "Journey Stage + Next Best Action Contract [WU90 STUB]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst allowed=['APPROVED_KB_OR_LOGIC','APPROVED_CURRICULUM_SOURCE','PACKAGES_LIVE_CONFIG','AUTHORIZED_OFFER_REQUIRED','MARKET_PAYMENT_CONFIG','PAYMENT_LIVE','POLICY_AND_LIVE_STATE','VERIFIED_TEACHER_OR_POLICY','SCHEDULING_LIVE','CRM_VALIDATION'];\nconst gate=j.classification?.source_gate||null;\nconst result={gate,allowed_gates:allowed,can_answer:false,can_execute:false,source_refs:[],reason_code:gate?'WU91_SOURCE_NOT_CONNECTED':'CLASSIFICATION_NOT_READY',status:'WU91_NOT_IMPLEMENTED'};\nreturn [{json:{...j,source_gate_contract:{schema:'SPM_SOURCE_GATE_V1',truth_rule:'commercial/operational facts require approved or live source; unsupported claims are blocked'},source_gate_result:result}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        -120
+      ],
+      "id": "38b21fb5-f7ae-59f3-92a7-4661728ff7dd",
+      "name": "Source + Tool Gate Contract [WU91 STUB]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst contract={\n schema:'SPM_SALES_AGENT_OUTPUT_V1',\n role:'consultative_sales_agent_not_faq_bot',\n fields:['answer_text','purpose','recommendation','purposeful_question','proposed_action','action_requires_gateway','claims_source_refs','handoff_requested','stop_nurture'],\n behavior:['answer_first','acknowledge_context','ask_one_purposeful_question','do_not_repeat_known_fields','no_pressure','no_unsupported_promise'],\n hard_boundary:'Agent may propose actions but cannot directly perform irreversible business actions.'\n};\nconst output={answer_text:'WU87 architecture test reached the Sales Agent contract. The sales model is intentionally not connected yet.',purpose:'architecture_test',recommendation:null,purposeful_question:null,proposed_action:'none',action_requires_gateway:false,claims_source_refs:[],handoff_requested:false,stop_nurture:false,status:'WU92_NOT_IMPLEMENTED'};\nreturn [{json:{...j,sales_agent_contract:contract,sales_agent_output:output}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        50,
+        -120
+      ],
+      "id": "06fd7adc-ea07-567b-9f15-72586225f948",
+      "name": "Sales Agent Structured Output Contract [WU92 STUB]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst requested=String(j.sales_agent_output?.proposed_action||'none');\nconst irreversible=['lead_upsert','booking_create','booking_change','payment_action','human_handoff_create','contact_update','opt_out_write'];\nconst result={requested_action:requested,executed:false,status:'NOOP_WU87',business_reference:null,reason_code:'ACTION_GATEWAY_SKELETON_ONLY',irreversible_action:false};\nif (irreversible.includes(requested)) result.irreversible_action=true;\nreturn [{json:{...j,action_gateway_contract:{schema:'SPM_ACTION_GATEWAY_V1',rule:'all irreversible actions require deterministic validation + explicit tool success before success may be reported',allowed_in_wu87:['none']},action_result:result}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        300,
+        -120
+      ],
+      "id": "7ecc8647-e191-556f-9b34-e912481086f8",
+      "name": "Deterministic Action Gateway [NO WRITES]"
+    },
+    {
+      "parameters": {
+        "jsCode": "const j=$input.first().json;\nconst duration=Math.max(0,Date.now()-Number(j.started_ms||Date.now()));\nconst telemetry={schema_version:'SPM_TELEMETRY_V1',timestamp:new Date().toISOString(),correlation_id:j.correlation_id,session_id:j.session_id,workflow_release:j.workflow_release,test_mode:Boolean(j.test_mode),intent:j.classification?.spm_intent||null,confidence:j.classification?.confidence??null,journey_stage:j.journey_decision?.stage||null,source_gate:j.source_gate_result?.gate||null,proposed_action:j.sales_agent_output?.proposed_action||null,action_status:j.action_result?.status||null,action_executed:Boolean(j.action_result?.executed),duration_ms:duration,pii_redacted:true};\nreturn [{json:{...j,telemetry}}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        550,
+        -120
+      ],
+      "id": "443af9d2-efbc-5711-b410-ebaa4dadb747",
+      "name": "Build Telemetry Envelope"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b552c7c6-0a9d-579b-85df-01cf945e96ac",
+              "name": "output",
+              "value": "={{ $json.sales_agent_output.answer_text }}",
+              "type": "string"
+            },
+            {
+              "id": "b540ed2d-d362-5f24-a97c-313b398fee1b",
+              "name": "status",
+              "value": "WU87_ARCHITECTURE_PASS_THROUGH",
+              "type": "string"
+            },
+            {
+              "id": "539cb35f-cf8a-5376-b13a-993eff60c816",
+              "name": "correlation_id",
+              "value": "={{ $json.correlation_id }}",
+              "type": "string"
+            },
+            {
+              "id": "94fcad79-fdf1-5838-b91d-236d83075417",
+              "name": "action_executed",
+              "value": "={{ $json.action_result.executed }}",
+              "type": "boolean"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.5,
+      "position": [
+        800,
+        -120
+      ],
+      "id": "7b51835d-5528-5715-bcc2-4fbd96858acc",
+      "name": "WU87 Test Response"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Greenfield Chat Trigger": {
+      "main": [
+        [
+          {
+            "node": "Build Canonical Session Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Canonical Session Envelope": {
+      "main": [
+        [
+          {
+            "node": "Is Greenfield Test Session?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Greenfield Test Session?": {
+      "main": [
+        [
+          {
+            "node": "Load Sales State [DISABLED UNTIL WU90]",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Block Non-Test Execution",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Sales State [DISABLED UNTIL WU90]": {
+      "main": [
+        [
+          {
+            "node": "Initialize + Merge Sales State Contract",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Initialize + Merge Sales State Contract": {
+      "main": [
+        [
+          {
+            "node": "Classifier Output Contract [WU88 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classifier Output Contract [WU88 STUB]": {
+      "main": [
+        [
+          {
+            "node": "Entity + Normalization Contract [WU89 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Entity + Normalization Contract [WU89 STUB]": {
+      "main": [
+        [
+          {
+            "node": "Journey Stage + Next Best Action Contract [WU90 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Journey Stage + Next Best Action Contract [WU90 STUB]": {
+      "main": [
+        [
+          {
+            "node": "Source + Tool Gate Contract [WU91 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Source + Tool Gate Contract [WU91 STUB]": {
+      "main": [
+        [
+          {
+            "node": "Sales Agent Structured Output Contract [WU92 STUB]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sales Agent Structured Output Contract [WU92 STUB]": {
+      "main": [
+        [
+          {
+            "node": "Deterministic Action Gateway [NO WRITES]",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Deterministic Action Gateway [NO WRITES]": {
+      "main": [
+        [
+          {
+            "node": "Build Telemetry Envelope",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Telemetry Envelope": {
+      "main": [
+        [
+          {
+            "node": "WU87 Test Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false
+  },
+  "nodeGroups": [],
+  "tags": []
+}

@@ -1,0 +1,603 @@
+{
+  "name": "Validated Human Handoff",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "session_id"
+            },
+            {
+              "name": "parent_name"
+            },
+            {
+              "name": "student_name"
+            },
+            {
+              "name": "phone"
+            },
+            {
+              "name": "email"
+            },
+            {
+              "name": "country"
+            },
+            {
+              "name": "city"
+            },
+            {
+              "name": "timezone"
+            },
+            {
+              "name": "subject"
+            },
+            {
+              "name": "grade"
+            },
+            {
+              "name": "preferred_language"
+            },
+            {
+              "name": "consent_to_contact",
+              "type": "boolean"
+            },
+            {
+              "name": "confirmed",
+              "type": "boolean"
+            },
+            {
+              "name": "last_summary"
+            },
+            {
+              "name": "request_type"
+            },
+            {
+              "name": "confirmation_message"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "40956706-fade-4519-98b3-fac8ab1461ed",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = $input.first()?.json ?? {};\n\nfunction clean(value) {\n  return String(value ?? '')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nfunction canonical(value) {\n  return clean(value)\n    .normalize('NFKD')\n    .replace(/\\p{M}/gu, '')\n    .replace(/[إأآٱ]/g, 'ا')\n    .replace(/ى/g, 'ي')\n    .replace(/ة/g, 'ه')\n    .replace(/ؤ/g, 'و')\n    .replace(/ئ/g, 'ي')\n    .toLowerCase()\n    .replace(/[^\\p{L}\\p{N}\\s]/gu, ' ')\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nfunction toBoolean(value) {\n  if (value === true) return true;\n\n  const normalized = canonical(value);\n\n  return [\n    'true',\n    'yes',\n    'oui',\n    'نعم',\n    'اوافق',\n    'موافق'\n  ].includes(normalized);\n}\n\nfunction isUuid(value) {\n  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i\n    .test(clean(value));\n}\n\nfunction isFullName(value) {\n  const text = clean(value);\n\n  if (\n    text.length < 3 ||\n    text.length > 100 ||\n    isUuid(text) ||\n    !/\\p{L}/u.test(text)\n  ) {\n    return false;\n  }\n\n  const words = text\n    .split(/\\s+/)\n    .filter(word => /\\p{L}{2,}/u.test(word));\n\n  return words.length >= 2;\n}\n\nfunction isNormalText(value, min = 2, max = 120) {\n  const text = clean(value);\n\n  return (\n    text.length >= min &&\n    text.length <= max &&\n    /\\p{L}/u.test(text) &&\n    !isUuid(text)\n  );\n}\n\nfunction isValidEmail(value) {\n  const email = clean(value).toLowerCase();\n\n  if (\n    !email ||\n    email.includes(' ') ||\n    email.startsWith('.') ||\n    email.endsWith('.') ||\n    email.includes('..')\n  ) {\n    return false;\n  }\n\n  if ((email.match(/@/g) || []).length !== 1) {\n    return false;\n  }\n\n  const parts = email.split('@');\n\n  if (parts.length !== 2) {\n    return false;\n  }\n\n  const [localPart, domain] = parts;\n\n  if (\n    !localPart ||\n    !domain ||\n    localPart.startsWith('.') ||\n    localPart.endsWith('.')\n  ) {\n    return false;\n  }\n\n  const basicPattern =\n    /^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$/;\n\n  if (!basicPattern.test(email)) {\n    return false;\n  }\n\n  const domainParts = domain.split('.');\n\n  return domainParts.every(part => {\n    return (\n      part.length > 0 &&\n      !part.startsWith('-') &&\n      !part.endsWith('-')\n    );\n  });\n}\n\nfunction isValidPhone(value) {\n  const phone = clean(value);\n  const digits = phone.replace(/\\D/g, '');\n\n  if (digits.length < 8 || digits.length > 15) {\n    return false;\n  }\n\n  // Reject obviously fake repeated numbers.\n  if (/^(\\d)\\1+$/.test(digits)) {\n    return false;\n  }\n\n  return /^[+()\\d\\s.-]+$/.test(phone);\n}\n\nfunction isValidTimezone(value) {\n  const timezone = clean(value);\n\n  return (\n    timezone === 'UTC' ||\n    timezone === 'GMT' ||\n    /^[A-Za-z_]+(?:\\/[A-Za-z0-9_+\\-]+)+$/.test(timezone)\n  );\n}\n\nfunction safeSheetText(value) {\n  const text = clean(value);\n\n  // Prevent spreadsheet formula injection.\n  if (/^[=+\\-@]/.test(text)) {\n    return `'${text}`;\n  }\n\n  return text;\n}\n\nconst languageMap = new Map([\n  ['ar', 'Arabic'],\n  ['arabic', 'Arabic'],\n  ['العربيه', 'Arabic'],\n\n  ['en', 'English'],\n  ['english', 'English'],\n  ['الانجليزيه', 'English'],\n\n  ['fr', 'French'],\n  ['french', 'French'],\n  ['francais', 'French'],\n  ['الفرنسيه', 'French']\n]);\n\nconst requestTypeMap = new Map([\n  ['free trial', 'FREE_TRIAL'],\n  ['trial', 'FREE_TRIAL'],\n  ['free trial lesson', 'FREE_TRIAL'],\n  ['حصه تجريبيه', 'FREE_TRIAL'],\n  ['جلسه تجريبيه', 'FREE_TRIAL'],\n\n  ['consultation', 'CONSULTATION'],\n  ['استشاره', 'CONSULTATION'],\n\n  ['callback', 'CALLBACK'],\n  ['call back', 'CALLBACK'],\n  ['مكالمه', 'CALLBACK'],\n  ['اتصال', 'CALLBACK'],\n\n  ['registration', 'ENROLLMENT'],\n  ['enrollment', 'ENROLLMENT'],\n  ['تسجيل', 'ENROLLMENT'],\n  ['اشتراك', 'ENROLLMENT'],\n\n  ['human contact', 'HUMAN_CONTACT'],\n  ['human handoff', 'HUMAN_CONTACT'],\n  ['التواصل مع الفريق', 'HUMAN_CONTACT']\n]);\n\nconst acceptedConfirmations = new Set([\n  canonical(\n    'أؤكد صحة البيانات وأوافق على مشاركتها والتواصل معي'\n  ),\n  canonical(\n    'I confirm the details are correct and consent to sharing them and being contacted'\n  ),\n  canonical(\n    \"Je confirme que les informations sont correctes et j'accepte de les partager et d'être contacté\"\n  ),\n  canonical(\n    \"Je confirme que les informations sont correctes et j'accepte de les partager et d'être contactée\"\n  )\n]);\n\nconst sessionId = clean(raw.session_id);\nconst parentName = clean(raw.parent_name);\nconst studentName = clean(raw.student_name);\nconst phone = clean(raw.phone);\nconst email = clean(raw.email).toLowerCase();\nconst country = clean(raw.country);\nconst city = clean(raw.city);\nconst timezone = clean(raw.timezone);\nconst subject = clean(raw.subject);\nconst grade = clean(raw.grade);\nconst lastSummary = clean(raw.last_summary);\n\nconst preferredLanguage =\n  languageMap.get(canonical(raw.preferred_language)) || '';\n\nconst requestType =\n  requestTypeMap.get(canonical(raw.request_type)) || '';\n\nconst consentGiven =\n  toBoolean(raw.consent_to_contact);\n\nconst confirmed =\n  toBoolean(raw.confirmed);\n\nconst confirmationMessage =\n  canonical(raw.confirmation_message);\n\nconst naturalConfirmationPattern =\n  /^(نعم|اجل|اوافق|موافق|اوكد|تم التاكيد|البيانات صحيحه|yes|i agree|i confirm|confirmed|oui|j accepte|je confirme)(\\s|$)/;\n\nconst explicitFinalConfirmation =\n  acceptedConfirmations.has(confirmationMessage) ||\n  (\n    consentGiven &&\n    confirmed &&\n    naturalConfirmationPattern.test(\n      confirmationMessage\n    )\n  );\n\nconst validationErrors = [];\n\nfunction addError(field, code) {\n  validationErrors.push({\n    field,\n    code\n  });\n}\n\nif (\n  !sessionId ||\n  sessionId.length < 8 ||\n  sessionId.length > 150\n) {\n  addError('session_id', 'invalid_session_id');\n}\n\nif (!isFullName(parentName)) {\n  addError('parent_name', 'invalid_full_name');\n}\n\nif (!isFullName(studentName)) {\n  addError('student_name', 'invalid_full_name');\n}\n\nif (!isValidPhone(phone)) {\n  addError('phone', 'invalid_phone');\n}\n\nif (!isValidEmail(email)) {\n  addError('email', 'invalid_email');\n}\n\nif (!isNormalText(country)) {\n  addError('country', 'invalid_country');\n}\n\nif (!isNormalText(city)) {\n  addError('city', 'invalid_city');\n}\n\nif (!isValidTimezone(timezone)) {\n  addError('timezone', 'invalid_timezone');\n}\n\nif (!isNormalText(subject)) {\n  addError('subject', 'invalid_subject');\n}\n\nif (!isNormalText(grade, 1, 80)) {\n  addError('grade', 'invalid_grade');\n}\n\nif (!preferredLanguage) {\n  addError(\n    'preferred_language',\n    'unsupported_preferred_language'\n  );\n}\n\nif (!requestType) {\n  addError('request_type', 'unsupported_request_type');\n}\n\nif (\n  lastSummary.length < 10 ||\n  lastSummary.length > 500\n) {\n  addError('last_summary', 'invalid_last_summary');\n}\n\nif (!consentGiven) {\n  addError(\n    'consent_to_contact',\n    'explicit_consent_required'\n  );\n}\n\nif (!confirmed) {\n  addError(\n    'confirmed',\n    'final_confirmation_required'\n  );\n}\n\nif (!explicitFinalConfirmation) {\n  addError(\n    'confirmation_message',\n    'confirmation_phrase_not_verified'\n  );\n}\n\nconst now = new Date();\nconst createdAt = now.toISOString();\nconst followUpAt =\n  new Date(now.getTime() + 60 * 60 * 1000).toISOString();\n\nconst timestamp = createdAt\n  .replace(/[-:.TZ]/g, '')\n  .slice(0, 14);\n\nconst sessionSuffix = sessionId\n  .replace(/[^A-Za-z0-9]/g, '')\n  .slice(-8)\n  .toUpperCase();\n\nconst leadId =\n  `LEAD-${timestamp}-${sessionSuffix || 'SESSION'}`;\n\nreturn [\n  {\n    json: {\n      valid: validationErrors.length === 0,\n      validation_errors: validationErrors,\n\n      session_id: sessionId,\n      lead_id: leadId,\n      created_at: createdAt,\n      follow_up_at: followUpAt,\n\n      parent_name: safeSheetText(parentName),\n      student_name: safeSheetText(studentName),\n      phone: safeSheetText(phone),\n      email,\n      country: safeSheetText(country),\n      city: safeSheetText(city),\n      timezone,\n      subject: safeSheetText(subject),\n      grade: safeSheetText(grade),\n      preferred_language: preferredLanguage,\n\n      consent_to_contact:\n        consentGiven ? 'YES' : 'NO',\n\n      confirmed:\n        confirmed && explicitFinalConfirmation,\n\n      last_summary: safeSheetText(lastSummary),\n      request_type: requestType,\n\n      lead_stage: 'human_handoff_requested',\n      status: 'Active',\n      assigned_to: 'Unassigned',\n      next_action:\n        'Contact parent and arrange consultation or free trial',\n\n      message_ar:\n        validationErrors.length === 0\n          ? 'تم التحقق من بيانات الطلب بنجاح.'\n          : 'تعذر إرسال الطلب لأن بعض البيانات ناقصة أو غير صالحة.',\n\n      message_en:\n        validationErrors.length === 0\n          ? 'The request details were validated successfully.'\n          : 'The request could not be submitted because some details are missing or invalid.',\n\n      message_fr:\n        validationErrors.length === 0\n          ? 'Les informations de la demande ont été validées.'\n          : 'La demande ne peut pas être envoyée car certaines informations sont manquantes ou invalides.'\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        304,
+        0
+      ],
+      "id": "51daf622-91d9-44bc-9703-fa787f6ce6d6",
+      "name": "Validate Lead Payload"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "ee6227cd-f0da-4858-83c1-f83c443afabf",
+              "leftValue": "={{ $json.valid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        528,
+        0
+      ],
+      "id": "923c6f3e-3a2e-47be-bbd5-adeeaacd7887",
+      "name": "Is Lead Payload Valid?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first()?.json ?? {};\n\nreturn [\n  {\n    json: {\n      success: false,\n      status: 'validation_failed',\n\n      validation_errors:\n        Array.isArray(data.validation_errors)\n          ? data.validation_errors\n          : [],\n\n      message_ar:\n        data.message_ar ||\n        'تعذر إرسال الطلب بسبب بيانات ناقصة أو غير صالحة.',\n\n      message_en:\n        data.message_en ||\n        'The request could not be submitted because some details are invalid.',\n\n      message_fr:\n        data.message_fr ||\n        'La demande ne peut pas être envoyée car certaines informations sont invalides.'\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        160
+      ],
+      "id": "d9ca445e-704d-47c3-b56f-b772d287c296",
+      "name": "Return Lead Validation Error"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1owA8YtiPkmcA50vi39TQX-IvBhHLzXjoTeBX_5zjCU0",
+          "mode": "list",
+          "cachedResultName": "Success_Path_Mentors_-_AI_Knowledge_Base_UPDATED",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1owA8YtiPkmcA50vi39TQX-IvBhHLzXjoTeBX_5zjCU0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1818014165,
+          "mode": "list",
+          "cachedResultName": "LEADS_TEMPLATE",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1owA8YtiPkmcA50vi39TQX-IvBhHLzXjoTeBX_5zjCU0/edit#gid=1818014165"
+        },
+        "filtersUI": {
+          "values": [
+            {
+              "lookupColumn": "session_id",
+              "lookupValue": "={{ $('Validate Lead Payload').first().json.session_id }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        864,
+        -192
+      ],
+      "id": "2fde29b7-fa66-40e6-9d54-e66d4f494a67",
+      "name": "Check Existing Lead Record",
+      "executeOnce": false,
+      "retryOnFail": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "k57sEBp5UiDsjtRE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const payload =\n  $('Validate Lead Payload').first().json ?? {};\n\nconst rows = $input\n  .all()\n  .map(item => item.json ?? {})\n  .filter(row => {\n    return (\n      String(row.session_id ?? '').trim() ===\n      String(payload.session_id ?? '').trim()\n    );\n  });\n\nconst existingCount = rows.length;\nconst existingRow = rows[0] ?? {};\n\nconst handoffAction =\n  existingCount === 0\n    ? 'created'\n    : existingCount === 1\n      ? 'updated'\n      : 'conflict';\n\nreturn [\n  {\n    json: {\n      ...payload,\n\n      existing_count: existingCount,\n\n      can_upsert:\n        existingCount <= 1,\n\n      handoff_action: handoffAction,\n\n      lead_id:\n        String(existingRow.lead_id ?? '').trim() ||\n        payload.lead_id,\n\n      created_at:\n        String(existingRow.created_at ?? '').trim() ||\n        payload.created_at\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1216,
+        -192
+      ],
+      "id": "5b8308a6-b456-4c0a-8def-75292cb16402",
+      "name": "Assess Existing Lead"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "6b1fa46c-1304-4959-976c-d378ca54759e",
+              "leftValue": "={{ $json.can_upsert }}",
+              "rightValue": "",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1648,
+        -192
+      ],
+      "id": "f0dd8626-aca2-4ab7-b357-2c867789fea8",
+      "name": "Is Lead Record Safe?"
+    },
+    {
+      "parameters": {
+        "jsCode": "const data = $input.first()?.json ?? {};\n\nreturn [\n  {\n    json: {\n      success: false,\n      status: 'duplicate_conflict',\n      error_code: 'MULTIPLE_LEADS_FOR_SESSION',\n\n      message_ar:\n        'تعذر تحديث الطلب تلقائيًا بسبب وجود تعارض في السجلات. لم يتم إنشاء سجل جديد.',\n\n      message_en:\n        'The request could not be updated automatically because conflicting records were found. No new record was created.',\n\n      message_fr:\n        'La demande ne peut pas être mise à jour automatiquement en raison de données conflictuelles. Aucun nouvel enregistrement n’a été créé.'\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2016,
+        80
+      ],
+      "id": "0ce347d9-8f72-486a-bddd-31c11c60fde9",
+      "name": "Return Lead Conflict"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1owA8YtiPkmcA50vi39TQX-IvBhHLzXjoTeBX_5zjCU0",
+          "mode": "list",
+          "cachedResultName": "Success_Path_Mentors_-_AI_Knowledge_Base_UPDATED",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1owA8YtiPkmcA50vi39TQX-IvBhHLzXjoTeBX_5zjCU0/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": 1818014165,
+          "mode": "list",
+          "cachedResultName": "LEADS_TEMPLATE",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1owA8YtiPkmcA50vi39TQX-IvBhHLzXjoTeBX_5zjCU0/edit#gid=1818014165"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.lead_id }}",
+            "created_at": "={{ $json.created_at }}",
+            "session_id": "={{ $json.session_id }}",
+            "parent_name": "={{ $json.parent_name }}",
+            "student_name": "={{ $json.student_name }}",
+            "phone": "={{ $json.phone }}",
+            "email": "={{ $json.email }}",
+            "country": "={{ $json.country }}",
+            "city": "={{ $json.city }}",
+            "timezone": "={{ $json.timezone }}",
+            "subject": "={{ $json.subject }}",
+            "grade": "={{ $json.grade }}",
+            "preferred_language": "={{ $json.preferred_language }}",
+            "lead_stage": "={{ $json.lead_stage }}",
+            "last_summary": "={{ $json.last_summary }}",
+            "next_action": "={{ $json.next_action }}",
+            "follow_up_at": "={{ $json.follow_up_at }}",
+            "consent_to_contact": "={{ $json.consent_to_contact }}",
+            "assigned_to": "={{ $json.assigned_to }}",
+            "status": "={{ $json.status }}"
+          },
+          "matchingColumns": [
+            "session_id"
+          ],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "session_id",
+              "displayName": "session_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "parent_name",
+              "displayName": "parent_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "student_name",
+              "displayName": "student_name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phone",
+              "displayName": "phone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "country",
+              "displayName": "country",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "city",
+              "displayName": "city",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "timezone",
+              "displayName": "timezone",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "subject",
+              "displayName": "subject",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "grade",
+              "displayName": "grade",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "preferred_language",
+              "displayName": "preferred_language",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "lead_stage",
+              "displayName": "lead_stage",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "last_summary",
+              "displayName": "last_summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "next_action",
+              "displayName": "next_action",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "follow_up_at",
+              "displayName": "follow_up_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "consent_to_contact",
+              "displayName": "consent_to_contact",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "assigned_to",
+              "displayName": "assigned_to",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        2000,
+        -320
+      ],
+      "id": "0ab71857-876e-40c4-9cc1-71e0f233fae5",
+      "name": "Upsert Validated Human Handoff",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "k57sEBp5UiDsjtRE",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const data =\n  $('Assess Existing Lead').first().json ?? {};\n\nconst wasUpdated =\n  data.handoff_action === 'updated';\n\nreturn [\n  {\n    json: {\n      success: true,\n\n      status:\n        wasUpdated\n          ? 'updated'\n          : 'created',\n\n      lead_id: data.lead_id,\n\n      message_ar:\n        wasUpdated\n          ? 'تم تحديث طلبك الحالي بنجاح وإرساله إلى فريق Success Path Mentors.'\n          : 'تم تسجيل طلبك بنجاح وإرساله إلى فريق Success Path Mentors.',\n\n      message_en:\n        wasUpdated\n          ? 'Your existing request was updated successfully and sent to the Success Path Mentors team.'\n          : 'Your request was recorded successfully and sent to the Success Path Mentors team.',\n\n      message_fr:\n        wasUpdated\n          ? 'Votre demande existante a été mise à jour et transmise à l’équipe Success Path Mentors.'\n          : 'Votre demande a été enregistrée et transmise à l’équipe Success Path Mentors.'\n    }\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2224,
+        -320
+      ],
+      "id": "29b0261c-ffff-4005-902d-22ad96c3a31c",
+      "name": "Return Handoff Success"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Validate Lead Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Lead Payload": {
+      "main": [
+        [
+          {
+            "node": "Is Lead Payload Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Lead Payload Valid?": {
+      "main": [
+        [
+          {
+            "node": "Check Existing Lead Record",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Lead Validation Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Existing Lead Record": {
+      "main": [
+        [
+          {
+            "node": "Assess Existing Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Assess Existing Lead": {
+      "main": [
+        [
+          {
+            "node": "Is Lead Record Safe?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Lead Record Safe?": {
+      "main": [
+        [
+          {
+            "node": "Upsert Validated Human Handoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Return Lead Conflict",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Validated Human Handoff": {
+      "main": [
+        [
+          {
+            "node": "Return Handoff Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "4c774d85-54cc-4ace-b2aa-7b09a03fb3f6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "1080a46fa20419c8057deab485138408cbde6b490fcd75ff59c438f103092b89"
+  },
+  "nodeGroups": [],
+  "id": "swhmNa0Goo0uYm1k",
+  "tags": []
+}
