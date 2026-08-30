@@ -11,10 +11,13 @@ on:
         options:
           - api-smoke
           - dry-run
+          - create-canary
+          - update-canary
 
 env:
   MIG003_SOURCE_REF: migration/mig-003-nonprod-deploy
   PROTECTED_PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
+  STAGING_CANARY_SHA256: f49a1610a26974684b3469cd803f116e3c8ab1ffd45e66df0c4478c7df654bb9
 
 jobs:
   bootstrap:
@@ -72,10 +75,48 @@ jobs:
             --mode dry-run \
             --result-file deployment-result.json
 
-      - name: Upload dry-run evidence
-        if: inputs.mode == 'dry-run'
+      - name: Create side-effect-free STAGING canary
+        if: inputs.mode == 'create-canary'
+        env:
+          N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+        run: |
+          set -euo pipefail
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact n8n/workflows/staging/MIG003_STAGING_CANARY.json \
+            --environment staging \
+            --expected-sha256 "$STAGING_CANARY_SHA256" \
+            --mode apply \
+            --allow-create \
+            --result-file deployment-result.json
+
+      - name: Update existing STAGING canary deterministically
+        if: inputs.mode == 'update-canary'
+        env:
+          N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+          N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+          N8N_TARGET_WORKFLOW_ID: ${{ secrets.N8N_TARGET_WORKFLOW_ID }}
+          SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+        run: |
+          set -euo pipefail
+          if [[ -z "${N8N_TARGET_WORKFLOW_ID:-}" ]]; then
+            echo "SAFETY_STOP: N8N_TARGET_WORKFLOW_ID is not configured for n8n-staging" >&2
+            exit 1
+          fi
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact n8n/workflows/staging/MIG003_STAGING_CANARY.json \
+            --environment staging \
+            --expected-sha256 "$STAGING_CANARY_SHA256" \
+            --target-workflow-id "$N8N_TARGET_WORKFLOW_ID" \
+            --mode apply \
+            --result-file deployment-result.json
+
+      - name: Upload deployment evidence
+        if: inputs.mode != 'api-smoke'
         uses: actions/upload-artifact@v4
         with:
-          name: mig-003-bootstrap-dry-run
+          name: mig-003-${{ inputs.mode }}-evidence
           path: deployment-result.json
+          if-no-files-found: error
           retention-days: 30
