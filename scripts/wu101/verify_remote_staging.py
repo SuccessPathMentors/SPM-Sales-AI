@@ -14,7 +14,9 @@ ALLOWED_TURN = {
 }
 EXPECTED_CONF = "={{ $json.wu101_analytics_event.confidence == null ? null : Number($json.wu101_analytics_event.confidence) }}"
 EXPECTED_DURATION = "={{ Number($json.wu101_analytics_event.duration_ms ?? 0) }}"
+EXPECTED_ERROR_CODES = "={{ JSON.stringify($json.wu101_analytics_event.error_codes || []) }}"
 EXPECTED_MEMORY = "={{ 'spm:staging:chat:' + $json.sessionId }}"
+NUMERIC_FIELDS = ('turn_index', 'confidence', 'duration_ms')
 BOOLEAN_FIELDS = (
     'clarification_used',
     'fallback_used',
@@ -28,6 +30,22 @@ BOOLEAN_FIELDS = (
     'correlation_id_logged',
     'secret_values_logged',
 )
+ALL_FIELDS = (
+    'event_schema','event_id','event_timestamp','workflow_release','channel','analytics_session_key','turn_index',
+    'primary_intent','secondary_intent','confidence','language','journey_stage','source_gate','classifier_route',
+    'clarification_used','fallback_used','human_requested','lead_outcome','lead_id_present','opt_out','action_status',
+    'degraded','recovery_mode','duration_ms','error_codes','pii_redacted','raw_message_logged','raw_session_logged',
+    'correlation_id_logged','secret_values_logged',
+)
+
+
+def field_expr(field):
+    return '={{ $json.wu101_analytics_event.' + field + ' }}'
+
+
+def boolean_text_expr(field):
+    return '={{ $json.wu101_analytics_event.' + field + " === true ? 'true' : 'false' }}"
+
 
 if not TARGET or not BASE or not KEY:
     raise SystemExit('missing required n8n readback environment')
@@ -70,6 +88,7 @@ observed = {
     'duration_ms': vals.get('duration_ms'),
     'attemptToConvertTypes': cols.get('attemptToConvertTypes'),
     'boolean_sink_fields': boolean_observed,
+    'expression_fields': {field: vals.get(field) for field in ALL_FIELDS},
     'chat_memory_session_key': memory.get('parameters', {}).get('sessionKey'),
 }
 print(json.dumps(observed, indent=2, ensure_ascii=False))
@@ -85,14 +104,25 @@ if vals.get('confidence') != EXPECTED_CONF:
     errors.append('confidence remote value mismatch')
 if vals.get('duration_ms') != EXPECTED_DURATION:
     errors.append('duration_ms remote value mismatch')
+if vals.get('error_codes') != EXPECTED_ERROR_CODES:
+    errors.append('error_codes remote value mismatch')
 if cols.get('attemptToConvertTypes') is not True:
     errors.append('attemptToConvertTypes remote value mismatch')
 for field in BOOLEAN_FIELDS:
-    expected = f"={{ $json.wu101_analytics_event.{field} === true ? 'true' : 'false' }}"
+    expected = boolean_text_expr(field)
     if vals.get(field) != expected:
         errors.append(f'{field} remote boolean sink mapping mismatch')
     if (schema.get(field) or {}).get('type') != 'string':
         errors.append(f'{field} remote sink schema is not string')
+for field in ALL_FIELDS:
+    mapping = vals.get(field)
+    if not isinstance(mapping, str) or not mapping.startswith('={{ ') or not mapping.endswith(' }}'):
+        errors.append(f'{field} remote n8n expression delimiter malformed')
+    if isinstance(mapping, str) and mapping.startswith('={ '):
+        errors.append(f'{field} remote mapping contains collapsed f-string braces')
+    if field not in NUMERIC_FIELDS and field not in BOOLEAN_FIELDS and field != 'error_codes':
+        if mapping != field_expr(field):
+            errors.append(f'{field} remote ordinary mapping mismatch')
 if memory.get('parameters', {}).get('sessionKey') != EXPECTED_MEMORY:
     errors.append('Redis Chat Memory sessionKey remote value mismatch')
 
