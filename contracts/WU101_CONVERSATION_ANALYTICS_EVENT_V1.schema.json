@@ -6,11 +6,11 @@
   "additionalProperties": false,
   "required": [
     "event_schema",
+    "event_id",
     "event_timestamp",
     "workflow_release",
     "channel",
     "analytics_session_key",
-    "correlation_id",
     "turn_index",
     "primary_intent",
     "secondary_intent",
@@ -33,120 +33,39 @@
     "pii_redacted",
     "raw_message_logged",
     "raw_session_logged",
+    "correlation_id_logged",
     "secret_values_logged"
   ],
   "properties": {
-    "event_schema": {
-      "const": "SPM_WU101_CONVERSATION_ANALYTICS_V1"
-    },
-    "event_timestamp": {
-      "type": "string",
-      "format": "date-time"
-    },
-    "workflow_release": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 120
-    },
-    "channel": {
-      "type": "string",
-      "enum": ["website_chat", "unknown"]
-    },
-    "analytics_session_key": {
-      "type": "string",
-      "pattern": "^conv-[A-Za-z0-9._:-]{8,120}$"
-    },
-    "correlation_id": {
-      "type": "string",
-      "minLength": 1,
-      "maxLength": 160
-    },
-    "turn_index": {
-      "type": "integer",
-      "minimum": 1
-    },
-    "primary_intent": {
-      "type": ["string", "null"],
-      "maxLength": 120
-    },
-    "secondary_intent": {
-      "type": ["string", "null"],
-      "maxLength": 120
-    },
-    "confidence": {
-      "type": ["number", "null"],
-      "minimum": 0,
-      "maximum": 1
-    },
-    "language": {
-      "type": "string",
-      "enum": ["ar", "en", "fr", "unknown"]
-    },
-    "journey_stage": {
-      "type": ["string", "null"],
-      "maxLength": 80
-    },
-    "source_gate": {
-      "type": ["string", "null"],
-      "maxLength": 120
-    },
-    "classifier_route": {
-      "type": "string",
-      "enum": ["direct", "clarify", "fallback", "unknown"]
-    },
-    "clarification_used": {
-      "type": "boolean"
-    },
-    "fallback_used": {
-      "type": "boolean"
-    },
-    "human_requested": {
-      "type": "boolean"
-    },
-    "lead_outcome": {
-      "type": "string",
-      "enum": ["none", "pending", "created", "updated", "failed"]
-    },
-    "lead_id_present": {
-      "type": "boolean"
-    },
-    "opt_out": {
-      "type": "boolean"
-    },
-    "action_status": {
-      "type": ["string", "null"],
-      "maxLength": 120
-    },
-    "degraded": {
-      "type": "boolean"
-    },
-    "recovery_mode": {
-      "type": ["string", "null"],
-      "maxLength": 120
-    },
-    "duration_ms": {
-      "type": "integer",
-      "minimum": 0
-    },
-    "error_codes": {
-      "type": "array",
-      "maxItems": 20,
-      "items": {
-        "type": "string",
-        "maxLength": 120
-      }
-    },
-    "pii_redacted": {
-      "const": true
-    },
-    "raw_message_logged": {
-      "const": false
-    },
-    "raw_session_logged": {
-      "const": false
-    },
-    "secret_values_logged": {
-      "const": false
-    }
+    "event_schema": {"const": "SPM_WU101_CONVERSATION_ANALYTICS_V1"},
+    "event_id": {"type": "string", "pattern": "^evt-[A-Za-z0-9._:-]{12,160}$"},
+    "event_timestamp": {"type": "string", "format": "date-time"},
+    "workflow_release": {"type": "string", "minLength": 1, "maxLength": 120},
+    "channel": {"type": "string", "enum": ["website_chat", "unknown"]},
+    "analytics_session_key": {"type": "string", "pattern": "^conv-[A-Za-z0-9._:-]{12,160}$"},
+    "turn_index": {"type": "integer", "minimum": 1},
+    "primary_intent": {"type": ["string", "null"], "maxLength": 120},
+    "secondary_intent": {"type": ["string", "null"], "maxLength": 120},
+    "confidence": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "language": {"type": "string", "enum": ["ar", "en", "fr", "unknown"]},
+    "journey_stage": {"type": ["string", "null"], "maxLength": 80},
+    "source_gate": {"type": ["string", "null"], "maxLength": 120},
+    "classifier_route": {"type": "string", "enum": ["direct", "clarify", "fallback", "unknown"]},
+    "clarification_used": {"type": "boolean"},
+    "fallback_used": {"type": "boolean"},
+    "human_requested": {"type": "boolean"},
+    "lead_outcome": {"type": "string", "enum": ["none", "pending", "created", "updated", "failed"]},
+    "lead_id_present": {"type": "boolean"},
+    "opt_out": {"type": "boolean"},
+    "action_status": {"type": ["string", "null"], "maxLength": 120},
+    "degraded": {"type": "boolean"},
+    "recovery_mode": {"type": ["string", "null"], "maxLength": 120},
+    "duration_ms": {"type": "integer", "minimum": 0},
+    "error_codes": {"type": "array", "maxItems": 20, "items": {"type": "string", "maxLength": 120}},
+    "pii_redacted": {"const": true},
+    "raw_message_logged": {"const": false},
+    "raw_session_logged": {"const": false},
+    "correlation_id_logged": {"const": false},
+    "secret_values_logged": {"const": false}
   }
 }
