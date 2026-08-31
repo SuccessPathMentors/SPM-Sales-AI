@@ -49,6 +49,37 @@ def validate_family_payload(target_family, payload, *, allow_missing_id=False):
     return adapter
 
 
+def parse_candidate_payload(target_family, candidate_payload_json, *, allow_missing_id=False):
+    if not isinstance(candidate_payload_json, str) or not candidate_payload_json.strip():
+        raise ValueError('CANDIDATE_PAYLOAD_JSON_REQUIRED')
+    try:
+        payload = json.loads(candidate_payload_json)
+    except json.JSONDecodeError as exc:
+        raise ValueError('CANDIDATE_PAYLOAD_JSON_INVALID') from exc
+    validate_family_payload(target_family, payload, allow_missing_id=allow_missing_id)
+    return payload
+
+
+def canonical_candidate_payload(target_family, candidate_payload_json, *, allow_missing_id=False):
+    payload = parse_candidate_payload(
+        target_family,
+        candidate_payload_json,
+        allow_missing_id=allow_missing_id,
+    )
+    adapter = load_adapters()[target_family]
+    normalized = {field: payload.get(field) for field in adapter['fields'] if field in payload}
+    return canonical_json(normalized)
+
+
+def candidate_payload_hash(target_family, candidate_payload_json, *, allow_missing_id=False):
+    canonical = canonical_candidate_payload(
+        target_family,
+        candidate_payload_json,
+        allow_missing_id=allow_missing_id,
+    )
+    return sha256_text(canonical)
+
+
 def normalized_authoritative_row(target_family, row):
     adapter = validate_family_payload(target_family, row, allow_missing_id=False)
     # `last_reviewed` is operational metadata, not content truth; all other
@@ -65,6 +96,11 @@ def payload_hash(target_family, payload):
     adapter = validate_family_payload(target_family, payload, allow_missing_id=True)
     normalized = {field: payload.get(field) for field in adapter['fields'] if field in payload}
     return sha256_json(normalized)
+
+
+def sheet_safe_text(value):
+    text = '' if value is None else str(value)
+    return "'" + text if text.startswith(('=', '+', '-', '@')) else text
 
 
 def allocate_logical_id(target_family, change_id):
@@ -158,6 +194,13 @@ def stale_base(expected_fingerprint, resolved_base):
     return expected_fingerprint != resolved_base['base_fingerprint_sha256']
 
 
+def payload_regression_is_current(change, regression_bound_payload_sha256):
+    return (
+        change.get('regression_status') == 'PASS'
+        and regression_bound_payload_sha256 == change.get('candidate_payload_sha256')
+    )
+
+
 def publish_gate(change, *, regression_bound_payload_sha256=None):
     if change.get('change_state') != 'RELEASE_APPROVED':
         return False, 'RELEASE_STATE_REQUIRED'
@@ -169,7 +212,7 @@ def publish_gate(change, *, regression_bound_payload_sha256=None):
         return False, 'RELEASE_APPROVAL_REQUIRED'
     if change.get('pii_reviewed') is not True:
         return False, 'PII_REVIEW_REQUIRED'
-    if regression_bound_payload_sha256 != change.get('candidate_payload_sha256'):
+    if not payload_regression_is_current(change, regression_bound_payload_sha256):
         return False, 'REGRESSION_PAYLOAD_HASH_MISMATCH'
     ok, reason = business_truth_gate(
         change.get('target_family'),
