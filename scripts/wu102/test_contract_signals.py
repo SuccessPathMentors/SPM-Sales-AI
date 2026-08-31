@@ -5,9 +5,7 @@ import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-WU101_DIR = HERE.parent / 'wu101'
 sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(WU101_DIR))
 
 from build_candidate import build  # noqa: E402
 
