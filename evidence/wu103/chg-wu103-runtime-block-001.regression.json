@@ -1,0 +1,48 @@
+{
+  "schema": "SPM_WU103_REGRESSION_EVIDENCE_V1",
+  "change_id": "chg-wu103-runtime-block-001",
+  "candidate_payload_sha256": "eb4d4088bc2f3de8db060a036e2cefa868eba9f26d2d2e44b80ef6bf720aac8b",
+  "source_queue_event_id": "uq-mthio2u5-14vfybrnbiu-d8skcnpdvis-1",
+  "target_family": "FALLBACKS",
+  "intent_mapping": ["out_of_scope"],
+  "candidate_payload_json": {
+    "language": "en",
+    "message": "I can help with questions related to Success Path Mentors tutoring services. If you have a tutoring question, I’ll be happy to help.",
+    "next_action": "redirect_to_spm_scope",
+    "scenario": "out_of_scope",
+    "status": "ACTIVE"
+  },
+  "cases": [
+    {
+      "case_id": "WU103-RUNTIME-BLOCK-POSITIVE",
+      "type": "positive_originating_gap",
+      "input": "What's the weather in Cairo today?",
+      "source_ref": "WU102_UNANSWERED_STAGING:uq-mthio2u5-14vfybrnbiu-d8skcnpdvis-1",
+      "observed_intent": "out_of_scope",
+      "expected_candidate_selected": true,
+      "assertions": {
+        "source_event_matches": true,
+        "intent_in_candidate_mapping": true,
+        "payload_scenario_is_out_of_scope": true,
+        "payload_redirects_to_spm_scope": true,
+        "payload_mentions_spm_tutoring": true,
+        "payload_avoids_false_unavailable_claim": true
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "WU103-RUNTIME-BLOCK-NEIGHBOR",
+      "type": "negative_neighbor",
+      "input": "What subjects do you offer?",
+      "source_ref": "SPM_INTENTS_V2:SPM-002",
+      "observed_intent": "subject_inquiry",
+      "expected_candidate_selected": false,
+      "assertions": {
+        "neighbor_intent_active": true,
+        "neighbor_intent_not_in_candidate_mapping": true
+      },
+      "result": "PASS"
+    }
+  ],
+  "overall_result": "PASS"
+}
