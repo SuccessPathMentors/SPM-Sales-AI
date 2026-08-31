@@ -1,0 +1,21 @@
+{
+  "$id": "SPM_WU103_KB_SHADOW_RECORD_V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "target_family","logical_record_id","revision","change_id","source_queue_event_id","payload_json","payload_sha256","base_fingerprint_sha256","record_status","published_at","supersedes_revision"
+  ],
+  "properties": {
+    "target_family": {"enum": ["FAQ","SUBJECTS","SUBJECT_PATHWAYS","SERVICES","LOCATIONS","FALLBACKS","PACKAGES","POLICIES"]},
+    "logical_record_id": {"type": "string", "minLength": 1},
+    "revision": {"type": "string", "pattern": "^v[1-9][0-9]*$"},
+    "change_id": {"type": "string", "pattern": "^chg-[a-z0-9-]+$"},
+    "source_queue_event_id": {"type": "string", "pattern": "^uq-"},
+    "payload_json": {"type": "string", "minLength": 2},
+    "payload_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "base_fingerprint_sha256": {"type": ["string","null"], "pattern": "^[a-f0-9]{64}$"},
+    "record_status": {"enum": ["ACTIVE","SUPERSEDED"]},
+    "published_at": {"type": "string", "format": "date-time"},
+    "supersedes_revision": {"type": ["string","null"], "pattern": "^v[1-9][0-9]*$"}
+  }
+}
