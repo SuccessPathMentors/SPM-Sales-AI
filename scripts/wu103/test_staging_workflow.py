@@ -25,6 +25,19 @@ assert len(nodes)==31
 for name in ['Manual Trigger','Build WU103 Early Preflight','Any WU103 Candidate Needs Deep Validation?','Load WU103 Change Ledger [STAGING]','Load WU103 KB Shadow [STAGING]','Collapse WU103 Routing Context','Build WU103 Publish Decisions','Is WU103 Publish Allowed?','WU103 Routing Guard Blocked']:
     assert name in nodes,name
 
+# Parse every generated n8n Code node as a JavaScript function body. This catches
+# duplicate declarations and other SyntaxErrors before a candidate can be deployed.
+code_nodes=[n for n in wf['nodes'] if n['type']=='n8n-nodes-base.code']
+for n in code_nodes:
+    js=n.get('parameters',{}).get('jsCode','')
+    proc=subprocess.run(
+        ['node','-e','new Function(process.argv[1]);',js],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    assert proc.returncode==0, f"JavaScript syntax error in {n['name']}: {proc.stderr.strip()}"
+
 for n in wf['nodes']:
     assert n['type'] not in {'@n8n/n8n-nodes-langchain.chatTrigger','n8n-nodes-base.webhook'}
     assert 'PRODUCTION' not in n['name'].upper()
@@ -75,6 +88,8 @@ for required in [
     assert required in js,required
 assert 'idempotentExisting' in js
 assert 'activeShadow.length===2&&sameCurrent.length===1' in js
+assert 'const canonicalRows={}' in js
+assert 'const canonical={}' not in js
 
 prepare_shadow=nodes['Prepare WU103 Shadow Writes']['parameters']['jsCode']
 assert prepare_shadow.find('new_shadow_row') < prepare_shadow.find('supersede_shadow_row')
@@ -99,4 +114,4 @@ for denied in ['CMBMpxX5AqqK2UTn','mMZVFxJIxE7a9SSW','1kaRBBFVJYbPxvQG']:
     assert denied not in raw
 
 print('WU103_STAGING_WORKFLOW_STATIC_PASS')
-print(json.dumps({'nodes':len(wf['nodes']),'write_nodes':len(write_nodes),'canonical_family_nodes':len(FAMILY_IDS),'max_canonical_family_reads_per_run':1,'routing_items_after_shadow':1,'shadow_exact_record_filter':True,'canonical_exact_id_filter':True,'retry_recovery':True,'active':wf['active']},indent=2))
+print(json.dumps({'nodes':len(wf['nodes']),'code_nodes_syntax_checked':len(code_nodes),'write_nodes':len(write_nodes),'canonical_family_nodes':len(FAMILY_IDS),'max_canonical_family_reads_per_run':1,'routing_items_after_shadow':1,'shadow_exact_record_filter':True,'canonical_exact_id_filter':True,'retry_recovery':True,'active':wf['active']},indent=2))
