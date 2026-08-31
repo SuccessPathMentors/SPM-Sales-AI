@@ -1,0 +1,70 @@
+{
+  "schema": "SPM_WU103_REGRESSION_EVIDENCE_V1",
+  "change_id": "chg-wu103-runtime-legacy-004",
+  "change_type": "UPDATE",
+  "candidate_payload_sha256": "502062d5301f724effdc3d4ab8599e79bcfb3e06d53193eae70d05a6b465518b",
+  "source_queue_event_id": "uq-mthio2u5-14vfybrnbiu-d8skcnpdvis-1",
+  "target_family": "FALLBACKS",
+  "target_record_id": "FB-003",
+  "base_revision": "LEGACY_UNVERSIONED",
+  "candidate_revision": "v1",
+  "base_fingerprint_sha256": "2b440d9609f77b23e6759f7ba03e3553ced3925a538dcb69646846491400f8de",
+  "supersedes_change_id": null,
+  "intent_mapping": ["out_of_scope"],
+  "candidate_payload_json": {
+    "language": "en",
+    "message": "I can help with questions related to Success Path Mentors tutoring services. Please ask me about tutoring, subjects, trials, scheduling, or support.",
+    "next_action": "redirect_to_spm_scope",
+    "record_id": "FB-003",
+    "scenario": "no_answer",
+    "status": "ACTIVE"
+  },
+  "cases": [
+    {
+      "case_id": "WU103-RUNTIME-LEGACY-V1-POSITIVE",
+      "type": "positive_originating_gap",
+      "input": "What's the weather in Cairo today?",
+      "source_ref": "WU102_UNANSWERED_STAGING:uq-mthio2u5-14vfybrnbiu-d8skcnpdvis-1",
+      "observed_intent": "out_of_scope",
+      "expected_candidate_selected": true,
+      "assertions": {
+        "source_event_matches": true,
+        "intent_in_candidate_mapping": true,
+        "payload_redirects_to_spm_scope": true,
+        "payload_mentions_spm_tutoring": true,
+        "payload_lists_supported_spm_topics": true,
+        "payload_avoids_false_unavailable_claim": true
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "WU103-RUNTIME-LEGACY-V1-NEIGHBOR",
+      "type": "negative_neighbor",
+      "input": "What subjects do you offer?",
+      "source_ref": "SPM_INTENTS_V2:SPM-002",
+      "observed_intent": "subject_inquiry",
+      "expected_candidate_selected": false,
+      "assertions": {
+        "neighbor_intent_active": true,
+        "neighbor_intent_not_in_candidate_mapping": true
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "WU103-RUNTIME-LEGACY-V1-BASE",
+      "type": "legacy_base_lineage",
+      "source_ref": "FALLBACKS:FB-003",
+      "expected_candidate_selected": true,
+      "assertions": {
+        "canonical_record_id_exact": true,
+        "canonical_record_active": true,
+        "base_revision_is_legacy_unversioned": true,
+        "base_fingerprint_matches_current_canonical": true,
+        "candidate_revision_is_v1": true,
+        "no_existing_shadow_revision_for_target": true
+      },
+      "result": "PASS"
+    }
+  ],
+  "overall_result": "PASS"
+}
