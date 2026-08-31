@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 import hashlib
 import json
+import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 ADAPTERS_PATH = ROOT / 'contracts' / 'WU103_FAMILY_ADAPTERS_V1.json'
+SHA256_RE = re.compile(r'^[a-f0-9]{64}$')
+SOURCE_TYPES = {'WEBSITE','ATTACHMENT','QUALITY_NOTE','OWNER_DECISION','INTERNAL_APPROVED_SOURCE'}
 
 
 def canonical_json(value):
@@ -61,23 +64,14 @@ def parse_candidate_payload(target_family, candidate_payload_json, *, allow_miss
 
 
 def canonical_candidate_payload(target_family, candidate_payload_json, *, allow_missing_id=False):
-    payload = parse_candidate_payload(
-        target_family,
-        candidate_payload_json,
-        allow_missing_id=allow_missing_id,
-    )
+    payload = parse_candidate_payload(target_family, candidate_payload_json, allow_missing_id=allow_missing_id)
     adapter = load_adapters()[target_family]
     normalized = {field: payload.get(field) for field in adapter['fields'] if field in payload}
     return canonical_json(normalized)
 
 
 def candidate_payload_hash(target_family, candidate_payload_json, *, allow_missing_id=False):
-    canonical = canonical_candidate_payload(
-        target_family,
-        candidate_payload_json,
-        allow_missing_id=allow_missing_id,
-    )
-    return sha256_text(canonical)
+    return sha256_text(canonical_candidate_payload(target_family, candidate_payload_json, allow_missing_id=allow_missing_id))
 
 
 def normalized_authoritative_row(target_family, row):
@@ -126,26 +120,23 @@ def transition_allowed(current_state, next_state):
 
 
 def automation_may_write_approval_field(field):
-    forbidden = {
-        'review_decision',
-        'business_truth_approval',
-        'release_approval_status',
-    }
-    return field not in forbidden
+    return field not in {'review_decision','business_truth_approval','release_approval_status'}
 
 
 def business_truth_gate(target_family, business_truth_approval, source_type, source_reference):
     adapters = load_adapters()
     if target_family not in adapters:
         return False, 'UNKNOWN_TARGET_FAMILY'
+    if source_type not in SOURCE_TYPES:
+        return False, 'SOURCE_TYPE_REQUIRED'
+    if not str(source_reference or '').strip():
+        return False, 'SOURCE_REFERENCE_REQUIRED'
     if not adapters[target_family]['business_truth_required']:
         return True, 'NOT_REQUIRED'
     if business_truth_approval is not True:
         return False, 'BUSINESS_TRUTH_APPROVAL_REQUIRED'
     if source_type not in {'OWNER_DECISION', 'INTERNAL_APPROVED_SOURCE'}:
         return False, 'APPROVED_BUSINESS_SOURCE_REQUIRED'
-    if not str(source_reference or '').strip():
-        return False, 'SOURCE_REFERENCE_REQUIRED'
     return True, 'PASS'
 
 
@@ -154,38 +145,17 @@ def resolve_staging_base(target_family, target_record_id, canonical_rows, shadow
     if target_family not in adapters:
         raise ValueError('UNKNOWN_TARGET_FAMILY')
     id_field = adapters[target_family]['id_field']
-
-    active_shadow = [
-        r for r in shadow_rows
-        if r.get('target_family') == target_family
-        and r.get('logical_record_id') == target_record_id
-        and r.get('record_status') == 'ACTIVE'
-    ]
+    active_shadow = [r for r in shadow_rows if r.get('target_family') == target_family and r.get('logical_record_id') == target_record_id and r.get('record_status') == 'ACTIVE']
     if len(active_shadow) > 1:
         raise ValueError('BASE_RECORD_NOT_UNIQUE')
     if len(active_shadow) == 1:
         row = active_shadow[0]
-        return {
-            'base_source': 'SHADOW',
-            'base_revision': row['revision'],
-            'base_fingerprint_sha256': row['payload_sha256'],
-            'base_row': row,
-        }
-
-    canonical = [
-        r for r in canonical_rows
-        if str(r.get(id_field, '')).strip() == str(target_record_id).strip()
-        and str(r.get('status', '')).upper() == 'ACTIVE'
-    ]
+        return {'base_source':'SHADOW','base_revision':row['revision'],'base_fingerprint_sha256':row['payload_sha256'],'base_row':row}
+    canonical = [r for r in canonical_rows if str(r.get(id_field, '')).strip() == str(target_record_id).strip() and str(r.get('status', '')).upper() == 'ACTIVE']
     if len(canonical) != 1:
         raise ValueError('BASE_RECORD_NOT_UNIQUE')
     row = canonical[0]
-    return {
-        'base_source': 'CANONICAL_LEGACY',
-        'base_revision': 'LEGACY_UNVERSIONED',
-        'base_fingerprint_sha256': row_fingerprint(target_family, row),
-        'base_row': row,
-    }
+    return {'base_source':'CANONICAL_LEGACY','base_revision':'LEGACY_UNVERSIONED','base_fingerprint_sha256':row_fingerprint(target_family,row),'base_row':row}
 
 
 def stale_base(expected_fingerprint, resolved_base):
@@ -193,10 +163,19 @@ def stale_base(expected_fingerprint, resolved_base):
 
 
 def payload_regression_is_current(change):
-    return (
-        change.get('regression_status') == 'PASS'
-        and change.get('regression_payload_sha256') == change.get('candidate_payload_sha256')
-    )
+    return change.get('regression_status') == 'PASS' and change.get('regression_payload_sha256') == change.get('candidate_payload_sha256')
+
+
+def regression_evidence_gate(change):
+    evidence = change.get('regression_evidence_sha256')
+    if not isinstance(evidence, str) or not SHA256_RE.fullmatch(evidence):
+        return False, 'REGRESSION_EVIDENCE_REQUIRED'
+    cases = change.get('regression_case_ids')
+    if not isinstance(cases, list) or len(set(cases)) < 2 or any(not str(x).strip() for x in cases):
+        return False, 'REGRESSION_CASES_INCOMPLETE'
+    if not payload_regression_is_current(change):
+        return False, 'REGRESSION_PAYLOAD_HASH_MISMATCH'
+    return True, 'PASS'
 
 
 def publish_gate(change):
@@ -210,14 +189,10 @@ def publish_gate(change):
         return False, 'RELEASE_APPROVAL_REQUIRED'
     if change.get('pii_reviewed') is not True:
         return False, 'PII_REVIEW_REQUIRED'
-    if not payload_regression_is_current(change):
-        return False, 'REGRESSION_PAYLOAD_HASH_MISMATCH'
-    ok, reason = business_truth_gate(
-        change.get('target_family'),
-        change.get('business_truth_approval'),
-        change.get('source_type'),
-        change.get('source_reference'),
-    )
+    ok, reason = regression_evidence_gate(change)
+    if not ok:
+        return False, reason
+    ok, reason = business_truth_gate(change.get('target_family'), change.get('business_truth_approval'), change.get('source_type'), change.get('source_reference'))
     if not ok:
         return False, reason
     return True, 'PASS'
