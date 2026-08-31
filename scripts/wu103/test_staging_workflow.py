@@ -21,7 +21,8 @@ assert wf['active'] is False
 assert wf['name']=='SPM WU103 Knowledge Maintenance STAGING Candidate'
 nodes={n['name']:n for n in wf['nodes']}
 assert len(nodes)==len(wf['nodes'])
-for name in ['Manual Trigger','Build WU103 Early Preflight','Any WU103 Candidate Needs Deep Validation?','Load WU103 Change Ledger [STAGING]','Load WU103 KB Shadow [STAGING]','Build WU103 Publish Decisions','Is WU103 Publish Allowed?','WU103 Routing Guard Blocked']:
+assert len(nodes)==31
+for name in ['Manual Trigger','Build WU103 Early Preflight','Any WU103 Candidate Needs Deep Validation?','Load WU103 Change Ledger [STAGING]','Load WU103 KB Shadow [STAGING]','Collapse WU103 Routing Context','Build WU103 Publish Decisions','Is WU103 Publish Allowed?','WU103 Routing Guard Blocked']:
     assert name in nodes,name
 
 for n in wf['nodes']:
@@ -31,6 +32,9 @@ for n in wf['nodes']:
 pre=nodes['Build WU103 Early Preflight']['parameters']['jsCode']
 for token in ['MULTIPLE_RELEASE_APPROVED_CANDIDATES_V1','wu103_target_family','wu103_lookup_id','wu103_selected_change_id','RELEASE_APPROVED']:
     assert token in pre,token
+collapse=nodes['Collapse WU103 Routing Context']['parameters']['jsCode']
+assert "$('Build WU103 Early Preflight').first()" in collapse
+assert 'wu103_shadow_history_loaded:true' in collapse
 
 shadow_read=nodes['Load WU103 KB Shadow [STAGING]']
 assert shadow_read['parameters']['filtersUI']['values']==[{
@@ -83,6 +87,8 @@ def targets(name): return [[x['node'] for x in group] for group in connections.g
 assert targets('Load WU103 Change Ledger [STAGING]')==[['Build WU103 Early Preflight']]
 assert targets('Build WU103 Early Preflight')==[['Any WU103 Candidate Needs Deep Validation?']]
 assert targets('Any WU103 Candidate Needs Deep Validation?')==[['Load WU103 KB Shadow [STAGING]'],['WU103 Blocked Result']]
+assert targets('Load WU103 KB Shadow [STAGING]')==[['Collapse WU103 Routing Context']]
+assert targets('Collapse WU103 Routing Context')==[['Is WU103 Target FAQ?']]
 for family in FAMILY_IDS:
     assert targets(f'Load {family} [WU103 READ ONLY]')==[['Build WU103 Publish Decisions']]
     for other in FAMILY_IDS:
@@ -93,4 +99,4 @@ for denied in ['CMBMpxX5AqqK2UTn','mMZVFxJIxE7a9SSW','1kaRBBFVJYbPxvQG']:
     assert denied not in raw
 
 print('WU103_STAGING_WORKFLOW_STATIC_PASS')
-print(json.dumps({'nodes':len(wf['nodes']),'write_nodes':len(write_nodes),'canonical_family_nodes':len(FAMILY_IDS),'max_canonical_family_reads_per_run':1,'shadow_exact_record_filter':True,'canonical_exact_id_filter':True,'retry_recovery':True,'active':wf['active']},indent=2))
+print(json.dumps({'nodes':len(wf['nodes']),'write_nodes':len(write_nodes),'canonical_family_nodes':len(FAMILY_IDS),'max_canonical_family_reads_per_run':1,'routing_items_after_shadow':1,'shadow_exact_record_filter':True,'canonical_exact_id_filter':True,'retry_recovery':True,'active':wf['active']},indent=2))
