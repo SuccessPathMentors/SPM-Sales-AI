@@ -1,0 +1,61 @@
+{
+  "schema": "SPM_WU103_FAMILY_ADAPTERS_V1",
+  "families": {
+    "FAQ": {
+      "sheet": "FAQ",
+      "id_field": "record_id",
+      "id_prefix": "FAQ-WU103-",
+      "business_truth_required": false,
+      "fields": ["record_id","category","language","question","answer","keywords","priority","status","last_reviewed"]
+    },
+    "SUBJECTS": {
+      "sheet": "SUBJECTS",
+      "id_field": "record_id",
+      "id_prefix": "SUB-WU103-",
+      "business_truth_required": false,
+      "fields": ["record_id","language","subject","grade_from","grade_to","delivery_mode","description","keywords","status"]
+    },
+    "SUBJECT_PATHWAYS": {
+      "sheet": "SUBJECT_PATHWAYS",
+      "id_field": "pathway_id",
+      "id_prefix": "P-WU103-",
+      "business_truth_required": false,
+      "fields": ["pathway_id","subject","strand","language","grade_range","description","keywords","source_url","status"]
+    },
+    "SERVICES": {
+      "sheet": "SERVICES",
+      "id_field": "service_id",
+      "id_prefix": "S-WU103-",
+      "business_truth_required": false,
+      "fields": ["service_id","language","service_name","description","customer_value","keywords","source_url","status"]
+    },
+    "LOCATIONS": {
+      "sheet": "LOCATIONS",
+      "id_field": "record_id",
+      "id_prefix": "LOC-WU103-",
+      "business_truth_required": false,
+      "fields": ["record_id","country","region","city","language","service_note","keywords","status"]
+    },
+    "FALLBACKS": {
+      "sheet": "FALLBACKS",
+      "id_field": "record_id",
+      "id_prefix": "FB-WU103-",
+      "business_truth_required": false,
+      "fields": ["record_id","scenario","language","message","next_action","status"]
+    },
+    "PACKAGES": {
+      "sheet": "PACKAGES",
+      "id_field": "record_id",
+      "id_prefix": "PKG-WU103-",
+      "business_truth_required": true,
+      "fields": ["record_id","package_name","class_count","price","currency","language","answer_text","keywords","status","last_reviewed"]
+    },
+    "POLICIES": {
+      "sheet": "POLICIES",
+      "id_field": "record_id",
+      "id_prefix": "POL-WU103-",
+      "business_truth_required": true,
+      "fields": ["record_id","policy_type","language","rule","customer_answer","keywords","status","last_reviewed"]
+    }
+  }
+}
