@@ -1,10 +1,26 @@
 #!/usr/bin/env python3
 import copy
+import importlib.util
 import json
 from pathlib import Path
 
-from build_candidate import build as build_normal, node_by_name
-from build_failure_injection_candidate import build as build_failure, FAILURE_DOCUMENT_ID, LOGGER
+HERE = Path(__file__).resolve().parent
+
+normal_spec = importlib.util.spec_from_file_location('wu102_build_candidate', HERE / 'build_candidate.py')
+assert normal_spec and normal_spec.loader
+normal_mod = importlib.util.module_from_spec(normal_spec)
+normal_spec.loader.exec_module(normal_mod)
+
+failure_spec = importlib.util.spec_from_file_location('wu102_failure_candidate', HERE / 'build_failure_injection_candidate.py')
+assert failure_spec and failure_spec.loader
+failure_mod = importlib.util.module_from_spec(failure_spec)
+failure_spec.loader.exec_module(failure_mod)
+
+build_normal = normal_mod.build
+node_by_name = normal_mod.node_by_name
+build_failure = failure_mod.build
+FAILURE_DOCUMENT_ID = failure_mod.FAILURE_DOCUMENT_ID
+LOGGER = failure_mod.LOGGER
 
 BASE = Path('n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json')
 
