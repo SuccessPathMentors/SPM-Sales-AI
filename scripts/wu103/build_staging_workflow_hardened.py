@@ -25,6 +25,17 @@ def build():
     decision=node_by_name(wf,'Build WU103 Publish Decisions')
     js=decision['parameters']['jsCode']
 
+    # Base V1 used `canonical` for both the canonical-JSON helper function and the
+    # canonical-row lookup map. n8n parses Code nodes as one JavaScript scope, so the
+    # duplicate declaration is a SyntaxError. Rename only the row map; keep the
+    # canonical(v) helper unchanged because it is used for deterministic hashing.
+    collision="const canonical={}; for(const f of Object.keys(A))canonical[f]=rows(`Load ${f} [WU103 READ ONLY]`).filter(r=>clean(r.status).toUpperCase()==='ACTIVE');"
+    collision_fix="const canonicalRows={}; for(const f of Object.keys(A))canonicalRows[f]=rows(`Load ${f} [WU103 READ ONLY]`).filter(r=>clean(r.status).toUpperCase()==='ACTIVE');"
+    if collision not in js:
+        raise RuntimeError('canonical row-map collision marker not found')
+    js=js.replace(collision,collision_fix)
+    js=js.replace('canonical[family]','canonicalRows[family]')
+
     marker="if(clean(r.regression_payload_sha256)!==clean(r.candidate_payload_sha256))reasons.push('REGRESSION_PAYLOAD_HASH_MISMATCH');\n if(type!=='ADD'&&type!=='UPDATE')reasons.push('INVALID_CHANGE_TYPE');"
     replacement="""if(clean(r.regression_payload_sha256)!==clean(r.candidate_payload_sha256))reasons.push('REGRESSION_PAYLOAD_HASH_MISMATCH');
  const regCases=arr(r.regression_case_ids);
@@ -74,7 +85,7 @@ def build():
      const next=/^v\d+$/.test(baseRevision)?`v${Number(baseRevision.slice(1))+1}`:null;
      if(next&&clean(r.candidate_revision)!==next)reasons.push('CANDIDATE_REVISION_MISMATCH');
    } else {
-     const matches=canonical[family].filter(x=>clean(x[a.id])===logicalId&&clean(x.status).toUpperCase()==='ACTIVE');
+     const matches=canonicalRows[family].filter(x=>clean(x[a.id])===logicalId&&clean(x.status).toUpperCase()==='ACTIVE');
      if(matches.length!==1)reasons.push('BASE_RECORD_NOT_UNIQUE');
      else {const norm={};for(const f of a.fields)if(f!=='last_reviewed')norm[f]=matches[0][f];baseRevision='LEGACY_UNVERSIONED';baseFp=sha256(canonical(norm));}
      if(baseRevision&&clean(r.base_revision)!==baseRevision)reasons.push('STALE_BASE_REVISION');
@@ -102,6 +113,6 @@ def main():
     ap=argparse.ArgumentParser();ap.add_argument('--output',required=True);args=ap.parse_args()
     wf=build();out=Path(args.output);out.parent.mkdir(parents=True,exist_ok=True)
     out.write_text(json.dumps(wf,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
-    print(json.dumps({'output':str(out),'sha256':sha256_file(out),'nodes':len(wf['nodes']),'connections':len(wf['connections']),'active':wf['active'],'hardening':'evidence+retry-recovery'},indent=2))
+    print(json.dumps({'output':str(out),'sha256':sha256_file(out),'nodes':len(wf['nodes']),'connections':len(wf['connections']),'active':wf['active'],'hardening':'evidence+retry-recovery+syntax-safe'},indent=2))
 
 if __name__=='__main__':main()
