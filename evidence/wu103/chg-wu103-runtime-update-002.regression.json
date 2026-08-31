@@ -1,0 +1,71 @@
+{
+  "schema": "SPM_WU103_REGRESSION_EVIDENCE_V1",
+  "change_id": "chg-wu103-runtime-update-002",
+  "change_type": "UPDATE",
+  "candidate_payload_sha256": "d0f48f467a9465de5d2ba5e5b830b913d2955f6d5384eb23cad7210ae0bc0389",
+  "source_queue_event_id": "uq-mthio2u5-14vfybrnbiu-d8skcnpdvis-1",
+  "target_family": "FALLBACKS",
+  "target_record_id": "FB-WU103-3BDF51AC9F7B",
+  "base_revision": "v1",
+  "candidate_revision": "v2",
+  "base_fingerprint_sha256": "eb4d4088bc2f3de8db060a036e2cefa868eba9f26d2d2e44b80ef6bf720aac8b",
+  "supersedes_change_id": "chg-wu103-runtime-block-001",
+  "intent_mapping": ["out_of_scope"],
+  "candidate_payload_json": {
+    "language": "en",
+    "message": "I can help with questions related to Success Path Mentors tutoring services. Please ask me about our tutoring, subjects, trials, scheduling, or support.",
+    "next_action": "redirect_to_spm_scope",
+    "record_id": "FB-WU103-3BDF51AC9F7B",
+    "scenario": "out_of_scope",
+    "status": "ACTIVE"
+  },
+  "cases": [
+    {
+      "case_id": "WU103-RUNTIME-UPDATE-V2-POSITIVE",
+      "type": "positive_originating_gap",
+      "input": "What's the weather in Cairo today?",
+      "source_ref": "WU102_UNANSWERED_STAGING:uq-mthio2u5-14vfybrnbiu-d8skcnpdvis-1",
+      "observed_intent": "out_of_scope",
+      "expected_candidate_selected": true,
+      "assertions": {
+        "source_event_matches": true,
+        "intent_in_candidate_mapping": true,
+        "payload_scenario_is_out_of_scope": true,
+        "payload_redirects_to_spm_scope": true,
+        "payload_mentions_spm_tutoring": true,
+        "payload_lists_supported_spm_topics": true,
+        "payload_avoids_false_unavailable_claim": true
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "WU103-RUNTIME-UPDATE-V2-NEIGHBOR",
+      "type": "negative_neighbor",
+      "input": "What subjects do you offer?",
+      "source_ref": "SPM_INTENTS_V2:SPM-002",
+      "observed_intent": "subject_inquiry",
+      "expected_candidate_selected": false,
+      "assertions": {
+        "neighbor_intent_active": true,
+        "neighbor_intent_not_in_candidate_mapping": true
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "WU103-RUNTIME-UPDATE-V2-LINEAGE",
+      "type": "update_lineage",
+      "source_ref": "WU103_KB_SHADOW_STAGING:FB-WU103-3BDF51AC9F7B:v1",
+      "expected_candidate_selected": true,
+      "assertions": {
+        "active_base_revision_is_v1": true,
+        "active_base_payload_sha_matches_fingerprint": true,
+        "candidate_revision_is_v2": true,
+        "target_record_id_is_exact": true,
+        "supersedes_change_matches_v1_publisher": true,
+        "base_not_stale_at_regression_time": true
+      },
+      "result": "PASS"
+    }
+  ],
+  "overall_result": "PASS"
+}
