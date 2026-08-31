@@ -1,0 +1,180 @@
+name: WU-103 knowledge maintenance staging
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/wu103/**"
+      - "contracts/WU103_*"
+      - "work-units/WU-103.md"
+      - "work-units/CR-103-*"
+      - ".github/workflows/wu103-staging.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run performs zero n8n writes; apply may create/update only inactive WU-103 STAGING"
+        required: true
+        type: choice
+        default: dry-run
+        options:
+          - dry-run
+          - apply
+      target_workflow_id:
+        description: "Existing WU-103 STAGING workflow ID. Leave blank only for the first deliberate create."
+        required: false
+        type: string
+        default: ""
+      allow_create:
+        description: "Explicitly permit one-time WU-103 STAGING creation when target_workflow_id is blank"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wu103-staging-${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'pr-validation' }}
+  cancel-in-progress: false
+
+env:
+  CANDIDATE: n8n/generated/SPM_WU103_KNOWLEDGE_MAINTENANCE_STAGING_CANDIDATE.json
+  EXPECTED_SHA256: 2c90ce90d5200b5574f7e0e0f1d3ab58c63dc00bf8d3dffc66f9b10f7412b93c
+  PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
+  LOCKED_WU101_STAGING_ID: mMZVFxJIxE7a9SSW
+  LOCKED_WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
+
+jobs:
+  validate:
+    name: WU103 contracts core publisher safety
+    runs-on: ubuntu-24.04
+    timeout-minutes: 7
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run WU-103 contract/core/static tests
+        run: |
+          set -euo pipefail
+          python scripts/wu103/test_contracts.py
+          python scripts/wu103/test_core.py
+          python scripts/wu103/test_staging_workflow.py
+
+      - name: Build and verify exact candidate SHA-256
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu103/build_staging_workflow.py --output "$CANDIDATE"
+          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+          echo "WU103_CANDIDATE_SHA256=$actual"
+          test "$actual" = "$EXPECTED_SHA256"
+
+      - name: Existing non-production deployer dry-run
+        run: |
+          set -euo pipefail
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact "$CANDIDATE" \
+            --environment staging \
+            --expected-sha256 "$EXPECTED_SHA256" \
+            --mode dry-run \
+            --result-file wu103-dry-run-result.json
+
+      - name: Upload candidate and dry-run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu103-candidate-and-dry-run
+          path: |
+            n8n/generated/SPM_WU103_KNOWLEDGE_MAINTENANCE_STAGING_CANDIDATE.json
+            wu103-dry-run-result.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  deploy-staging:
+    name: WU103 ${{ inputs.mode }} to staging
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rebuild exact WU-103 candidate
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu103/build_staging_workflow.py --output "$CANDIDATE"
+          python scripts/wu103/test_contracts.py
+          python scripts/wu103/test_core.py
+          python scripts/wu103/test_staging_workflow.py
+          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+          test "$actual" = "$EXPECTED_SHA256"
+
+      - name: Hard-stop target checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="${{ inputs.target_workflow_id }}"
+          for denied in "$PRODUCTION_WORKFLOW_ID" "$LOCKED_WU101_STAGING_ID" "$LOCKED_WU102_STAGING_ID" "BIDVhNCRbj9dvH1t"; do
+            if [[ "$target" == "$denied" ]]; then
+              echo "Denied protected/locked workflow target: $target" >&2
+              exit 1
+            fi
+          done
+          if [[ "${{ inputs.mode }}" == "apply" && -z "$target" && "${{ inputs.allow_create }}" != "true" ]]; then
+            echo "First WU-103 apply with no target requires allow_create=true" >&2
+            exit 1
+          fi
+          if [[ "${{ inputs.allow_create }}" == "true" && -n "$target" ]]; then
+            echo "allow_create=true is permitted only when target_workflow_id is blank" >&2
+            exit 1
+          fi
+
+      - name: Run safe non-production deployer
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --artifact "$CANDIDATE"
+            --environment staging
+            --expected-sha256 "$EXPECTED_SHA256"
+            --mode "${{ inputs.mode }}"
+            --result-file wu103-deployment-result.json
+          )
+          if [[ -n "${{ inputs.target_workflow_id }}" ]]; then
+            args+=(--target-workflow-id "${{ inputs.target_workflow_id }}")
+          fi
+          if [[ "${{ inputs.allow_create }}" == "true" ]]; then
+            args+=(--allow-create)
+          fi
+          python scripts/n8n/deploy_nonprod.py "${args[@]}"
+
+      - name: Verify remote WU-103 STAGING content after apply
+        if: inputs.mode == 'apply'
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="$(python - <<'PY'
+          import json
+          print(json.load(open('wu103-deployment-result.json'))['target_workflow_id'])
+          PY
+          )"
+          N8N_TARGET_WORKFLOW_ID="$target" python scripts/wu103/verify_remote_staging.py
+
+      - name: Upload WU-103 deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu103-staging-${{ inputs.mode }}-evidence
+          path: |
+            n8n/generated/SPM_WU103_KNOWLEDGE_MAINTENANCE_STAGING_CANDIDATE.json
+            wu103-deployment-result.json
+          if-no-files-found: ignore
+          retention-days: 30
