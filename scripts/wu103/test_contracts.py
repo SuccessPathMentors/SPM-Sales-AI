@@ -15,10 +15,7 @@ assert shadow['$id'] == 'SPM_WU103_KB_SHADOW_RECORD_V1'
 assert shadow['additionalProperties'] is False
 assert set(shadow['required']) == set(shadow['properties'])
 
-for forbidden in [
-    'session_id','correlation_id','raw_message','raw_question','phone','email',
-    'parent_name','student_name','contact','api_key','token','password','secret','credential'
-]:
+for forbidden in ['session_id','correlation_id','raw_message','raw_question','phone','email','parent_name','student_name','contact','api_key','token','password','secret','credential']:
     assert forbidden not in change['properties'], forbidden
     assert forbidden not in shadow['properties'], forbidden
 
@@ -31,19 +28,14 @@ assert change['properties']['candidate_payload_json']['type'] == 'string'
 assert change['properties']['candidate_payload_json']['minLength'] >= 2
 assert change['properties']['regression_payload_sha256']['type'] == ['string','null']
 assert change['properties']['regression_payload_sha256']['pattern'] == '^[a-f0-9]{64}$'
+assert change['properties']['regression_case_ids']['minItems'] == 2
 
-expected_families = [
-    'FAQ','SUBJECTS','SUBJECT_PATHWAYS','SERVICES','LOCATIONS','FALLBACKS','PACKAGES','POLICIES'
-]
+expected_families = ['FAQ','SUBJECTS','SUBJECT_PATHWAYS','SERVICES','LOCATIONS','FALLBACKS','PACKAGES','POLICIES']
 assert change['properties']['target_family']['enum'] == expected_families
 assert shadow['properties']['target_family']['enum'] == expected_families
 assert list(adapters['families'].keys()) == expected_families
 
-expected_ids = {
-    'FAQ':'record_id','SUBJECTS':'record_id','SUBJECT_PATHWAYS':'pathway_id',
-    'SERVICES':'service_id','LOCATIONS':'record_id','FALLBACKS':'record_id',
-    'PACKAGES':'record_id','POLICIES':'record_id'
-}
+expected_ids = {'FAQ':'record_id','SUBJECTS':'record_id','SUBJECT_PATHWAYS':'pathway_id','SERVICES':'service_id','LOCATIONS':'record_id','FALLBACKS':'record_id','PACKAGES':'record_id','POLICIES':'record_id'}
 for family, id_field in expected_ids.items():
     a = adapters['families'][family]
     assert a['id_field'] == id_field
@@ -58,11 +50,4 @@ for family in expected_families[:-2]:
     assert adapters['families'][family]['business_truth_required'] is False
 
 print('WU103_CONTRACT_TESTS_PASS')
-print(json.dumps({
-    'change_fields': len(change['properties']),
-    'shadow_fields': len(shadow['properties']),
-    'families': len(expected_families),
-    'candidate_payload_stored': True,
-    'regression_payload_binding_stored': True,
-    'production_publish_environment_allowed': False
-}, indent=2))
+print(json.dumps({'change_fields':len(change['properties']),'shadow_fields':len(shadow['properties']),'families':len(expected_families),'candidate_payload_stored':True,'regression_payload_binding_stored':True,'minimum_regression_cases':2,'production_publish_environment_allowed':False},indent=2))
