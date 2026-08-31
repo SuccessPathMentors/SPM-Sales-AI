@@ -1,14 +1,19 @@
 #!/usr/bin/env python3
+import json
 from copy import deepcopy
 from core import (
     allocate_logical_id,
     automation_may_write_approval_field,
     business_truth_gate,
     candidate_key,
+    candidate_payload_hash,
+    canonical_candidate_payload,
+    parse_candidate_payload,
     payload_hash,
     publish_gate,
     resolve_staging_base,
     row_fingerprint,
+    sheet_safe_text,
     stale_base,
     transition_allowed,
     validate_family_payload,
@@ -32,6 +37,46 @@ try:
     raise AssertionError('unknown field accepted')
 except ValueError as e:
     assert str(e).startswith('UNKNOWN_PAYLOAD_FIELDS')
+
+# CR-103-01: curated candidate payload must be valid family-allowlisted JSON and
+# its hash binds regression/publish evidence to the exact content.
+payload_json = json.dumps(faq, ensure_ascii=False)
+parsed = parse_candidate_payload('FAQ', payload_json)
+assert parsed == faq
+canonical = canonical_candidate_payload('FAQ', payload_json)
+assert json.loads(canonical) == faq
+candidate_hash_1 = candidate_payload_hash('FAQ', payload_json)
+assert candidate_hash_1 == payload_hash('FAQ', faq)
+
+edited = {**faq, 'answer':'A revised human-curated answer.'}
+candidate_hash_2 = candidate_payload_hash('FAQ', json.dumps(edited))
+assert candidate_hash_2 != candidate_hash_1
+
+try:
+    parse_candidate_payload('FAQ', '{bad json')
+    raise AssertionError('invalid JSON accepted')
+except ValueError as e:
+    assert str(e) == 'CANDIDATE_PAYLOAD_JSON_INVALID'
+
+try:
+    parse_candidate_payload('FAQ', json.dumps({**faq, 'raw_question':'customer text'}))
+    raise AssertionError('queue/raw field accepted as knowledge payload')
+except ValueError as e:
+    assert str(e).startswith('UNKNOWN_PAYLOAD_FIELDS')
+
+# ADD may omit the logical ID before collision-checked allocation; UPDATE may not.
+faq_add = {k:v for k,v in faq.items() if k != 'record_id'}
+parse_candidate_payload('FAQ', json.dumps(faq_add), allow_missing_id=True)
+try:
+    parse_candidate_payload('FAQ', json.dumps(faq_add), allow_missing_id=False)
+    raise AssertionError('UPDATE payload without target id accepted')
+except ValueError as e:
+    assert str(e) == 'MISSING_TARGET_ID_FIELD'
+
+# Spreadsheet/formula injection escaping is adapter-boundary behavior and does
+# not alter canonical JSON/hash semantics.
+assert sheet_safe_text('=IMPORTXML("x","y")').startswith("'=")
+assert sheet_safe_text('normal text') == 'normal text'
 
 # Hashes deterministic; operational last_reviewed does not create a stale content fingerprint.
 f1 = row_fingerprint('FAQ', faq)
@@ -60,8 +105,8 @@ assert business_truth_gate('PACKAGES', True, 'OWNER_DECISION', 'SRC-009')[0] is 
 assert business_truth_gate('POLICIES', True, 'INTERNAL_APPROVED_SOURCE', 'approved-policy-1')[0] is True
 
 # Base resolution: canonical legacy first, then ACTIVE shadow takes precedence.
-canonical = [faq]
-base_legacy = resolve_staging_base('FAQ', 'FAQ-001', canonical, [])
+canonical_rows = [faq]
+base_legacy = resolve_staging_base('FAQ', 'FAQ-001', canonical_rows, [])
 assert base_legacy['base_source'] == 'CANONICAL_LEGACY'
 assert base_legacy['base_revision'] == 'LEGACY_UNVERSIONED'
 assert base_legacy['base_fingerprint_sha256'] == f1
@@ -74,13 +119,13 @@ shadow = [{
     'base_fingerprint_sha256':f1,'record_status':'ACTIVE','published_at':'2026-08-31T00:00:00Z',
     'supersedes_revision':None
 }]
-base_shadow = resolve_staging_base('FAQ', 'FAQ-001', canonical, shadow)
+base_shadow = resolve_staging_base('FAQ', 'FAQ-001', canonical_rows, shadow)
 assert base_shadow['base_source'] == 'SHADOW'
 assert base_shadow['base_revision'] == 'v1'
 assert base_shadow['base_fingerprint_sha256'] == 'a' * 64
 
 try:
-    resolve_staging_base('FAQ', 'FAQ-001', canonical, shadow + [dict(shadow[0], change_id='chg-two')])
+    resolve_staging_base('FAQ', 'FAQ-001', canonical_rows, shadow + [dict(shadow[0], change_id='chg-two')])
     raise AssertionError('non-unique shadow base accepted')
 except ValueError as e:
     assert str(e) == 'BASE_RECORD_NOT_UNIQUE'
@@ -97,19 +142,21 @@ change = {
     'regression_status':'PASS',
     'release_approval_status':'APPROVED',
     'pii_reviewed':True,
-    'candidate_payload_sha256':'b' * 64,
+    'candidate_payload_sha256':candidate_hash_1,
     'target_family':'FAQ',
     'business_truth_approval':False,
     'source_type':'WEBSITE',
     'source_reference':'SRC-01'
 }
-assert publish_gate(change, regression_bound_payload_sha256='b' * 64) == (True, 'PASS')
-assert publish_gate(change, regression_bound_payload_sha256='c' * 64)[0] is False
-assert publish_gate({**change, 'change_state':'TEST_PASSED'}, regression_bound_payload_sha256='b' * 64)[0] is False
+assert publish_gate(change, regression_bound_payload_sha256=candidate_hash_1) == (True, 'PASS')
+assert publish_gate(change, regression_bound_payload_sha256=candidate_hash_2)[0] is False
+assert publish_gate({**change, 'change_state':'TEST_PASSED'}, regression_bound_payload_sha256=candidate_hash_1)[0] is False
 
 print('WU103_CORE_TESTS_PASS')
 print({
     'candidate_key': k1,
+    'candidate_payload_hash': candidate_hash_1,
+    'payload_edit_invalidates_hash': True,
     'legacy_fingerprint': f1,
     'shadow_precedence': True,
     'business_truth_gate': True,
