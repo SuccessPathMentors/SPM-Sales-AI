@@ -17,13 +17,13 @@ if TARGET in DENIED: raise SystemExit('protected/locked workflow ID denied for W
 req=urllib.request.Request(f'{BASE}/workflows/{TARGET}',headers={'accept':'application/json','X-N8N-API-KEY':KEY},method='GET')
 with urllib.request.urlopen(req,timeout=45) as resp: wf=json.loads(resp.read().decode('utf-8'))
 nodes={n.get('name'):n for n in wf.get('nodes',[])}
-required=['Manual Trigger','Load WU103 Change Ledger [STAGING]','Load WU103 KB Shadow [STAGING]','Build WU103 Publish Decisions','Is WU103 Publish Allowed?','Prepare WU103 Shadow Writes','Upsert WU103 KB Shadow [STAGING]','Prepare WU103 Ledger Publication Updates','Upsert WU103 Change Ledger [STAGING]','WU103 Published Result','WU103 Blocked Result']+[f'Load {f} [WU103 READ ONLY]' for f in FAMILY_IDS]
+required=['Manual Trigger','Load WU103 Change Ledger [STAGING]','Build WU103 Early Preflight','Any WU103 Candidate Needs Deep Validation?','Load WU103 KB Shadow [STAGING]','Build WU103 Publish Decisions','Is WU103 Publish Allowed?','Prepare WU103 Shadow Writes','Upsert WU103 KB Shadow [STAGING]','Prepare WU103 Ledger Publication Updates','Upsert WU103 Change Ledger [STAGING]','WU103 Published Result','WU103 Blocked Result']+[f'Load {f} [WU103 READ ONLY]' for f in FAMILY_IDS]
 errors=[]
 missing=[n for n in required if n not in nodes]
 if missing: errors.append('missing nodes: '+','.join(missing))
 if wf.get('active') is True: errors.append('remote workflow unexpectedly active')
 if wf.get('name')!='[STAGING] SPM WU103 Knowledge Maintenance STAGING Candidate': errors.append('remote workflow name mismatch')
-if len(wf.get('nodes',[]))!=19: errors.append('remote node count mismatch')
+if len(wf.get('nodes',[]))!=21: errors.append('remote node count mismatch')
 for n in wf.get('nodes',[]):
     if n.get('type') in {'@n8n/n8n-nodes-langchain.chatTrigger','n8n-nodes-base.webhook'}: errors.append('public/customer trigger present')
 
@@ -44,22 +44,28 @@ for family,sid in FAMILY_IDS.items():
     if p.get('operation') not in (None,'read'): errors.append(f'{family} canonical node is not read-only')
     if p.get('filtersUI',{}).get('values',[])!=[{'lookupColumn':'status','lookupValue':'ACTIVE'}]: errors.append(f'{family} ACTIVE filter mismatch')
 
+preflight=nodes.get('Build WU103 Early Preflight',{}).get('parameters',{}).get('jsCode','')
+for token in ['REGRESSION_PASS_REQUIRED','HUMAN_APPROVAL_REQUIRED','RELEASE_APPROVAL_REQUIRED','REGRESSION_PAYLOAD_HASH_MISMATCH','REGRESSION_EVIDENCE_REQUIRED','REGRESSION_CASES_INCOMPLETE','BUSINESS_TRUTH_APPROVAL_REQUIRED','deep_validation_required']:
+    if token not in preflight: errors.append('missing preflight gate: '+token)
 js=nodes.get('Build WU103 Publish Decisions',{}).get('parameters',{}).get('jsCode','')
 for token in ['REGRESSION_PAYLOAD_HASH_MISMATCH','REGRESSION_EVIDENCE_REQUIRED','REGRESSION_CASES_INCOMPLETE','CANDIDATE_PAYLOAD_HASH_MISMATCH','STALE_BASE_RECORD','HUMAN_APPROVAL_REQUIRED','RELEASE_APPROVAL_REQUIRED','BUSINESS_TRUTH_APPROVAL_REQUIRED','SOURCE_REFERENCE_REQUIRED','DUPLICATE_ACTIVE_CANDIDATE_KEY','ADD_ID_COLLISION_CANONICAL','BASE_RECORD_NOT_UNIQUE','INTERRUPTED_PUBLISH_LINEAGE_MISMATCH',"clean(r.publish_environment)!=='STAGING'",'new TextEncoder().encode(str)','activeShadow.length===2&&sameCurrent.length===1','idempotentExisting']:
     if token not in js: errors.append('missing gate/recovery: '+token)
 for forbidden in ["review_decision:'APPROVED'","business_truth_approval:true","release_approval_status:'APPROVED'"]:
-    if forbidden in js: errors.append('self-approval assignment present: '+forbidden)
+    if forbidden in js or forbidden in preflight: errors.append('self-approval assignment present: '+forbidden)
 prepare_shadow=nodes.get('Prepare WU103 Shadow Writes',{}).get('parameters',{}).get('jsCode','')
 if prepare_shadow.find('new_shadow_row')<0 or prepare_shadow.find('supersede_shadow_row')<0 or prepare_shadow.find('new_shadow_row')>prepare_shadow.find('supersede_shadow_row'): errors.append('new shadow row must be written before superseding prior revision')
 
 connections=wf.get('connections',{})
 def targets(name): return [[c.get('node') for c in group] for group in connections.get(name,{}).get('main',[])]
+if targets('Load WU103 Change Ledger [STAGING]')!=[['Build WU103 Early Preflight']]: errors.append('ledger-to-preflight path mismatch')
+if targets('Build WU103 Early Preflight')!=[['Any WU103 Candidate Needs Deep Validation?']]: errors.append('preflight-to-gate path mismatch')
+if targets('Any WU103 Candidate Needs Deep Validation?')!=[['Load WU103 KB Shadow [STAGING]'],['WU103 Blocked Result']]: errors.append('preflight branch mismatch')
 if targets('Is WU103 Publish Allowed?')!=[['Prepare WU103 Shadow Writes'],['WU103 Blocked Result']]: errors.append('publish gate branch mismatch')
 if targets('Prepare WU103 Shadow Writes')!=[['Upsert WU103 KB Shadow [STAGING]']]: errors.append('shadow write path mismatch')
 if targets('Upsert WU103 KB Shadow [STAGING]')!=[['Prepare WU103 Ledger Publication Updates']]: errors.append('shadow-to-ledger path mismatch')
 if targets('Prepare WU103 Ledger Publication Updates')!=[['Upsert WU103 Change Ledger [STAGING]']]: errors.append('ledger update path mismatch')
 
-observed={'workflow_id':wf.get('id'),'workflow_name':wf.get('name'),'active':wf.get('active'),'node_count':len(wf.get('nodes',[])),'ledger_sheet_id':ledger.get('parameters',{}).get('sheetName',{}).get('value'),'shadow_sheet_id':shadow.get('parameters',{}).get('sheetName',{}).get('value'),'ledger_matching':ledger.get('parameters',{}).get('columns',{}).get('matchingColumns'),'shadow_matching':shadow.get('parameters',{}).get('columns',{}).get('matchingColumns'),'canonical_family_count':len(FAMILY_IDS),'shadow_history_read':True,'retry_recovery_present':'idempotentExisting' in js,'fail_closed_writes':ledger.get('onError') is None and shadow.get('onError') is None}
+observed={'workflow_id':wf.get('id'),'workflow_name':wf.get('name'),'active':wf.get('active'),'node_count':len(wf.get('nodes',[])),'ledger_sheet_id':ledger.get('parameters',{}).get('sheetName',{}).get('value'),'shadow_sheet_id':shadow.get('parameters',{}).get('sheetName',{}).get('value'),'ledger_matching':ledger.get('parameters',{}).get('columns',{}).get('matchingColumns'),'shadow_matching':shadow.get('parameters',{}).get('columns',{}).get('matchingColumns'),'canonical_family_count':len(FAMILY_IDS),'shadow_history_read':True,'early_preflight_present':'deep_validation_required' in preflight,'retry_recovery_present':'idempotentExisting' in js,'fail_closed_writes':ledger.get('onError') is None and shadow.get('onError') is None}
 print(json.dumps(observed,indent=2,ensure_ascii=False))
 if errors:
     print('WU103_REMOTE_READBACK_FAIL: '+'; '.join(errors),file=sys.stderr)
