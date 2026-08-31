@@ -1,9 +1,18 @@
 #!/usr/bin/env python3
 import argparse
+import importlib.util
 import json
 from pathlib import Path
 
-from build_candidate import build as build_normal, node_by_name, sha256
+HERE = Path(__file__).resolve().parent
+spec = importlib.util.spec_from_file_location('wu102_build_candidate', HERE / 'build_candidate.py')
+assert spec and spec.loader
+wu102 = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(wu102)
+
+build_normal = wu102.build
+node_by_name = wu102.node_by_name
+sha256 = wu102.sha256
 
 FAILURE_DOCUMENT_ID = 'WU102_FAILURE_INJECTION_NONEXISTENT_SPREADSHEET'
 LOGGER = 'Upsert WU102 Unanswered [STAGING]'
