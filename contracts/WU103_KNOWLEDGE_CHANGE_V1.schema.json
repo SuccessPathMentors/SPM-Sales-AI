@@ -27,7 +27,7 @@
     "source_reference": {"type": "string", "minLength": 1},
     "source_type": {"enum": ["WEBSITE","ATTACHMENT","QUALITY_NOTE","OWNER_DECISION","INTERNAL_APPROVED_SOURCE"]},
     "business_truth_approval": {"type": "boolean"},
-    "regression_case_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "regression_case_ids": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true, "minItems": 2},
     "regression_evidence_sha256": {"type": ["string","null"], "pattern": "^[a-f0-9]{64}$"},
     "regression_payload_sha256": {"type": ["string","null"], "pattern": "^[a-f0-9]{64}$"},
     "regression_status": {"enum": ["NOT_RUN","PASS","FAIL","INVALIDATED"]},
