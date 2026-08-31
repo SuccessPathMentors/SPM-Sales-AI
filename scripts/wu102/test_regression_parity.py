@@ -1,16 +1,23 @@
 #!/usr/bin/env python3
 import copy
+import importlib.util
 import json
 import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 WU101_DIR = HERE.parent / 'wu101'
-sys.path.insert(0, str(HERE))
-sys.path.insert(0, str(WU101_DIR))
 
-import build_candidate as wu102  # noqa: E402
+# Import the locked WU-101 builder from its own directory first.
+sys.path.insert(0, str(WU101_DIR))
 from build_candidate_sheets_type_safe import build as build_wu101  # noqa: E402
+
+# Load WU-102 explicitly by file path so Python cannot resolve WU-101's
+# build_candidate.py by module-name collision.
+spec = importlib.util.spec_from_file_location('wu102_build_candidate', HERE / 'build_candidate.py')
+assert spec and spec.loader
+wu102 = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(wu102)
 
 BASE = Path('n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json')
 base = build_wu101(BASE)
