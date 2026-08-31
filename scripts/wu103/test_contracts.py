@@ -27,6 +27,8 @@ assert change['properties']['raw_session_logged']['const'] is False
 assert change['properties']['secret_values_logged']['const'] is False
 assert change['properties']['publish_environment']['const'] == 'STAGING'
 assert change['properties']['candidate_key']['pattern'] == '^[a-f0-9]{64}$'
+assert change['properties']['candidate_payload_json']['type'] == 'string'
+assert change['properties']['candidate_payload_json']['minLength'] >= 2
 
 expected_families = [
     'FAQ','SUBJECTS','SUBJECT_PATHWAYS','SERVICES','LOCATIONS','FALLBACKS','PACKAGES','POLICIES'
@@ -45,6 +47,9 @@ for family, id_field in expected_ids.items():
     assert a['id_field'] == id_field
     assert id_field in a['fields']
     assert 'status' in a['fields']
+    # Customer queue/runtime identifiers can never be legal KB payload fields.
+    for forbidden_payload in ['session_id','correlation_id','phone','email','parent_name','student_name','raw_question','raw_message']:
+        assert forbidden_payload not in a['fields'], (family, forbidden_payload)
 
 assert adapters['families']['PACKAGES']['business_truth_required'] is True
 assert adapters['families']['POLICIES']['business_truth_required'] is True
@@ -56,5 +61,6 @@ print(json.dumps({
     'change_fields': len(change['properties']),
     'shadow_fields': len(shadow['properties']),
     'families': len(expected_families),
+    'candidate_payload_stored': True,
     'production_publish_environment_allowed': False
 }, indent=2))
