@@ -1,0 +1,73 @@
+{
+  "schema": "SPM_WU103_REGRESSION_EVIDENCE_V1",
+  "change_id": "chg-wu103-runtime-stale-003",
+  "change_type": "UPDATE",
+  "candidate_payload_sha256": "d0f48f467a9465de5d2ba5e5b830b913d2955f6d5384eb23cad7210ae0bc0389",
+  "source_queue_event_id": "uq-mthj2huo-574fruu6b14-1fugv0klka3-1",
+  "target_family": "FALLBACKS",
+  "target_record_id": "FB-WU103-3BDF51AC9F7B",
+  "base_revision": "v2",
+  "candidate_revision": "v3",
+  "base_fingerprint_sha256": "eb4d4088bc2f3de8db060a036e2cefa868eba9f26d2d2e44b80ef6bf720aac8b",
+  "current_active_revision": "v2",
+  "current_active_payload_sha256": "d0f48f467a9465de5d2ba5e5b830b913d2955f6d5384eb23cad7210ae0bc0389",
+  "supersedes_change_id": "chg-wu103-runtime-update-002",
+  "intent_mapping": ["out_of_scope"],
+  "candidate_payload_json": {
+    "language": "en",
+    "message": "I can help with questions related to Success Path Mentors tutoring services. Please ask me about our tutoring, subjects, trials, scheduling, or support.",
+    "next_action": "redirect_to_spm_scope",
+    "record_id": "FB-WU103-3BDF51AC9F7B",
+    "scenario": "out_of_scope",
+    "status": "ACTIVE"
+  },
+  "cases": [
+    {
+      "case_id": "WU103-RUNTIME-STALE-V3-POSITIVE",
+      "type": "positive_originating_gap",
+      "input": "ما حالة الطقس في القاهرة اليوم؟",
+      "source_ref": "WU102_UNANSWERED_STAGING:uq-mthj2huo-574fruu6b14-1fugv0klka3-1",
+      "observed_intent": "out_of_scope",
+      "expected_candidate_selected": true,
+      "assertions": {
+        "source_event_matches": true,
+        "intent_in_candidate_mapping": true,
+        "payload_scenario_is_out_of_scope": true,
+        "payload_redirects_to_spm_scope": true,
+        "payload_mentions_spm_tutoring": true,
+        "payload_avoids_false_unavailable_claim": true
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "WU103-RUNTIME-STALE-V3-NEIGHBOR",
+      "type": "negative_neighbor",
+      "input": "What subjects do you offer?",
+      "source_ref": "SPM_INTENTS_V2:SPM-002",
+      "observed_intent": "subject_inquiry",
+      "expected_candidate_selected": false,
+      "assertions": {
+        "neighbor_intent_active": true,
+        "neighbor_intent_not_in_candidate_mapping": true
+      },
+      "result": "PASS"
+    },
+    {
+      "case_id": "WU103-RUNTIME-STALE-V3-BASE",
+      "type": "stale_base_safety",
+      "source_ref": "WU103_KB_SHADOW_STAGING:FB-WU103-3BDF51AC9F7B:v2",
+      "expected_candidate_selected": false,
+      "assertions": {
+        "current_active_revision_is_v2": true,
+        "current_active_payload_sha_is_v2": true,
+        "candidate_declares_base_revision_v2": true,
+        "candidate_base_fingerprint_points_to_superseded_v1": true,
+        "candidate_base_fingerprint_differs_from_current_active_v2": true,
+        "expected_publisher_reason_is_stale_base_record": true,
+        "expected_no_v3_write": true
+      },
+      "result": "PASS"
+    }
+  ],
+  "overall_result": "PASS"
+}

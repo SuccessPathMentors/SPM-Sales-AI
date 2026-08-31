@@ -95,6 +95,70 @@ assert lineage['source_ref'] == 'WU103_KB_SHADOW_STAGING:FB-WU103-3BDF51AC9F7B:v
 assert lineage['expected_candidate_selected'] is True
 assert all(lineage['assertions'].values())
 
+# Runtime stale-base safety evidence. This candidate intentionally carries the
+# superseded v1 payload fingerprint while declaring v2 as its base. The live
+# STAGING shadow precondition captured for this test is v2 ACTIVE with the v2
+# payload SHA, so the only acceptable publisher outcome is STALE_BASE_RECORD
+# and no v3 write.
+v3_path = EVIDENCE_DIR / 'chg-wu103-runtime-stale-003.regression.json'
+v3 = json.loads(v3_path.read_text(encoding='utf-8'))
+assert v3['schema'] == 'SPM_WU103_REGRESSION_EVIDENCE_V1'
+assert v3['change_id'] == 'chg-wu103-runtime-stale-003'
+assert v3['source_queue_event_id'] == 'uq-mthj2huo-574fruu6b14-1fugv0klka3-1'
+assert v3['target_family'] == 'FALLBACKS'
+assert v3['change_type'] == 'UPDATE'
+assert v3['target_record_id'] == 'FB-WU103-3BDF51AC9F7B'
+assert v3['base_revision'] == 'v2'
+assert v3['candidate_revision'] == 'v3'
+assert v3['supersedes_change_id'] == 'chg-wu103-runtime-update-002'
+assert v3['intent_mapping'] == ['out_of_scope']
+assert v3['overall_result'] == 'PASS'
+
+v3_payload = v3['candidate_payload_json']
+v3_payload_sha = sha256_text(canonical_json(v3_payload))
+assert v3_payload_sha == v3['candidate_payload_sha256']
+assert v3_payload_sha == 'd0f48f467a9465de5d2ba5e5b830b913d2955f6d5384eb23cad7210ae0bc0389'
+assert v3_payload['record_id'] == v3['target_record_id']
+assert v3_payload['scenario'] == 'out_of_scope'
+assert v3_payload['next_action'] == 'redirect_to_spm_scope'
+assert v3_payload['status'] == 'ACTIVE'
+assert 'Success Path Mentors' in v3_payload['message']
+assert 'tutoring' in v3_payload['message'].lower()
+
+# Stale-base precondition: candidate fingerprint is the superseded v1 SHA,
+# while current ACTIVE v2 carries the v2 payload SHA.
+assert v3['base_fingerprint_sha256'] == 'eb4d4088bc2f3de8db060a036e2cefa868eba9f26d2d2e44b80ef6bf720aac8b'
+assert v3['current_active_revision'] == 'v2'
+assert v3['current_active_payload_sha256'] == 'd0f48f467a9465de5d2ba5e5b830b913d2955f6d5384eb23cad7210ae0bc0389'
+assert v3['base_fingerprint_sha256'] != v3['current_active_payload_sha256']
+
+v3_cases = v3['cases']
+v3_ids = [c['case_id'] for c in v3_cases]
+assert len(v3_ids) >= 3 and len(v3_ids) == len(set(v3_ids))
+assert all(c['result'] == 'PASS' for c in v3_cases)
+v3_positive = next(c for c in v3_cases if c['type'] == 'positive_originating_gap')
+assert v3_positive['source_ref'] == 'WU102_UNANSWERED_STAGING:uq-mthj2huo-574fruu6b14-1fugv0klka3-1'
+assert v3_positive['observed_intent'] == 'out_of_scope'
+assert v3_positive['expected_candidate_selected'] is True
+assert all(v3_positive['assertions'].values())
+v3_negative = next(c for c in v3_cases if c['type'] == 'negative_neighbor')
+assert v3_negative['source_ref'] == 'SPM_INTENTS_V2:SPM-002'
+assert v3_negative['observed_intent'] == 'subject_inquiry'
+assert v3_negative['expected_candidate_selected'] is False
+assert all(v3_negative['assertions'].values())
+v3_stale = next(c for c in v3_cases if c['type'] == 'stale_base_safety')
+assert v3_stale['source_ref'] == 'WU103_KB_SHADOW_STAGING:FB-WU103-3BDF51AC9F7B:v2'
+assert v3_stale['expected_candidate_selected'] is False
+assert all(v3_stale['assertions'].values())
+
+v3_raw = canonical_json(v3).lower()
+for forbidden_key in [
+    'queue_session_key', 'session_id', 'correlation_id', 'email', 'phone',
+    'api_key', 'password', 'credential'
+]:
+    assert f'\"{forbidden_key}\"' not in v3_raw
+v3_evidence_sha = sha256_text(canonical_json(v3))
+
 print('WU103_REGRESSION_EVIDENCE_PASS')
 print(json.dumps({
     'verified_changes': [
@@ -114,6 +178,18 @@ print(json.dumps({
             'base_revision': v2['base_revision'],
             'candidate_revision': v2['candidate_revision'],
             'base_fingerprint_sha256': v2['base_fingerprint_sha256'],
+        },
+        {
+            'change_id': v3['change_id'],
+            'candidate_payload_sha256': v3_payload_sha,
+            'regression_evidence_sha256': v3_evidence_sha,
+            'case_ids': v3_ids,
+            'overall_result': v3['overall_result'],
+            'base_revision': v3['base_revision'],
+            'candidate_revision': v3['candidate_revision'],
+            'declared_base_fingerprint_sha256': v3['base_fingerprint_sha256'],
+            'current_active_payload_sha256': v3['current_active_payload_sha256'],
+            'expected_runtime_block': 'STALE_BASE_RECORD',
         },
     ]
 }, indent=2))
