@@ -5,6 +5,7 @@ on:
     paths:
       - 'contracts/WU103_*'
       - 'scripts/wu103/**'
+      - 'evidence/wu103/**'
       - 'work-units/WU-103.md'
       - 'work-units/CR-103-*'
       - '.github/workflows/wu103-contract.yml'
@@ -23,6 +24,10 @@ jobs:
         run: python scripts/wu103/test_contracts.py
       - name: Deterministic core tests
         run: python scripts/wu103/test_core.py
+      - name: Regression evidence verification
+        run: python scripts/wu103/verify_regression_evidence.py
+      - name: Legacy FB-003 regression verification
+        run: python scripts/wu103/verify_legacy_fb003_regression.py
       - name: STAGING maintenance workflow static safety tests
         run: python scripts/wu103/test_staging_workflow.py
       - name: Build hardened candidate and print deterministic SHA
