@@ -1,0 +1,199 @@
+name: WU-102 unanswered queue staging
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "scripts/wu102/**"
+      - "contracts/WU102_UNANSWERED_QUESTION_EVENT_V1.schema.json"
+      - "work-units/WU-102.md"
+      - ".github/workflows/wu102-staging.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run performs zero n8n writes; apply may create/update only inactive WU-102 STAGING"
+        required: true
+        type: choice
+        default: dry-run
+        options:
+          - dry-run
+          - apply
+      target_workflow_id:
+        description: "Existing WU-102 STAGING workflow ID. Leave blank only for the first deliberate create."
+        required: false
+        type: string
+        default: ""
+      allow_create:
+        description: "Explicitly permit one-time WU-102 STAGING creation when target_workflow_id is blank"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wu102-staging-${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'pr-validation' }}
+  cancel-in-progress: false
+
+env:
+  BASELINE: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+  CANDIDATE: n8n/generated/SPM_WU102_STAGING_UNANSWERED_CANDIDATE.json
+  EXPECTED_SHA256: 6a429304f114b472429cde20c0687499b0b978567b4b3fb983891884dbba9cf5
+  PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
+  LOCKED_WU101_STAGING_ID: mMZVFxJIxE7a9SSW
+
+jobs:
+  validate:
+    name: WU102 static contract privacy regression
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build deterministic WU-102 candidate
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu102/build_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
+
+      - name: Run WU-102 schema static contract and regression tests
+        run: |
+          set -euo pipefail
+          python scripts/wu102/test_schema.py
+          python scripts/wu102/test_candidate.py
+          python scripts/wu102/test_contract_signals.py
+          python scripts/wu102/test_regression_parity.py
+
+      - name: Lock or verify exact candidate SHA-256
+        run: |
+          set -euo pipefail
+          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+          echo "WU102_CANDIDATE_SHA256=$actual"
+          if [[ "$EXPECTED_SHA256" == "TO_LOCK_AFTER_FIRST_CI" ]]; then
+            echo "Candidate is deterministic. Lock EXPECTED_SHA256 to the value above, then rerun CI." >&2
+            exit 1
+          fi
+          test "$actual" = "$EXPECTED_SHA256"
+
+      - name: Existing non-production deployer dry-run
+        run: |
+          set -euo pipefail
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact "$CANDIDATE" \
+            --environment staging \
+            --expected-sha256 "$EXPECTED_SHA256" \
+            --mode dry-run \
+            --result-file wu102-dry-run-result.json
+
+      - name: Upload candidate and dry-run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu102-candidate-and-dry-run
+          path: |
+            n8n/generated/SPM_WU102_STAGING_UNANSWERED_CANDIDATE.json
+            wu102-dry-run-result.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  deploy-staging:
+    name: WU102 ${{ inputs.mode }} to staging
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      N8N_TARGET_WORKFLOW_ID: ${{ inputs.target_workflow_id }}
+      SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Rebuild and verify exact WU-102 candidate
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu102/build_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
+          python scripts/wu102/test_schema.py
+          python scripts/wu102/test_candidate.py
+          python scripts/wu102/test_contract_signals.py
+          python scripts/wu102/test_regression_parity.py
+          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+          test "$EXPECTED_SHA256" != "TO_LOCK_AFTER_FIRST_CI"
+          test "$actual" = "$EXPECTED_SHA256"
+
+      - name: Hard-stop manual target checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="${{ inputs.target_workflow_id }}"
+          if [[ "$target" == "$PRODUCTION_WORKFLOW_ID" ]]; then
+            echo "Production workflow ID is denied" >&2
+            exit 1
+          fi
+          if [[ "$target" == "$LOCKED_WU101_STAGING_ID" ]]; then
+            echo "Locked WU-101 STAGING workflow ID is denied for WU-102" >&2
+            exit 1
+          fi
+          if [[ "$target" == "BIDVhNCRbj9dvH1t" ]]; then
+            echo "Legacy MIG-003 canary ID is denied for WU-102" >&2
+            exit 1
+          fi
+          if [[ "${{ inputs.mode }}" == "apply" && -z "$target" && "${{ inputs.allow_create }}" != "true" ]]; then
+            echo "First WU-102 apply with no target requires allow_create=true" >&2
+            exit 1
+          fi
+          if [[ "${{ inputs.allow_create }}" == "true" && -n "$target" ]]; then
+            echo "allow_create=true is permitted only when target_workflow_id is blank" >&2
+            exit 1
+          fi
+
+      - name: Run safe non-production deployer
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --artifact "$CANDIDATE"
+            --environment staging
+            --expected-sha256 "$EXPECTED_SHA256"
+            --mode "${{ inputs.mode }}"
+            --result-file wu102-deployment-result.json
+          )
+          if [[ -n "${{ inputs.target_workflow_id }}" ]]; then
+            args+=(--target-workflow-id "${{ inputs.target_workflow_id }}")
+          fi
+          if [[ "${{ inputs.allow_create }}" == "true" ]]; then
+            args+=(--allow-create)
+          fi
+          python scripts/n8n/deploy_nonprod.py "${args[@]}"
+
+      - name: Verify remote WU-102 STAGING content after apply
+        if: inputs.mode == 'apply'
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="$(python - <<'PY'
+          import json
+          print(json.load(open('wu102-deployment-result.json'))['target_workflow_id'])
+          PY
+          )"
+          test "$target" != "$PRODUCTION_WORKFLOW_ID"
+          test "$target" != "$LOCKED_WU101_STAGING_ID"
+          N8N_TARGET_WORKFLOW_ID="$target" python scripts/wu102/verify_remote_staging.py
+
+      - name: Upload WU-102 deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu102-staging-${{ inputs.mode }}-evidence
+          path: |
+            n8n/generated/SPM_WU102_STAGING_UNANSWERED_CANDIDATE.json
+            wu102-deployment-result.json
+          if-no-files-found: ignore
+          retention-days: 30
