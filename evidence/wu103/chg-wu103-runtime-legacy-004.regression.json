@@ -1,0 +1,66 @@
+{
+  "schema": "SPM_WU103_REGRESSION_EVIDENCE_V1",
+  "change_id": "chg-wu103-runtime-legacy-004",
+  "source_queue_event_id": "uq-mthio2u5-14vfybrnbiu-d8skcnpdvis-1",
+  "target_family": "FALLBACKS",
+  "change_type": "UPDATE",
+  "target_record_id": "FB-003",
+  "base_revision": "LEGACY_UNVERSIONED",
+  "candidate_revision": "v1",
+  "base_fingerprint_sha256": "2b440d9609f77b23e6759f7ba03e3553ced3925a538dcb69646846491400f8de",
+  "candidate_payload_json": {
+    "language": "en",
+    "message": "I can help with questions related to Success Path Mentors tutoring services. Please ask me about tutoring, subjects, trials, scheduling, or support.",
+    "next_action": "redirect_to_spm_scope",
+    "record_id": "FB-003",
+    "scenario": "no_answer",
+    "status": "ACTIVE"
+  },
+  "candidate_payload_sha256": "502062d5301f724effdc3d4ab8599e79bcfb3e06d53193eae70d05a6b465518b",
+  "intent_mapping": ["out_of_scope"],
+  "overall_result": "PASS",
+  "cases": [
+    {
+      "case_id": "WU103-LEGACY-FB003-POSITIVE-OUT-OF-SCOPE",
+      "type": "positive_originating_gap",
+      "source_ref": "WU102_UNANSWERED_STAGING:uq-mthio2u5-14vfybrnbiu-d8skcnpdvis-1",
+      "observed_intent": "out_of_scope",
+      "expected_candidate_selected": true,
+      "result": "PASS",
+      "assertions": {
+        "scope_redirect_present": true,
+        "success_path_mentors_named": true,
+        "tutoring_scope_present": true,
+        "misleading_information_unavailable_phrase_removed": true,
+        "automatic_team_referral_promise_removed": true
+      }
+    },
+    {
+      "case_id": "WU103-LEGACY-FB003-NEGATIVE-SUBJECT-INQUIRY",
+      "type": "negative_neighbor",
+      "source_ref": "SPM_INTENTS_V2:SPM-002",
+      "observed_intent": "subject_inquiry",
+      "expected_candidate_selected": false,
+      "result": "PASS",
+      "assertions": {
+        "neighbor_intent_not_out_of_scope": true,
+        "candidate_mapping_not_subject_inquiry": true,
+        "existing_subject_evidence_path_unchanged": true
+      }
+    },
+    {
+      "case_id": "WU103-LEGACY-FB003-BASE-BINDING",
+      "type": "legacy_base_binding",
+      "source_ref": "FALLBACKS:FB-003",
+      "expected_candidate_selected": true,
+      "result": "PASS",
+      "assertions": {
+        "exactly_one_active_legacy_row": true,
+        "base_revision_is_legacy_unversioned": true,
+        "base_fingerprint_matches_live_row": true,
+        "candidate_target_record_id_matches": true,
+        "candidate_revision_is_v1": true
+      }
+    }
+  ]
+}
