@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 import hashlib
+import importlib.util
 import json
-import sys
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-sys.path.insert(0, str(HERE))
+spec = importlib.util.spec_from_file_location('wu102_build_candidate', HERE / 'build_candidate.py')
+assert spec and spec.loader
+wu102 = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(wu102)
 
-from build_candidate import (  # noqa: E402
-    BOOLEAN_FIELDS,
-    FIELDS,
-    NUMERIC_FIELDS,
-    QUEUE_SHEET_ID,
-    QUEUE_SHEET_NAME,
-    build,
-)
+BOOLEAN_FIELDS = wu102.BOOLEAN_FIELDS
+FIELDS = wu102.FIELDS
+NUMERIC_FIELDS = wu102.NUMERIC_FIELDS
+QUEUE_SHEET_ID = wu102.QUEUE_SHEET_ID
+QUEUE_SHEET_NAME = wu102.QUEUE_SHEET_NAME
+build = wu102.build
 
 BASE = Path('n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json')
 assert BASE.is_file(), BASE
