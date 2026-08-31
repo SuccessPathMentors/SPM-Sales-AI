@@ -82,8 +82,6 @@ def candidate_payload_hash(target_family, candidate_payload_json, *, allow_missi
 
 def normalized_authoritative_row(target_family, row):
     adapter = validate_family_payload(target_family, row, allow_missing_id=False)
-    # `last_reviewed` is operational metadata, not content truth; all other
-    # allowlisted fields participate in optimistic-concurrency fingerprinting.
     fields = [f for f in adapter['fields'] if f != 'last_reviewed']
     return {field: row.get(field) for field in fields}
 
@@ -194,14 +192,14 @@ def stale_base(expected_fingerprint, resolved_base):
     return expected_fingerprint != resolved_base['base_fingerprint_sha256']
 
 
-def payload_regression_is_current(change, regression_bound_payload_sha256):
+def payload_regression_is_current(change):
     return (
         change.get('regression_status') == 'PASS'
-        and regression_bound_payload_sha256 == change.get('candidate_payload_sha256')
+        and change.get('regression_payload_sha256') == change.get('candidate_payload_sha256')
     )
 
 
-def publish_gate(change, *, regression_bound_payload_sha256=None):
+def publish_gate(change):
     if change.get('change_state') != 'RELEASE_APPROVED':
         return False, 'RELEASE_STATE_REQUIRED'
     if change.get('review_decision') != 'APPROVED':
@@ -212,7 +210,7 @@ def publish_gate(change, *, regression_bound_payload_sha256=None):
         return False, 'RELEASE_APPROVAL_REQUIRED'
     if change.get('pii_reviewed') is not True:
         return False, 'PII_REVIEW_REQUIRED'
-    if not payload_regression_is_current(change, regression_bound_payload_sha256):
+    if not payload_regression_is_current(change):
         return False, 'REGRESSION_PAYLOAD_HASH_MISMATCH'
     ok, reason = business_truth_gate(
         change.get('target_family'),
