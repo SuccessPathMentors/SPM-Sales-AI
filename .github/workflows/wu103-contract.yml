@@ -6,6 +6,7 @@ on:
       - 'contracts/WU103_*'
       - 'scripts/wu103/**'
       - 'work-units/WU-103.md'
+      - 'work-units/CR-103-*'
       - '.github/workflows/wu103-contract.yml'
   workflow_dispatch:
 
@@ -22,3 +23,16 @@ jobs:
         run: python scripts/wu103/test_contracts.py
       - name: Deterministic core tests
         run: python scripts/wu103/test_core.py
+      - name: STAGING maintenance workflow static safety tests
+        run: python scripts/wu103/test_staging_workflow.py
+      - name: Build candidate and print deterministic SHA
+        run: |
+          mkdir -p n8n/generated
+          python scripts/wu103/build_staging_workflow.py --output n8n/generated/SPM_WU103_KNOWLEDGE_MAINTENANCE_STAGING_CANDIDATE.json
+          sha256sum n8n/generated/SPM_WU103_KNOWLEDGE_MAINTENANCE_STAGING_CANDIDATE.json
+      - name: Upload WU-103 candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu103-maintenance-candidate
+          path: n8n/generated/SPM_WU103_KNOWLEDGE_MAINTENANCE_STAGING_CANDIDATE.json
+          retention-days: 30
