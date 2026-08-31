@@ -9,7 +9,6 @@ on:
       - "contracts/WU103_*"
       - "work-units/WU-103.md"
       - "work-units/CR-103-*"
-      - "work-units/WU-103.runtime-hardening-*"
       - ".github/workflows/wu103-staging.yml"
   workflow_dispatch:
     inputs:
@@ -39,7 +38,7 @@ concurrency:
 
 env:
   CANDIDATE: n8n/generated/SPM_WU103_KNOWLEDGE_MAINTENANCE_STAGING_CANDIDATE.json
-  EXPECTED_SHA256: bfe68c41ef68186f03272dde29f64eb4111e5fe7be28db5b491b8101cab9c96f
+  EXPECTED_SHA256: TO_LOCK_AFTER_MEMORY_SAFE_CI
   PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
   LOCKED_WU101_STAGING_ID: mMZVFxJIxE7a9SSW
   LOCKED_WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
@@ -58,13 +57,13 @@ jobs:
           python scripts/wu103/test_contracts.py
           python scripts/wu103/test_core.py
           python scripts/wu103/test_staging_workflow.py
-      - name: Build preflight-hardened candidate and verify exact SHA-256
+      - name: Build memory-safe candidate and verify exact SHA-256
         run: |
           set -euo pipefail
           mkdir -p n8n/generated
-          python scripts/wu103/build_staging_workflow_preflight.py --output "$CANDIDATE"
+          python scripts/wu103/build_staging_workflow_memory_safe.py --output "$CANDIDATE"
           actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
-          echo "WU103_PREFLIGHT_CANDIDATE_SHA256=$actual"
+          echo "WU103_CANDIDATE_SHA256=$actual"
           test "$actual" = "$EXPECTED_SHA256"
       - name: Existing non-production deployer dry-run
         run: |
@@ -95,11 +94,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-      - name: Rebuild exact preflight-hardened WU-103 candidate
+      - name: Rebuild exact memory-safe WU-103 candidate
         run: |
           set -euo pipefail
           mkdir -p n8n/generated
-          python scripts/wu103/build_staging_workflow_preflight.py --output "$CANDIDATE"
+          python scripts/wu103/build_staging_workflow_memory_safe.py --output "$CANDIDATE"
           python scripts/wu103/test_contracts.py
           python scripts/wu103/test_core.py
           python scripts/wu103/test_staging_workflow.py
