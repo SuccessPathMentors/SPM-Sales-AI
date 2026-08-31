@@ -61,14 +61,15 @@ n['parameters']['jsCode'] = n['parameters']['jsCode'].replace(
 for name in ['Save AI Message to Chat History', 'Restore Final Response Payload', 'RC3 Chat Response']:
     node(normalized, name)['position'] = copy.deepcopy(node(base, name)['position'])
 
+# This exact full-object comparison is the primary parity proof.
 assert normalized == base, 'WU-102 changed content outside its approved insertion/release-label path'
 
-# Critical business nodes are byte-identical even before normalization.
+# Supplement the exact comparison with named critical business nodes that are
+# known to exist in the locked WU-101 candidate.
 critical = [
     'Validate SPM V2 Classifier Output',
     'Route Classifier Confidence',
     'Resolve WU91 Source Plan',
-    'Build WU91 Source Gate Decision',
     'Build WU92 Response Rule Context',
     'Apply WU95 Lead Truth Guard',
     'Deterministic Action Gateway [RC3 SCOPE LOCK]',
