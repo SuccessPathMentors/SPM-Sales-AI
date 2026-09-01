@@ -1,0 +1,22 @@
+{
+  "$id": "SPM_WU104_CLARIFICATION_STATE_V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema","active","clarification_key","attempt","reason_code","language","expected_response_type","last_intent","updated_at","raw_message_logged","raw_session_logged","secret_values_logged"
+  ],
+  "properties": {
+    "schema": {"const": "SPM_WU104_CLARIFICATION_STATE_V1"},
+    "active": {"type": "boolean"},
+    "clarification_key": {"type": ["string","null"], "pattern": "^[a-f0-9]{64}$"},
+    "attempt": {"type": "integer", "minimum": 0, "maximum": 2},
+    "reason_code": {"enum": ["NONE","BARE_FRAGMENT_NO_CONTEXT","MULTIPLE_PLAUSIBLE_MEANINGS","CLASSIFIER_AMBIGUOUS","CLASSIFIER_BELOW_THRESHOLD","UNSAFE_YES_NO","UNKNOWN_AWAITED_ENTITY"]},
+    "language": {"enum": ["en","ar","fr"]},
+    "expected_response_type": {"enum": ["NONE","grade","subject","location","day","time","yes_no","intent_disambiguation"]},
+    "last_intent": {"type": ["string","null"]},
+    "updated_at": {"type": ["string","null"], "format": "date-time"},
+    "raw_message_logged": {"const": false},
+    "raw_session_logged": {"const": false},
+    "secret_values_logged": {"const": false}
+  }
+}
