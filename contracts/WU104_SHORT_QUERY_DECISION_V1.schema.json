@@ -1,0 +1,30 @@
+{
+  "$id": "SPM_WU104_SHORT_QUERY_DECISION_V1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema","short_query_detected","normalized_length_bucket","short_query_type","context_available","awaited_entity","context_binding_status","binding_source","resolved_intent","resolved_entity_type","clarification_required","clarification_reason","clarification_key","clarification_attempt","clarification_language","safe_action","irreversible_action_allowed","raw_message_logged","raw_session_logged","secret_values_logged"
+  ],
+  "properties": {
+    "schema": {"const": "SPM_WU104_SHORT_QUERY_DECISION_V1"},
+    "short_query_detected": {"type": "boolean"},
+    "normalized_length_bucket": {"enum": ["EMPTY","VERY_SHORT","SHORT","NOT_SHORT"]},
+    "short_query_type": {"enum": ["NONE","AFFIRMATION","NEGATION","GRADE_ONLY","SUBJECT_ONLY","LOCATION_ONLY","DAY_ONLY","TIME_ONLY","SEMANTIC_FRAGMENT","OTHER_SHORT"]},
+    "context_available": {"type": "boolean"},
+    "awaited_entity": {"type": ["string","null"]},
+    "context_binding_status": {"enum": ["NOT_NEEDED","BOUND_DETERMINISTIC","NEEDS_CLARIFICATION","UNSAFE_TO_BIND"]},
+    "binding_source": {"enum": ["NONE","AWAITED_ENTITY","REGISTRATION_CONFIRMATION_GUARD","CLASSIFIER_DIRECT"]},
+    "resolved_intent": {"type": ["string","null"]},
+    "resolved_entity_type": {"enum": ["NONE","grade","subject","location","day","time","confirmation"]},
+    "clarification_required": {"type": "boolean"},
+    "clarification_reason": {"enum": ["NONE","BARE_FRAGMENT_NO_CONTEXT","MULTIPLE_PLAUSIBLE_MEANINGS","CLASSIFIER_AMBIGUOUS","CLASSIFIER_BELOW_THRESHOLD","UNSAFE_YES_NO","UNKNOWN_AWAITED_ENTITY","LOOP_CAP_REACHED"]},
+    "clarification_key": {"type": ["string","null"], "pattern": "^[a-f0-9]{64}$"},
+    "clarification_attempt": {"type": "integer", "minimum": 0, "maximum": 2},
+    "clarification_language": {"enum": ["en","ar","fr"]},
+    "safe_action": {"enum": ["CONTINUE","ASK_ONE_CLARIFYING_QUESTION","SAFE_FALLBACK_OR_HUMAN_HELP"]},
+    "irreversible_action_allowed": {"const": false},
+    "raw_message_logged": {"const": false},
+    "raw_session_logged": {"const": false},
+    "secret_values_logged": {"const": false}
+  }
+}
