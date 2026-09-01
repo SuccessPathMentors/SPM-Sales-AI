@@ -23,7 +23,7 @@ permissions:
 jobs:
   contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 7
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -33,3 +33,21 @@ jobs:
         run: python scripts/wu104/test_contracts.py
       - name: WU-104 deterministic core
         run: python scripts/wu104/test_core.py
+      - name: WU-104 candidate structure and locked-upstream parity
+        run: python scripts/wu104/test_candidate.py
+      - name: Build deterministic WU-104 candidate and print SHA
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu104/build_candidate.py \
+            --baseline n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json \
+            --output n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+          sha256sum n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+      - name: Upload WU-104 candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu104-candidate
+          path: n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+          if-no-files-found: ignore
+          retention-days: 30
