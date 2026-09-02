@@ -23,7 +23,7 @@ permissions:
 jobs:
   contract:
     runs-on: ubuntu-latest
-    timeout-minutes: 7
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -31,3 +31,21 @@ jobs:
           python-version: '3.12'
       - name: Validate WU-105 golden manifest and protected Production baseline
         run: python scripts/wu105/test_manifest.py
+      - name: Validate deterministic WU-105 staging candidate parity
+        run: python scripts/wu105/test_candidate.py
+      - name: Build WU-105 staging candidate
+        run: |
+          mkdir -p n8n/generated
+          python scripts/wu105/build_candidate.py \
+            --baseline n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json \
+            --manifest contracts/WU105_GOLDEN_INTENTS_V1.json \
+            --output n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+          sha256sum n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+      - name: Upload deterministic candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu105-golden-intent-candidate
+          path: n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+          if-no-files-found: ignore
+          retention-days: 30
