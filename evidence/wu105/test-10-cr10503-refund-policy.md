@@ -1,6 +1,6 @@
-# WU-105 Test 10 — Refund Policy / CR-105-03 Evidence
+# WU-105 Test 10 — Refund Policy / CR-105-03 + CR-105-04 Evidence
 
-Status: `CR-105-03 DEPLOYED / EXACT CUSTOMER RETEST PENDING`
+Status: `CR-105-04 DEPLOYED / EXACT CUSTOMER RETEST PENDING`
 
 Workflow: `[STAGING] SPM_WU105_GOLDEN_INTENTS_V1`
 Workflow ID: `KXfalaYSCLdgmf4X`
@@ -16,117 +16,147 @@ Observed customer output:
 
 Result: `FAIL`
 
-Reason:
-- the customer asked for general policy information;
-- the answer did not explain the refund policy;
-- the response was an action-gateway fallback and therefore violated WU-105 answer-first behavior;
-- the policy inquiry was effectively confused with an executed/refund-action claim.
+The customer asked for general policy information, but the response returned an action/system-confirmation fallback instead of explaining the policy.
+
+## CR-105-03 — first repair attempt
+
+CR-105-03 added a narrow post-validator guard after `Validate + Guard WU92 Sales Agent Output` to recover a source-backed general refund-policy explanation when execution-like vocabulary such as `refunded` or `confirmed` caused a false positive. Explicit refund execution requests remained protected by the action gateway.
+
+Static/deployment evidence:
+- contract run `33694278816` — PASS;
+- deployment run `33694457544` — PASS;
+- candidate SHA `aaaa139faa67815f4196fb9779232471c4c8b051a26f0ba0a3be4c56231d4653`;
+- node count `130`;
+- remote versionId `464aba28-b3b9-4cdf-9bb2-378039f19683`;
+- `active=false`;
+- `published_or_activated=false`;
+- Production untouched.
+
+### Exact owner retest after CR-105-03
+
+Fresh-session prompt:
+`What is your refund policy?`
+
+Observed output was unchanged:
+`We can proceed with that step, but it is only confirmed after the required system check or action succeeds.`
+
+Retest result: `FAIL`.
 
 Owner screenshot evidence supplied in chat on 2026-09-03.
 
-## Root cause diagnosis
+This proved CR-105-03 addressed a downstream symptom but did not resolve the upstream source-availability defect.
 
-Two read-only STAGING diagnosis runs were used; neither wrote to n8n.
+## Exact structural root cause
 
-The defect is in the existing node `Validate + Guard WU92 Sales Agent Output`, not primarily in the `refund_policy` classifier route. Its irreversible-action vocabulary includes:
+Read-only inspection of the deployed WU-105 STAGING workflow identified a WU91 source-routing defect.
 
-`booked|confirmed|saved|registered|refunded|discount approved|tutor assigned`
+`refund_policy` belongs to the WU91 `policies` source family, but the `policies` output from `Route WU91 Source Family` was wired directly to:
 
-When a legitimate source-backed refund-policy explanation contains vocabulary such as `refunded` (and potentially `confirmed`), the validator may interpret the informational policy statement as an executed irreversible action and replace the entire answer with the generic system-check fallback.
+`Rank + Compact WU91 Source Evidence`
 
-This is a false positive in policy prose. The protection itself remains important for real refund execution claims.
+There was no `Load POLICIES [WU91 READ ONLY]` node, unlike the existing PACKAGES, SUBJECTS, FAQ, SERVICES, LOCATIONS, FALLBACKS and SUBJECT_PATHWAYS source families.
 
-## CR-105-03 design
+Therefore the policy ranker received no ACTIVE policy rows, producing zero usable policy evidence and causing `source_gate_decision.can_answer=false`.
 
-CR-105-03 does **not** modify or weaken the existing WU92 validator. It adds one narrow deterministic post-validator guard:
+The WU92 fail-closed message itself contains the word `confirmed`. The existing irreversible-action vocabulary includes `confirmed`, so the fail-closed sentence can then be rewritten again into the generic system/action fallback observed in the owner screenshot.
 
-`Validate + Guard WU92 Sales Agent Output -> Apply WU105 Refund Policy Answer-First Guard -> Apply WU92 Sales Agent Policy Guard`
+This explains why CR-105-03 could not restore the policy answer: its design correctly required `source_can_answer=true`, but the missing WU91 policy loader kept that condition false.
 
-Guard schema: `SPM_WU105_REFUND_POLICY_ANSWER_FIRST_GUARD_V1`
+## Approved policy source verification
 
-Recovery is allowed only when all relevant conditions are met:
-- current authoritative intent is `refund_policy`;
-- customer wording is a general policy-information request;
-- wording is not an explicit refund execution request;
-- the existing source gate says the question can be answered;
-- the upstream WU92 validator actually applied its safety rewrite;
-- the original generated answer exists;
-- unrelated executed-action claims are absent;
-- customer-specific executed-refund claims are absent.
+The existing approved KB spreadsheet is:
+`Success_Path_Mentors_AI_KB_V2_SPM_2026-08-18`
 
-If safe recovery is permitted, execution-like vocabulary that causes the validator false positive is neutralized into policy wording while preserving the source-backed policy explanation.
+Spreadsheet ID:
+`1JJu6eNurnNbBdikOnOe1u7OvUjcTS8Q14TPHjUiT3lM`
 
-Explicit requests such as `I want a refund`, `Please refund me`, or equivalent AR/FR wording retain the original action gateway. Source-unavailable cases remain fail-closed.
+The `POLICIES` tab exists with sheet ID `1408992606` and contains ACTIVE refund-policy rows in English, Arabic and French, including `POL-008` for English. The table exposes `policy_type`, `rule`, `customer_answer`, `keywords`, `status`, and review metadata.
 
-No new intent, LLM/classifier, credential, external call, or business-write permission is introduced.
+No refund-policy content needed to be invented or hard-coded into the workflow.
 
-## Static contract evidence
+## CR-105-04 — WU91 POLICIES source-wiring repair
 
-Actions run: `33694278816` — `PASS`
+CR-105-04 repairs the source path only:
 
-Input CR-105-02 candidate:
-- SHA-256: `7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e`
-- nodes: `129`
+Before:
+`policies -> Rank + Compact WU91 Source Evidence`
 
-CR-105-03 final candidate:
-- SHA-256: `aaaa139faa67815f4196fb9779232471c4c8b051a26f0ba0a3be4c56231d4653`
-- nodes: `130`
+After:
+`policies -> Load POLICIES [WU91 READ ONLY] -> Rank + Compact WU91 Source Evidence`
 
-Static tests PASS:
-- exactly one deterministic post-validator Code guard added;
-- general refund-policy information fixtures EN/AR/FR;
-- explicit refund-action fixtures preserve original gateway;
-- source-unavailable fail-closed behavior;
-- no-action-permission invariants;
-- false-positive validator vocabulary is sanitized without deleting refund-policy meaning.
+Implementation invariants:
+- new loader uses the existing approved KB document ID;
+- exact `POLICIES` sheet ID `1408992606`;
+- same proven Google Sheets OAuth read credential pattern as existing WU91 loaders;
+- `status=ACTIVE` filter;
+- same success/error topology as the proven FAQ loader;
+- no Google Sheets write operation;
+- no policy text hard-coded;
+- all unrelated WU91 source routes unchanged;
+- CR-105-01, CR-105-02 and CR-105-03 retained.
 
-Contract evidence artifact:
-- `wu105-cr10503-candidate`
-- artifact ID `9871183359`
+### CR-105-04 static evidence
 
-## STAGING deployment and remote readback
+Contract run: `33695317685` — `PASS`
 
-Actions run: `33694457544` — `PASS`
+Final candidate:
+- SHA-256: `42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1`
+- node count: `131`
+
+Static checks PASS:
+- missing policies branch repaired with exactly one ACTIVE-only read loader;
+- approved KB and POLICIES sheet identity exact;
+- existing OAuth credential reused with no write operation;
+- unrelated WU91 routes unchanged;
+- policy compaction still feeds `policy_type`, `rule`, and `customer_answer` to the source-gate path;
+- CR-105-01/02/03 remain present.
+
+Contract artifact:
+- `wu105-cr10504-candidate`
+- artifact ID `9871549751`
+
+### CR-105-04 STAGING deployment/readback
+
+Deployment run: `33695423662` — `PASS`
 
 Deployment result:
 - operation: `UPDATE_INACTIVE_NONPROD`
-- target: `KXfalaYSCLdgmf4X`
-- candidate SHA-256: `aaaa139faa67815f4196fb9779232471c4c8b051a26f0ba0a3be4c56231d4653`
-- node count: `130`
-- remote versionId: `464aba28-b3b9-4cdf-9bb2-378039f19683`
+- target workflow: `KXfalaYSCLdgmf4X`
+- candidate SHA-256: `42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1`
+- node count: `131`
+- remote versionId: `2e4c852b-4669-4be3-b6ba-246a0ecef6f6`
 - `active=false`
 - `published_or_activated=false`
 - Production ID checked/protected: `CMBMpxX5AqqK2UTn`
 
-Remote result: `WU105_CR10503_REMOTE_PASS`
+Remote marker: `WU105_CR10504_REMOTE_PASS`
 
-Readback verified:
+Remote readback verified:
+- `Load POLICIES [WU91 READ ONLY]` present;
+- `policies` route points to the loader;
+- exact POLICIES sheet ID `1408992606`;
 - CR-105-01 present;
 - CR-105-02 present;
 - CR-105-03 present;
-- CR-104-04 present;
-- CR-104-05 present;
 - WU-102 queue remains `appendOrUpdate` with `queue_event_id`;
-- STAGING Redis Chat Memory remains `={{ 'spm:staging:chat:' + $json.sessionId }}`;
+- STAGING Redis namespace remains `spm:staging:chat:`;
 - workflow remains inactive.
 
-Deployment evidence artifact:
-- `wu105-cr10503-staging-update-evidence`
-- artifact ID `9871247757`
+Deployment artifact:
+- `wu105-cr10504-staging-update-evidence`
+- artifact ID `9871587023`
 
-Temporary diagnosis, contract, and deployment workflows were removed after evidence was captured.
-
-## Exact runtime gate
+## Exact runtime gate after CR-105-04
 
 Retest in a **fresh chat session** with exactly:
 
 `What is your refund policy?`
 
 Expected:
-- answer the general refund policy first;
-- do not return the generic system/action-confirmation fallback;
-- do not claim a customer-specific refund has been issued or approved;
-- do not invent eligibility, refund amount, timing, or promise;
-- at most one follow-up question, only after the general policy answer if needed.
+- answer the general refund policy directly using approved policy evidence;
+- no generic system/action-confirmation fallback;
+- no claim that a customer-specific refund has been approved or issued;
+- no invented eligibility, amount, timing, or guarantee;
+- at most one follow-up question if genuinely needed after answering.
 
-Test 10 remains `RETEST PENDING` until owner customer-output evidence is reviewed.
+Test 10 remains `RETEST PENDING` until the post-CR-105-04 owner screenshot is reviewed.
