@@ -4,32 +4,29 @@ on:
   pull_request:
     paths:
       - 'contracts/WU105_*'
-      - 'scripts/wu104/**'
       - 'scripts/wu105/**'
-      - 'work-units/WU-104.md'
+      - 'work-units/WU-104.lock.md'
       - 'work-units/WU-105.md'
-      - '.github/workflows/wu104-staging.yml'
       - '.github/workflows/wu105-contract.yml'
   push:
     branches:
       - 'wu105-planning'
     paths:
       - 'contracts/WU105_*'
-      - 'scripts/wu104/**'
       - 'scripts/wu105/**'
-      - 'work-units/WU-104.md'
       - 'work-units/WU-105.md'
-      - '.github/workflows/wu104-staging.yml'
       - '.github/workflows/wu105-contract.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
+  actions: read
 
 env:
-  PRODUCTION: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
-  WU104_UPSTREAM: n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
-  WU104_EXPECTED_SHA256: d0c2ad10c3455b435868a8b7d4c874d31d27ae35e64844d62713d1a5ba74e45f
+  WU104_LOCK_RUN_ID: '33663124381'
+  WU104_ARTIFACT_NAME: wu104-cr10405-evidence
+  WU104_UPSTREAM: locked-wu104/n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+  WU104_EXPECTED_SHA256: 32721cae2b09531d8f4860373c37911ace9e95b6818babdca880fa08ef1b7bc9
   WU105_CANDIDATE: n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
 
 jobs:
@@ -38,40 +35,53 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Download exact locked WU-104 CR-104-05 evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.WU104_ARTIFACT_NAME }}
+          path: locked-wu104
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.WU104_LOCK_RUN_ID }}
+      - name: Verify formal WU-104 lock and exact inherited artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/main:work-units/WU-104.lock.md > /tmp/WU-104.lock.md
+          grep -q '^Status: LOCKED$' /tmp/WU-104.lock.md
+          grep -q "$WU104_EXPECTED_SHA256" /tmp/WU-104.lock.md
+          actual="$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')"
+          echo "WU104_LOCKED_UPSTREAM_SHA256=$actual"
+          test "$actual" = "$WU104_EXPECTED_SHA256"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU104_UPSTREAM"]))["nodes"]))')" = "126"
       - name: Validate WU-105 golden manifest and protected Production baseline
         run: python scripts/wu105/test_manifest.py
       - name: Validate WU-105 planned runtime matrix coverage
         run: python scripts/wu105/test_runtime_matrix.py
-      - name: Rebuild exact current WU-104 upstream candidate
+      - name: Validate deterministic WU-105 inheritance and candidate parity
+        run: python scripts/wu105/test_candidate.py
+      - name: Build WU-105 staging candidate on locked WU-104
         run: |
           set -euo pipefail
           mkdir -p n8n/generated
-          python scripts/wu104/build_context_await_candidate.py \
-            --baseline "$PRODUCTION" \
-            --output "$WU104_UPSTREAM"
-          actual="$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')"
-          echo "WU104_UPSTREAM_SHA256=$actual"
-          test "$actual" = "$WU104_EXPECTED_SHA256"
-      - name: Validate deterministic WU-105 inheritance and candidate parity
-        run: python scripts/wu105/test_candidate.py
-      - name: Build WU-105 staging candidate on WU-104
-        run: |
-          set -euo pipefail
           python scripts/wu105/build_candidate.py \
             --baseline "$WU104_UPSTREAM" \
             --manifest contracts/WU105_GOLDEN_INTENTS_V1.json \
             --output "$WU105_CANDIDATE"
-          sha256sum "$WU105_CANDIDATE"
+          echo "WU105_CANDIDATE_SHA256=$(sha256sum "$WU105_CANDIDATE" | awk '{print $1}')"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_CANDIDATE"]))["nodes"]))')" = "127"
       - name: Upload deterministic candidate evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: wu105-golden-intent-candidate
           path: |
-            n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+            locked-wu104/n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
             n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
             contracts/WU105_RUNTIME_MATRIX_V1.json
           if-no-files-found: ignore
