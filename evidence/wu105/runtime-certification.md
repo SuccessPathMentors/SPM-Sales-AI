@@ -1,11 +1,11 @@
 # WU-105 Runtime Golden Intent Certification Evidence
 
-Status: IN_PROGRESS — TEST-09 PASS / NEXT RUNTIME CASE PENDING
+Status: IN_PROGRESS — TEST-10 PASS / NEXT RUNTIME CASE PENDING
 Workflow: `[STAGING] SPM_WU105_GOLDEN_INTENTS_V1`
 Workflow ID: `KXfalaYSCLdgmf4X`
-Current Candidate SHA-256: `7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e`
-Current node count: `129`
-Current remote versionId: `6e1b8a71-a9e2-4bf5-8f09-a26c991a10ac`
+Current Candidate SHA-256: `42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1`
+Current node count: `131`
+Current remote versionId: `2e4c852b-4669-4be3-b6ba-246a0ecef6f6`
 Runtime matrix contract: `104` planned scenarios across `13` Golden Intents.
 Production: untouched / protected.
 
@@ -183,15 +183,87 @@ Content QA note (non-blocking for this intent-flow test): the exact criteria sta
 
 **Owner screenshot evidence:** supplied in chat on 2026-09-03.
 
+## Test 10 — Refund Policy / Source Truth / No Invented Refund Outcome
+
+**Intent:** `refund_policy`
+
+**Fresh-session prompt:**
+`What is your refund policy?`
+
+### Initial result
+Observed response:
+`We can proceed with that step, but it is only confirmed after the required system check or action succeeds.`
+
+Initial result: `FAIL`.
+
+The response treated a general policy-information question like an action/system-confirmation path and did not explain the refund policy.
+
+### CR-105-03 first repair attempt
+CR-105-03 added a narrow post-validator false-positive recovery guard while preserving explicit refund execution requests behind the original action gateway. Static and deployment checks passed, but the exact owner retest remained unchanged and therefore `FAIL`.
+
+This proved the downstream guard was not the complete root-cause repair.
+
+### CR-105-04 structural root-cause repair
+Read-only diagnosis found that WU91 routed the `policies` source family directly to the evidence ranker without a `POLICIES` Google Sheets loader. The approved KB already contained ACTIVE refund policy records in EN/AR/FR, but those rows were never loaded into the policy evidence path.
+
+CR-105-04 added exactly one read-only source loader:
+
+`policies -> Load POLICIES [WU91 READ ONLY] -> Rank + Compact WU91 Source Evidence`
+
+CR-105-04 evidence:
+- contract run `33695317685` — PASS;
+- deployment run `33695423662` — PASS;
+- candidate SHA `42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1`;
+- node count `131`;
+- remote versionId `2e4c852b-4669-4be3-b6ba-246a0ecef6f6`;
+- exact POLICIES sheet ID `1408992606`;
+- `status=ACTIVE` read filter;
+- no Google Sheets write;
+- workflow remained `active=false`;
+- Production untouched/protected;
+- remote marker `WU105_CR10504_REMOTE_PASS`.
+
+### Exact customer-output retest after CR-105-04
+
+**Prompt:**
+`What is your refund policy?`
+
+**Observed response:**
+`Our refund policy does not guarantee automatic cash refunds upon cancellation. Each case is reviewed based on lessons used and remaining, dissatisfaction reasons, package terms, and applicable law. Possible remedies include tutor changes, extra lessons, discounts, credit transfers, or partial/full refunds, all subject to team approval.`
+
+**Retest result:** `PASS`
+
+Retest evidence:
+- answers the requested general refund policy directly;
+- no generic system/action-confirmation fallback;
+- no customer-specific refund approval or execution claim;
+- no invented eligibility, refund amount, timing, or guaranteed outcome;
+- remedies remain conditional and subject to team approval;
+- asks zero follow-up questions;
+- no business write or irreversible action is claimed.
+
+Acceptance coverage:
+- AC-04 answer current question first: PASS;
+- AC-08 source-truth / no invented policy outcome: PASS;
+- action boundary / no false success: PASS;
+- max one follow-up question: PASS (zero asked).
+
+**Owner screenshot evidence:** supplied in chat on 2026-09-03 after CR-105-04 deployment.
+
+Detailed evidence: `evidence/wu105/test-10-cr10503-refund-policy.md`.
+
 ## Running certification summary
 
-- Customer-output tests attempted: `9`
-- Current passing customer-output cases: `9 / 9`
-- Initial failures encountered: `2` (Test 04, Test 07)
-- Repaired and exact-retested: `2 / 2`
+- Customer-output tests attempted: `10`
+- Current passing customer-output cases: `10 / 10`
+- Initial failures encountered: `3` (Test 04, Test 07, Test 10)
+- Repaired and exact-retested to PASS: `3 / 3`
 - CR-105-01 static/deployment/readback/retest: `PASS`
 - CR-105-02 static/deployment/readback/retest: `PASS`
+- CR-105-03 static/deployment: `PASS`; exact customer retest alone: `FAIL`; retained as narrow safeguard
+- CR-105-04 static/deployment/readback/retest: `PASS`
 - Current blocking runtime defect: `NONE`
-- Next representative case: `refund_policy` source-truth / no invented eligibility, amount, timing, or promise.
+- Current deployed candidate: `42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1` / `131` nodes / inactive STAGING
+- Next representative case: `registration` action boundary — begin registration safely without false completion or unauthorized business write.
 
-Owner screenshot evidence for Tests 01-09 supplied in chat on 2026-09-03.
+Owner screenshot evidence for Tests 01-10 supplied in chat on 2026-09-03.
