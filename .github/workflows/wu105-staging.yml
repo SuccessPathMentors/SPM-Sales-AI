@@ -1,0 +1,212 @@
+name: WU-105 golden intent staging
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "contracts/WU105_*"
+      - "scripts/wu104/**"
+      - "scripts/wu105/**"
+      - "work-units/WU-105.md"
+      - ".github/workflows/wu105-staging.yml"
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "dry-run performs zero n8n writes; apply may create/update only inactive WU-105 STAGING"
+        required: true
+        type: choice
+        default: dry-run
+        options:
+          - dry-run
+          - apply
+      target_workflow_id:
+        description: "Existing WU-105 STAGING workflow ID. Leave blank only for first deliberate create."
+        required: false
+        type: string
+        default: ""
+      allow_create:
+        description: "Explicitly permit one-time WU-105 STAGING creation when target_workflow_id is blank"
+        required: true
+        type: boolean
+        default: false
+      wu104_dependency_reconciled:
+        description: "Required TRUE for apply only after WU-104 dependency is formally reconciled/approved"
+        required: true
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: wu105-staging-${{ github.event_name == 'workflow_dispatch' && inputs.mode || 'pr-validation' }}
+  cancel-in-progress: false
+
+env:
+  PRODUCTION: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+  WU104_UPSTREAM: n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+  WU104_EXPECTED_SHA256: d0c2ad10c3455b435868a8b7d4c874d31d27ae35e64844d62713d1a5ba74e45f
+  CANDIDATE: n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+  EXPECTED_SHA256: 43ac3b2be6ae51b99b16f4e3166e0c9e0e055ccbc0b67d48871346d594415eed
+  PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
+  WU101_STAGING_ID: mMZVFxJIxE7a9SSW
+  WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
+  WU103_STAGING_ID: 5COEoxXjk8AvuGBa
+  WU104_STAGING_ID: Bt3PvOIbFzU0O9gk
+
+jobs:
+  validate:
+    name: WU105 candidate and non-production dry-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Rebuild exact WU-104 upstream
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu104/build_context_await_candidate.py --baseline "$PRODUCTION" --output "$WU104_UPSTREAM"
+          actual="$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')"
+          test "$actual" = "$WU104_EXPECTED_SHA256"
+      - name: Build and verify exact WU-105 candidate
+        run: |
+          set -euo pipefail
+          python scripts/wu105/test_manifest.py
+          python scripts/wu105/test_runtime_matrix.py
+          python scripts/wu105/test_candidate.py
+          python scripts/wu105/build_candidate.py \
+            --baseline "$WU104_UPSTREAM" \
+            --manifest contracts/WU105_GOLDEN_INTENTS_V1.json \
+            --output "$CANDIDATE"
+          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+          echo "WU105_CANDIDATE_SHA256=$actual"
+          test "$actual" = "$EXPECTED_SHA256"
+      - name: Existing non-production deployer dry-run
+        run: |
+          set -euo pipefail
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact "$CANDIDATE" \
+            --environment staging \
+            --expected-sha256 "$EXPECTED_SHA256" \
+            --mode dry-run \
+            --result-file wu105-dry-run-result.json
+      - name: Upload candidate and dry-run evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu105-candidate-and-dry-run
+          path: |
+            n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+            n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+            contracts/WU105_RUNTIME_MATRIX_V1.json
+            wu105-dry-run-result.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  deploy-staging:
+    name: WU105 ${{ inputs.mode }} to staging
+    if: github.event_name == 'workflow_dispatch'
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      N8N_TARGET_WORKFLOW_ID: ${{ inputs.target_workflow_id }}
+      SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Hard dependency gate before any apply
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ inputs.mode }}" == "apply" && "${{ inputs.wu104_dependency_reconciled }}" != "true" ]]; then
+            echo "WU-105 apply blocked: WU-104 dependency must be formally reconciled/approved first." >&2
+            exit 1
+          fi
+      - name: Rebuild exact inherited WU-105 candidate
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu104/build_context_await_candidate.py --baseline "$PRODUCTION" --output "$WU104_UPSTREAM"
+          test "$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')" = "$WU104_EXPECTED_SHA256"
+          python scripts/wu105/test_manifest.py
+          python scripts/wu105/test_runtime_matrix.py
+          python scripts/wu105/test_candidate.py
+          python scripts/wu105/build_candidate.py --baseline "$WU104_UPSTREAM" --manifest contracts/WU105_GOLDEN_INTENTS_V1.json --output "$CANDIDATE"
+          test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$EXPECTED_SHA256"
+      - name: Hard-stop protected target checks
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="${{ inputs.target_workflow_id }}"
+          for denied in "$PRODUCTION_WORKFLOW_ID" "$WU101_STAGING_ID" "$WU102_STAGING_ID" "$WU103_STAGING_ID" "$WU104_STAGING_ID"; do
+            if [[ "$target" == "$denied" ]]; then
+              echo "Denied protected workflow ID: $target" >&2
+              exit 1
+            fi
+          done
+          if [[ "${{ inputs.mode }}" == "apply" && -z "$target" && "${{ inputs.allow_create }}" != "true" ]]; then
+            echo "First WU-105 apply with no target requires allow_create=true" >&2
+            exit 1
+          fi
+          if [[ "${{ inputs.allow_create }}" == "true" && -n "$target" ]]; then
+            echo "allow_create=true is permitted only when target_workflow_id is blank" >&2
+            exit 1
+          fi
+      - name: Run safe non-production deployer
+        shell: bash
+        run: |
+          set -euo pipefail
+          args=(
+            --artifact "$CANDIDATE"
+            --environment staging
+            --expected-sha256 "$EXPECTED_SHA256"
+            --mode "${{ inputs.mode }}"
+            --result-file wu105-deployment-result.json
+          )
+          if [[ -n "${{ inputs.target_workflow_id }}" ]]; then
+            args+=(--target-workflow-id "${{ inputs.target_workflow_id }}")
+          fi
+          if [[ "${{ inputs.allow_create }}" == "true" ]]; then
+            args+=(--allow-create)
+          fi
+          python scripts/n8n/deploy_nonprod.py "${args[@]}"
+      - name: Verify remote WU-105 STAGING content after apply
+        if: inputs.mode == 'apply'
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="$(python - <<'PY'
+          import json
+          print(json.load(open('wu105-deployment-result.json'))['target_workflow_id'])
+          PY
+          )"
+          for denied in "$PRODUCTION_WORKFLOW_ID" "$WU101_STAGING_ID" "$WU102_STAGING_ID" "$WU103_STAGING_ID" "$WU104_STAGING_ID"; do
+            test "$target" != "$denied"
+          done
+          N8N_TARGET_WORKFLOW_ID="$target" python scripts/wu105/verify_remote_staging.py
+      - name: Upload WU-105 deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu105-staging-${{ inputs.mode }}-evidence
+          path: |
+            n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+            n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+            contracts/WU105_RUNTIME_MATRIX_V1.json
+            wu105-deployment-result.json
+          if-no-files-found: ignore
+          retention-days: 30
