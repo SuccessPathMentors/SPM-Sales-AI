@@ -64,7 +64,6 @@ for token in [
 ]:
     assert token in asked_js, token
 
-# Only deterministic, non-PII contextual slot families are allowed.
 for slot in ['grade', 'subject', 'location', 'day', 'time']:
     assert slot in js and slot in asked_js, slot
 for forbidden in ['email:', 'phone:', 'parent_name:', 'student_name:', 'session_id:', 'correlation_id:', 'api_key:', 'password:']:
@@ -85,7 +84,7 @@ assert wf['connections']['Persist WU104 Awaited Context Hint']['main'] == [[{
 }]]
 
 final_upstream = 'Apply WU97 Fail-Closed Privacy Security Guard'
-final_downstream = 'Serialize WU95 Production Sales State'
+final_downstream = 'Serialize WU95 STAGING Sales State'
 assert wf['connections'][final_upstream]['main'] == [[{
     'node': 'Persist WU104 Final Asked Field', 'type': 'main', 'index': 0
 }]]
@@ -93,7 +92,6 @@ assert wf['connections']['Persist WU104 Final Asked Field']['main'] == [[{
     'node': final_downstream, 'type': 'main', 'index': 0
 }]]
 
-# Normalize both CR-104 insertions and prove exact parity with the current WU-104 base candidate.
 normalized = json.loads(json.dumps(wf))
 normalized['nodes'] = [n for n in normalized['nodes'] if n.get('name') not in {
     'Persist WU104 Awaited Context Hint', 'Persist WU104 Final Asked Field'
@@ -104,7 +102,6 @@ normalized['connections'][final_upstream] = {'main': [[{'node': final_downstream
 normalized['connections'].pop('Persist WU104 Final Asked Field', None)
 assert normalized == base
 
-# The pre-existing WU104 decision consumes the persisted journey.awaiting_entity next turn.
 decision_js = node('Build WU104 Short Query Decision')['parameters']['jsCode']
 assert 'state.journey?.awaiting_entity' in decision_js
 assert "awaitedType==='subject'" in decision_js
