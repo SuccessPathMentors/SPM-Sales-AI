@@ -40,7 +40,7 @@ concurrency:
 env:
   BASELINE: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
   CANDIDATE: n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
-  EXPECTED_SHA256: af403c1f57bbf7a2532a6dc262f4d6de70bf473359f22c07ccfc5f72695dda88
+  EXPECTED_SHA256: CR10401_TO_LOCK_AFTER_CI
   PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
   LOCKED_WU101_STAGING_ID: mMZVFxJIxE7a9SSW
   LOCKED_WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
@@ -62,13 +62,14 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p n8n/generated
-          python scripts/wu104/build_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
+          python scripts/wu104/build_context_await_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
       - name: Run WU-104 contracts core candidate parity
         run: |
           set -euo pipefail
           python scripts/wu104/test_contracts.py
           python scripts/wu104/test_core.py
           python scripts/wu104/test_candidate.py
+          python scripts/wu104/test_context_await_candidate.py
       - name: Verify locked candidate SHA-256
         run: |
           set -euo pipefail
@@ -118,10 +119,11 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p n8n/generated
-          python scripts/wu104/build_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
+          python scripts/wu104/build_context_await_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
           python scripts/wu104/test_contracts.py
           python scripts/wu104/test_core.py
           python scripts/wu104/test_candidate.py
+          python scripts/wu104/test_context_await_candidate.py
           actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
           test "$actual" = "$EXPECTED_SHA256"
       - name: Hard-stop manual target checks
