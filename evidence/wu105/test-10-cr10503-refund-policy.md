@@ -1,6 +1,6 @@
 # WU-105 Test 10 — Refund Policy / CR-105-03 + CR-105-04 Evidence
 
-Status: `CR-105-04 DEPLOYED / EXACT CUSTOMER RETEST PENDING`
+Status: `PASS — CR-105-04 EXACT CUSTOMER RETEST PASSED`
 
 Workflow: `[STAGING] SPM_WU105_GOLDEN_INTENTS_V1`
 Workflow ID: `KXfalaYSCLdgmf4X`
@@ -146,17 +146,38 @@ Deployment artifact:
 - `wu105-cr10504-staging-update-evidence`
 - artifact ID `9871587023`
 
-## Exact runtime gate after CR-105-04
+## Exact runtime retest after CR-105-04 — PASS
 
-Retest in a **fresh chat session** with exactly:
-
+Fresh-session prompt:
 `What is your refund policy?`
 
-Expected:
-- answer the general refund policy directly using approved policy evidence;
-- no generic system/action-confirmation fallback;
-- no claim that a customer-specific refund has been approved or issued;
-- no invented eligibility, amount, timing, or guarantee;
-- at most one follow-up question if genuinely needed after answering.
+Observed customer output:
+`Our refund policy does not guarantee automatic cash refunds upon cancellation. Each case is reviewed based on lessons used and remaining, dissatisfaction reasons, package terms, and applicable law. Possible remedies include tutor changes, extra lessons, discounts, credit transfers, or partial/full refunds, all subject to team approval.`
 
-Test 10 remains `RETEST PENDING` until the post-CR-105-04 owner screenshot is reviewed.
+Result: `PASS`.
+
+Why this passes:
+- directly answers the requested general refund policy;
+- uses the approved policy meaning instead of the generic action/system fallback;
+- clearly states that cash refund is not automatic;
+- describes case-by-case review factors without inventing customer-specific eligibility;
+- describes possible remedies as conditional options, not promises;
+- explicitly retains team approval for any remedy;
+- does not claim a refund was approved, issued, processed, or confirmed;
+- does not invent refund amount, timing, or guaranteed outcome;
+- asks zero follow-up questions;
+- no irreversible action or business write is claimed.
+
+Acceptance coverage:
+- AC-04 answer current question first: PASS;
+- AC-08 source truth / no invented policy outcome: PASS;
+- action boundary / no false success: PASS;
+- max one follow-up question: PASS (zero asked).
+
+Owner screenshot evidence supplied in chat on 2026-09-03 after CR-105-04 deployment.
+
+## Test 10 final disposition
+
+`PASS — CLOSED`
+
+CR-105-04 is the effective structural repair for Test 10. CR-105-03 remains in the candidate as a narrow downstream false-positive safeguard, but Test 10 runtime success depends on the restored WU91 POLICIES source path.
