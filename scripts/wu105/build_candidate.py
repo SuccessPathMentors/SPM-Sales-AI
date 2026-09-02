@@ -10,6 +10,9 @@ EXPECTED_WU104_NODE_COUNT = 126
 PROMPT_NODE = "Build WU96-Aware Sales Agent Prompt"
 GENERATOR_NODE = "Generate WU92 Sales Agent Response"
 OVERLAY_NODE = "Apply WU105 Golden Intent Prompt Overlay"
+SCHEDULING_GUARD_NODE = "Apply WU94 Scheduling Truth Guard"
+CONVERSION_NODE = "Resolve WU95 Conversion Mode"
+AVAILABILITY_GUARD_NODE = "Apply WU105 Availability Answer-First Guard"
 REQUIRED_WU104_NODES = {
     "Build WU104 Short Query Decision",
     "Apply WU104 Short Trial Inquiry Guard",
@@ -73,6 +76,54 @@ return [{{json:{{...j,sales_agent_prompt:String(j.sales_agent_prompt||'')+overla
     }
 
 
+def make_availability_guard_node(position):
+    js_code = """const j=$input.first().json||{};
+const intent=String(j.classification?.spm_intent||'');
+const lang=(j.classification?.language||j.language_hint||'en').toLowerCase();
+const o={...(j.sales_agent_output||{})};
+const availabilityVerified=Boolean(j.scheduling_context?.availability_verified);
+const wu92SafetyRewrite=Boolean(o.safety_rewrite_applied);
+const wu94Violations=Array.isArray(j.wu94_scheduling_guard?.violations)?j.wu94_scheduling_guard.violations:[];
+const schedulingRewrite=wu94Violations.includes('UNVERIFIED_AVAILABILITY_CLAIM_REWRITTEN')||wu94Violations.includes('UNVERIFIED_BOOKING_CLAIM_REWRITTEN');
+let applied=false;
+
+if(intent==='availability' && !availabilityVerified && (wu92SafetyRewrite || schedulingRewrite)){
+  if(lang==='ar'){
+    o.answer_text='أحتاج إلى التحقق من جدول المواعيد المباشر قبل أن أخبرك إن كان اليوم أو الوقت المطلوب يحتوي على موعد مفتوح للدروس.';
+  }else if(lang==='fr'){
+    o.answer_text="Je dois vérifier le planning en direct avant de pouvoir vous dire si le jour ou l’heure demandés disposent d’un créneau de tutorat libre.";
+  }else{
+    o.answer_text='I need to check the live schedule before I can tell you whether your requested day or time has an open tutoring slot.';
+  }
+  applied=true;
+}
+
+const guard={
+  schema:'SPM_WU105_AVAILABILITY_ANSWER_FIRST_GUARD_V1',
+  applied,
+  intent,
+  availability_verified:availabilityVerified,
+  source_action_gates_authoritative:true,
+  action_mutated:false,
+  purposeful_question_mutated:false,
+  irreversible_action_allowed:false,
+  raw_message_logged:false,
+  raw_session_logged:false,
+  secret_values_logged:false
+};
+return [{json:{...j,sales_agent_output:o,wu105_availability_guard:guard}}];"""
+    return {
+        "parameters": {"jsCode": js_code},
+        "type": "n8n-nodes-base.code",
+        "typeVersion": 2,
+        "position": position,
+        "id": "wu105-availability-answer-first-guard-v1",
+        "name": AVAILABILITY_GUARD_NODE,
+        "notesInFlow": True,
+        "notes": "CR-105-01 STAGING-only UX guard. Restores availability-specific answer-first wording after inherited safety rewrites without changing classifier, live truth, action permission, or Production."
+    }
+
+
 def build(baseline: Path, manifest_path: Path, output: Path):
     actual = sha256(baseline)
     if actual != EXPECTED_WU104_BASELINE_SHA256:
@@ -96,17 +147,24 @@ def build(baseline: Path, manifest_path: Path, output: Path):
     missing_wu104 = sorted(REQUIRED_WU104_NODES - set(names))
     if missing_wu104:
         raise SystemExit("WU-105 refuses a baseline without locked WU-104 controls: " + ", ".join(missing_wu104))
-    if OVERLAY_NODE in names:
-        raise SystemExit("WU-105 overlay node already exists")
-    if names.count(PROMPT_NODE) != 1 or names.count(GENERATOR_NODE) != 1:
-        raise SystemExit("Required locked prompt/generator node identity not found exactly once")
+    if OVERLAY_NODE in names or AVAILABILITY_GUARD_NODE in names:
+        raise SystemExit("WU-105 owned node already exists")
+    for required in [PROMPT_NODE, GENERATOR_NODE, SCHEDULING_GUARD_NODE, CONVERSION_NODE]:
+        if names.count(required) != 1:
+            raise SystemExit(f"Required locked node identity not found exactly once: {required}")
 
     prompt_node = next(n for n in candidate["nodes"] if n.get("name") == PROMPT_NODE)
     x, y = prompt_node.get("position", [0, 0])
     overlay = make_overlay_node(manifest, [x + 320, y + 176])
     candidate["nodes"].append(overlay)
 
+    scheduling_node = next(n for n in candidate["nodes"] if n.get("name") == SCHEDULING_GUARD_NODE)
+    sx, sy = scheduling_node.get("position", [0, 0])
+    availability_guard = make_availability_guard_node([sx + 320, sy + 160])
+    candidate["nodes"].append(availability_guard)
+
     connections = candidate.setdefault("connections", {})
+
     prompt_connections = deepcopy(connections.get(PROMPT_NODE))
     if not prompt_connections or "main" not in prompt_connections:
         raise SystemExit("Locked prompt node has no main connection")
@@ -116,6 +174,16 @@ def build(baseline: Path, manifest_path: Path, output: Path):
     original_target = deepcopy(main[0][0])
     connections[PROMPT_NODE] = {**prompt_connections, "main": [[{"node": OVERLAY_NODE, "type": "main", "index": 0}]]}
     connections[OVERLAY_NODE] = {"main": [[original_target]]}
+
+    scheduling_connections = deepcopy(connections.get(SCHEDULING_GUARD_NODE))
+    if not scheduling_connections or "main" not in scheduling_connections:
+        raise SystemExit("Locked scheduling guard has no main connection")
+    smain = scheduling_connections["main"]
+    if len(smain) != 1 or len(smain[0]) != 1 or smain[0][0].get("node") != CONVERSION_NODE:
+        raise SystemExit("Unexpected scheduling-guard-to-conversion topology; refusing broad graph rewrite")
+    scheduling_target = deepcopy(smain[0][0])
+    connections[SCHEDULING_GUARD_NODE] = {**scheduling_connections, "main": [[{"node": AVAILABILITY_GUARD_NODE, "type": "main", "index": 0}]]}
+    connections[AVAILABILITY_GUARD_NODE] = {"main": [[scheduling_target]]}
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(candidate, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
