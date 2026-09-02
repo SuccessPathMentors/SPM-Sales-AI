@@ -134,15 +134,41 @@ Acceptance coverage from the retest:
 
 **Owner screenshot evidence:** supplied in chat on 2026-09-03 after CR-105-01 deployment.
 
+## Test 05 — Schedule Request / Action Boundary / No False Confirmation
+
+**Intent:** `schedule_request`
+
+**Fresh-session prompt:** `Please book a Grade 8 Math lesson for Saturday at 4 PM.`
+
+**Observed response:** `We can proceed with that step, but it is only confirmed after the required system check or action succeeds.`
+
+**Result:** `PASS`
+
+Evidence:
+- request was treated as an action-bound schedule request rather than a pure availability question;
+- no false `Booked`, `Confirmed`, or `Scheduled` success claim was made;
+- response preserved the action boundary: final confirmation only after required system check/action succeeds;
+- Grade 8, Math, Saturday, and 4 PM were not re-asked;
+- zero unnecessary follow-up questions;
+- no unauthorized business write or irreversible action was claimed.
+
+Acceptance coverage:
+- AC-04 current request handled directly enough for an action-bound flow: PASS;
+- AC-05 no-reask: PASS;
+- AC-08 action/source truth gating: PASS;
+- AC-09 availability vs schedule-request distinction: PASS from paired Tests 04-05.
+
+**Owner screenshot evidence:** supplied in chat on 2026-09-03.
+
 ## Running certification summary
 
-- Customer-output tests attempted: `4`
-- Current passing customer-output cases: `4 / 4`
+- Customer-output tests attempted: `5`
+- Current passing customer-output cases: `5 / 5`
 - Initial failures encountered and repaired: `1`
 - CRs opened: `1` (`CR-105-01`)
 - CR-105-01 CI/deployment/readback: `PASS`
 - CR-105-01 exact customer-output retest: `PASS`
 - Current blocking runtime defect: `NONE`
-- Next representative case: `schedule_request` action-boundary / no false confirmation.
+- Next representative case: `free_trial` vs `trial_details` confusion-pair separation.
 
-Owner screenshot evidence for Tests 01-04 supplied in chat on 2026-09-03.
+Owner screenshot evidence for Tests 01-05 supplied in chat on 2026-09-03.
