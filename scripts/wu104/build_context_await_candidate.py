@@ -32,8 +32,6 @@ def build(baseline_path):
     base = load_base_builder()
     wf = copy.deepcopy(base.build(baseline_path))
 
-    # Early deterministic hint from WU90 required entities. This remains useful when
-    # the journey contract already knows the next required field before response planning.
     persist_name = 'Persist WU104 Awaited Context Hint'
     persist_js = r"""const j=$input.first().json||{};
 const state=(j.sales_state&&typeof j.sales_state==='object')?JSON.parse(JSON.stringify(j.sales_state)):{};
@@ -95,10 +93,6 @@ return [{json:{...j,sales_state:state,wu104_await_context_write:evidence}}];"""
     wf['connections'][upstream] = {'main': [[{'node': persist_name, 'type': 'main', 'index': 0}]]}
     wf['connections'][persist_name] = {'main': [[{'node': downstream, 'type': 'main', 'index': 0}]]}
 
-    # Final asked-field persistence. WU92 may ask a useful discovery question even when
-    # WU90 required_missing_fields is empty. Persist only a whitelisted next_field when
-    # the final guarded response actually contains a question, immediately before the
-    # later WU95 Redis state save. Registration awaiting_field remains authoritative.
     asked_name = 'Persist WU104 Final Asked Field'
     asked_js = r"""const j=$input.first().json||{};
 const state=(j.sales_state&&typeof j.sales_state==='object')?JSON.parse(JSON.stringify(j.sales_state)):{};
@@ -160,7 +154,7 @@ return [{json:{...j,sales_state:state,wu104_final_asked_field_write:evidence}}];
     wf['nodes'].append(asked_node)
 
     final_upstream = 'Apply WU97 Fail-Closed Privacy Security Guard'
-    final_downstream = 'Serialize WU95 Production Sales State'
+    final_downstream = 'Serialize WU95 STAGING Sales State'
     final_existing = wf['connections'].get(final_upstream, {}).get('main', [])
     if final_existing != [[{'node': final_downstream, 'type': 'main', 'index': 0}]]:
         raise RuntimeError(f'unexpected final WU95 serialization connection: {final_existing!r}')
