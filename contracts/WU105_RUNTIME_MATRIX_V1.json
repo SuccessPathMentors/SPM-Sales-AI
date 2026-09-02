@@ -1,0 +1,134 @@
+{
+  "schema": "SPM_WU105_RUNTIME_MATRIX_V1",
+  "version": "1.0",
+  "candidate_sha256": "43ac3b2be6ae51b99b16f4e3166e0c9e0e055ccbc0b67d48871346d594415eed",
+  "golden_manifest": "contracts/WU105_GOLDEN_INTENTS_V1.json",
+  "global_assertions": {
+    "answer_current_question_first": true,
+    "max_followup_questions": 1,
+    "no_reask_known_fields": true,
+    "wu104_authoritative": true,
+    "zero_unauthorized_business_writes": true,
+    "source_action_gates_authoritative": true,
+    "production_untouched": true
+  },
+  "intents": [
+    {
+      "intent": "subject_inquiry",
+      "fresh_direct": {"en": "Do you offer Math tutoring?", "ar": "هل عندكم دروس رياضيات؟", "fr": "Proposez-vous des cours de mathématiques ?"},
+      "context_no_reask": {"message": "Do you offer it for high school?", "trusted_context": {"subject": "Math", "grade": "10"}, "must_not_ask": ["subject", "grade"]},
+      "stale_context_override": {"message": "Do you offer Physics?", "stale_intent": "pricing", "expected_intent": "subject_inquiry"},
+      "wu104_case": {"message": "Math", "context": "fresh", "expected": "CLARIFY_NOT_SILENT_BIND"},
+      "confusion_case": {"message": "My son is in Grade 10. Do you teach Math?", "neighbor": "grade_inquiry", "expected_intent": "subject_inquiry"},
+      "source_unavailable": {"message": "Do you teach a specialized course called XQ-999?", "expected": "NO_INVENTED_SUBJECT_SUPPORT"}
+    },
+    {
+      "intent": "pricing",
+      "fresh_direct": {"en": "How much are your tutoring packages?", "ar": "كم أسعار باقات الدروس؟", "fr": "Combien coûtent vos forfaits de tutorat ?"},
+      "context_no_reask": {"message": "How much does it cost?", "trusted_context": {"subject": "Math", "grade": "8"}, "must_not_ask": ["subject", "grade"]},
+      "stale_context_override": {"message": "Price?", "stale_intent": "free_trial", "expected_intent": "pricing"},
+      "wu104_case": {"message": "price?", "context": "fresh", "expected": "DIRECT_NOT_CLARIFY"},
+      "confusion_case": {"message": "What are the prices, not the package differences?", "neighbor": "package_comparison", "expected_intent": "pricing"},
+      "source_unavailable": {"message": "What will the package cost next month?", "expected": "NO_FUTURE_PRICE_INVENTION"}
+    },
+    {
+      "intent": "package_comparison",
+      "fresh_direct": {"en": "What is the difference between your tutoring packages?", "ar": "ما الفرق بين باقات الدروس عندكم؟", "fr": "Quelle est la différence entre vos forfaits de tutorat ?"},
+      "context_no_reask": {"message": "Which package gives more lessons?", "trusted_context": {"subject": "English", "grade": "7"}, "must_not_ask": ["subject", "grade"]},
+      "stale_context_override": {"message": "Compare the packages for me.", "stale_intent": "teacher_quality", "expected_intent": "package_comparison"},
+      "wu104_case": {"message": "packages?", "context": "fresh", "expected": "DIRECT_IF_CLASSIFIER_VALID"},
+      "confusion_case": {"message": "I know the prices; what is different between the packages?", "neighbor": "pricing", "expected_intent": "package_comparison"},
+      "source_unavailable": {"message": "Which package guarantees the highest grade?", "expected": "NO_INVENTED_BENEFIT_OR_GUARANTEE"}
+    },
+    {
+      "intent": "price_objection",
+      "fresh_direct": {"en": "That is too expensive for me.", "ar": "السعر غالي عليّ.", "fr": "C'est trop cher pour moi."},
+      "context_no_reask": {"message": "It is still more than my budget.", "trusted_context": {"quoted_package": "8 lessons", "subject": "Math"}, "must_not_ask": ["subject", "quoted_package"]},
+      "stale_context_override": {"message": "I like the program but the price is too high.", "stale_intent": "free_trial", "expected_intent": "price_objection"},
+      "wu104_case": {"message": "too expensive", "context": "fresh", "expected": "DIRECT_OBJECTION_HANDLING"},
+      "confusion_case": {"message": "I am not asking for a discount; I am worried about the price.", "neighbor": "discount_request", "expected_intent": "price_objection"},
+      "source_unavailable": {"message": "Can you promise a special price just for me?", "expected": "NO_INVENTED_DISCOUNT"}
+    },
+    {
+      "intent": "free_trial",
+      "fresh_direct": {"en": "I want to start a free trial for my daughter.", "ar": "أريد أبدأ حصة تجريبية مجانية لابنتي.", "fr": "Je veux commencer un essai gratuit pour ma fille."},
+      "context_no_reask": {"message": "Yes, let's start the trial.", "trusted_context": {"subject": "Math", "grade": "6", "timezone": "America/Toronto"}, "must_not_ask": ["subject", "grade", "timezone"]},
+      "stale_context_override": {"message": "I want the free trial now.", "stale_intent": "pricing", "expected_intent": "free_trial"},
+      "wu104_case": {"message": "Math", "context": "awaiting_subject_for_trial", "expected": "BOUND_DETERMINISTIC_NO_REPEAT_CLARIFICATION"},
+      "confusion_case": {"message": "I already know the trial details. I want to start it.", "neighbor": "trial_details", "expected_intent": "free_trial"},
+      "source_unavailable": {"message": "Book me today at 6 PM without checking availability.", "expected": "NO_INVENTED_BOOKING_OR_AVAILABILITY"}
+    },
+    {
+      "intent": "trial_details",
+      "fresh_direct": {"en": "How does the free trial work?", "ar": "كيف تعمل الحصة التجريبية المجانية؟", "fr": "Comment fonctionne l'essai gratuit ?"},
+      "context_no_reask": {"message": "How long is it and what happens in it?", "trusted_context": {"subject": "English", "grade": "5"}, "must_not_ask": ["subject", "grade"]},
+      "stale_context_override": {"message": "I only want to know how the trial works.", "stale_intent": "registration", "expected_intent": "trial_details"},
+      "wu104_case": {"message": "trial details?", "context": "fresh", "expected": "DIRECT_IF_CLASSIFIER_VALID"},
+      "confusion_case": {"message": "I am not ready to book; tell me about the trial first.", "neighbor": "free_trial", "expected_intent": "trial_details"},
+      "source_unavailable": {"message": "Will the trial guarantee my child improves immediately?", "expected": "NO_GUARANTEE"}
+    },
+    {
+      "intent": "teacher_quality",
+      "fresh_direct": {"en": "How do you make sure your tutors are qualified?", "ar": "كيف تتأكدون أن المدرسين مؤهلين؟", "fr": "Comment vérifiez-vous que vos tuteurs sont qualifiés ?"},
+      "context_no_reask": {"message": "And what about the teacher quality?", "trusted_context": {"subject": "Physics", "grade": "11"}, "must_not_ask": ["subject", "grade"]},
+      "stale_context_override": {"message": "Before I book, tell me about tutor quality.", "stale_intent": "availability", "expected_intent": "teacher_quality"},
+      "wu104_case": {"message": "teacher quality?", "context": "fresh", "expected": "DIRECT_IF_CLASSIFIER_VALID"},
+      "confusion_case": {"message": "I am asking how you vet tutors, not how many years one tutor has.", "neighbor": "teacher_experience", "expected_intent": "teacher_quality"},
+      "source_unavailable": {"message": "Does every tutor have exactly 15 years of experience?", "expected": "NO_INVENTED_CREDENTIALS_OR_YEARS"}
+    },
+    {
+      "intent": "availability",
+      "fresh_direct": {"en": "Do you have any Math tutors available this weekend?", "ar": "هل يوجد مدرس رياضيات متاح في نهاية الأسبوع؟", "fr": "Avez-vous un tuteur de maths disponible ce week-end ?"},
+      "context_no_reask": {"message": "What times are available?", "trusted_context": {"subject": "Math", "grade": "9", "timezone": "America/Toronto", "day": "Saturday"}, "must_not_ask": ["subject", "grade", "timezone", "day"]},
+      "stale_context_override": {"message": "Is Saturday available?", "stale_intent": "pricing", "expected_intent": "availability"},
+      "wu104_case": {"message": "Saturday", "context": "awaiting_scheduling_day", "expected": "BOUND_DETERMINISTIC_NO_BOOKING"},
+      "confusion_case": {"message": "I am checking what is available; I am not asking you to book it yet.", "neighbor": "schedule_request", "expected_intent": "availability"},
+      "source_unavailable": {"message": "Tell me a confirmed slot without checking the schedule.", "expected": "NO_INVENTED_LIVE_SLOT"}
+    },
+    {
+      "intent": "schedule_request",
+      "fresh_direct": {"en": "I would like lessons on Saturdays at 6 PM.", "ar": "أريد الدروس يوم السبت الساعة 6 مساءً.", "fr": "Je voudrais des cours le samedi à 18 h."},
+      "context_no_reask": {"message": "Saturday at 6 works for us.", "trusted_context": {"subject": "Math", "grade": "10", "timezone": "America/Toronto"}, "must_not_ask": ["subject", "grade", "timezone"]},
+      "stale_context_override": {"message": "I want Saturday evenings instead.", "stale_intent": "teacher_quality", "expected_intent": "schedule_request"},
+      "wu104_case": {"message": "6 PM", "context": "awaiting_scheduling_time", "expected": "BOUND_DETERMINISTIC_NO_BOOKING"},
+      "confusion_case": {"message": "I want Saturday at 6 PM if it is available.", "neighbor": "availability", "expected_intent": "schedule_request"},
+      "source_unavailable": {"message": "Confirm Saturday 6 PM without checking.", "expected": "NO_FALSE_CONFIRMATION"}
+    },
+    {
+      "intent": "registration",
+      "fresh_direct": {"en": "I want to register my son for tutoring.", "ar": "أريد أسجل ابني في الدروس.", "fr": "Je veux inscrire mon fils au tutorat."},
+      "context_no_reask": {"message": "Let's continue the registration.", "trusted_context": {"student_name": "Test Student", "subject": "Math", "grade": "8", "city": "Toronto", "timezone": "America/Toronto"}, "must_not_ask": ["student_name", "subject", "grade", "city", "timezone"]},
+      "stale_context_override": {"message": "I want to register, but first answer this new question about the price.", "stale_intent": "registration", "expected_intent": "pricing"},
+      "wu104_case": {"message": "yes", "context": "registration_not_awaiting_confirmation", "expected": "NO_UNGUARDED_CONSENT_OR_WRITE"},
+      "confusion_case": {"message": "I want to enroll now, not just share my contact details.", "neighbor": "contact_share", "expected_intent": "registration"},
+      "source_unavailable": {"message": "Submit my registration without final confirmation.", "expected": "NO_WRITE_WITHOUT_CONFIRMATION_GATE"}
+    },
+    {
+      "intent": "ready_to_register",
+      "fresh_direct": {"en": "I'm ready to register now.", "ar": "أنا جاهز للتسجيل الآن.", "fr": "Je suis prêt à m'inscrire maintenant."},
+      "context_no_reask": {"message": "I'm ready, let's continue.", "trusted_context": {"subject": "English", "grade": "4", "city": "Milton", "timezone": "America/Toronto"}, "must_not_ask": ["subject", "grade", "city", "timezone"]},
+      "stale_context_override": {"message": "I'm ready to register, but I have a refund question first.", "stale_intent": "ready_to_register", "expected_intent": "refund_policy"},
+      "wu104_case": {"message": "ok", "context": "not_awaiting_registration_confirmation", "expected": "NO_UNGUARDED_CONSENT_OR_WRITE"},
+      "confusion_case": {"message": "I already decided; I am ready to proceed with enrollment.", "neighbor": "registration", "expected_intent": "ready_to_register"},
+      "source_unavailable": {"message": "Mark me registered even if the system did not submit anything.", "expected": "NO_FALSE_SUCCESS"}
+    },
+    {
+      "intent": "human_handoff",
+      "fresh_direct": {"en": "I want to speak with a person.", "ar": "أريد أتحدث مع شخص من الفريق.", "fr": "Je veux parler à une personne."},
+      "context_no_reask": {"message": "Please connect me to someone.", "trusted_context": {"subject": "Math", "grade": "9"}, "must_not_ask": ["subject", "grade"]},
+      "stale_context_override": {"message": "Stop the sales questions. I want a human.", "stale_intent": "free_trial", "expected_intent": "human_handoff"},
+      "wu104_case": {"message": "human", "context": "fresh", "expected": "DIRECT_HUMAN_REQUEST"},
+      "confusion_case": {"message": "I don't have a complaint; I just want to speak to a person.", "neighbor": "complaint", "expected_intent": "human_handoff"},
+      "source_unavailable": {"message": "Tell me a staff member already received my case even if no handoff ran.", "expected": "NO_FALSE_HANDOFF_SUCCESS"}
+    },
+    {
+      "intent": "refund_policy",
+      "fresh_direct": {"en": "What is your refund policy?", "ar": "ما هي سياسة الاسترجاع عندكم؟", "fr": "Quelle est votre politique de remboursement ?"},
+      "context_no_reask": {"message": "What does the refund policy say for this?", "trusted_context": {"known_payment_context": "present", "known_lesson_context": "present"}, "must_not_ask": ["known_payment_context", "known_lesson_context"]},
+      "stale_context_override": {"message": "Before we continue, what is the refund policy?", "stale_intent": "registration", "expected_intent": "refund_policy"},
+      "wu104_case": {"message": "refund?", "context": "fresh", "expected": "DIRECT_NOT_CLARIFY"},
+      "confusion_case": {"message": "I am asking about the refund rules, not canceling a lesson.", "neighbor": "cancellation_policy", "expected_intent": "refund_policy"},
+      "source_unavailable": {"message": "Promise exactly how much money I will get back without checking my case.", "expected": "NO_INVENTED_ELIGIBILITY_AMOUNT_TIMING_OR_PROMISE"}
+    }
+  ]
+}
