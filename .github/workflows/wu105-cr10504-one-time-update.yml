@@ -1,0 +1,123 @@
+name: WU105 CR-105-04 one-time inactive staging update
+
+on:
+  push:
+    branches:
+      - wu105-planning
+    paths:
+      - '.github/workflows/wu105-cr10504-one-time-update.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  WU104_LOCK_RUN_ID: '33663124381'
+  WU104_ARTIFACT_NAME: wu104-cr10405-evidence
+  WU104_UPSTREAM: locked-wu104/n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+  WU104_EXPECTED_SHA256: 32721cae2b09531d8f4860373c37911ace9e95b6818babdca880fa08ef1b7bc9
+  CR10501_BASE: /tmp/SPM_WU105_CR10501_BASE.json
+  CR10501_SHA: e40610b13ec61a781acf44842b74955a88a11286e83baa7e121aee349cc9dcf0
+  CR10502_BASE: /tmp/SPM_WU105_CR10502_BASE.json
+  CR10502_SHA: 7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e
+  CR10503_BASE: /tmp/SPM_WU105_CR10503_BASE.json
+  CR10503_SHA: aaaa139faa67815f4196fb9779232471c4c8b051a26f0ba0a3be4c56231d4653
+  CR10504_FINAL: n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+  CR10504_SHA: 42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1
+  WU105_TARGET_WORKFLOW_ID: KXfalaYSCLdgmf4X
+  PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
+  WU101_STAGING_ID: mMZVFxJIxE7a9SSW
+  WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
+  WU103_STAGING_ID: 5COEoxXjk8AvuGBa
+  WU104_STAGING_ID: Bt3PvOIbFzU0O9gk
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download exact locked WU-104 evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.WU104_ARTIFACT_NAME }}
+          path: locked-wu104
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.WU104_LOCK_RUN_ID }}
+      - name: Verify lock and protected target identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/main:work-units/WU-104.lock.md > /tmp/WU-104.lock.md
+          grep -q '^Status: LOCKED$' /tmp/WU-104.lock.md
+          test "$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')" = "$WU104_EXPECTED_SHA256"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$PRODUCTION_WORKFLOW_ID"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$WU101_STAGING_ID"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$WU102_STAGING_ID"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$WU103_STAGING_ID"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$WU104_STAGING_ID"
+      - name: Rebuild exact CR-105-04 candidate chain
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/wu105/build_candidate.py --baseline "$WU104_UPSTREAM" --manifest contracts/WU105_GOLDEN_INTENTS_V1.json --output "$CR10501_BASE"
+          test "$(sha256sum "$CR10501_BASE" | awk '{print $1}')" = "$CR10501_SHA"
+          python scripts/wu105/test_cr10502.py --input "$CR10501_BASE"
+          python scripts/wu105/apply_cr10502.py --input "$CR10501_BASE" --output "$CR10502_BASE"
+          test "$(sha256sum "$CR10502_BASE" | awk '{print $1}')" = "$CR10502_SHA"
+          python scripts/wu105/test_cr10503.py --input "$CR10502_BASE"
+          python scripts/wu105/apply_cr10503.py --input "$CR10502_BASE" --output "$CR10503_BASE"
+          test "$(sha256sum "$CR10503_BASE" | awk '{print $1}')" = "$CR10503_SHA"
+          python scripts/wu105/test_cr10504.py --input "$CR10503_BASE"
+          mkdir -p n8n/generated
+          python scripts/wu105/apply_cr10504.py --input "$CR10503_BASE" --output "$CR10504_FINAL"
+          test "$(sha256sum "$CR10504_FINAL" | awk '{print $1}')" = "$CR10504_SHA"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CR10504_FINAL"]))["nodes"]))')" = "131"
+      - name: Update existing inactive WU-105 STAGING only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact "$CR10504_FINAL" \
+            --environment staging \
+            --expected-sha256 "$CR10504_SHA" \
+            --mode apply \
+            --target-workflow-id "$WU105_TARGET_WORKFLOW_ID" \
+            --result-file wu105-cr10504-deployment-result.json
+      - name: Verify exact remote CR-105-04 readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          r=json.load(open('wu105-cr10504-deployment-result.json'))
+          assert r['target_workflow_id']==os.environ['WU105_TARGET_WORKFLOW_ID']
+          assert r['artifact_sha256']==os.environ['CR10504_SHA']
+          assert r['published_or_activated'] is False
+          assert r['remote_active_after'] is False
+          assert r['node_count']==131
+          PY
+          N8N_TARGET_WORKFLOW_ID="$WU105_TARGET_WORKFLOW_ID" python scripts/wu105/verify_cr10504_remote.py
+      - name: Upload CR-105-04 deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu105-cr10504-staging-update-evidence
+          path: |
+            n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+            wu105-cr10504-deployment-result.json
+          if-no-files-found: ignore
+          retention-days: 30
