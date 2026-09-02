@@ -74,7 +74,7 @@ jobs:
             --manifest contracts/WU105_GOLDEN_INTENTS_V1.json \
             --output "$WU105_CANDIDATE"
           echo "WU105_CANDIDATE_SHA256=$(sha256sum "$WU105_CANDIDATE" | awk '{print $1}')"
-          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_CANDIDATE"]))["nodes"]))')" = "127"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_CANDIDATE"]))["nodes"]))')" = "128"
       - name: Upload deterministic candidate evidence
         if: always()
         uses: actions/upload-artifact@v4
