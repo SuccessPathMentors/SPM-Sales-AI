@@ -43,6 +43,8 @@ jobs:
           python-version: '3.12'
       - name: Validate WU-105 golden manifest and protected Production baseline
         run: python scripts/wu105/test_manifest.py
+      - name: Validate WU-105 planned runtime matrix coverage
+        run: python scripts/wu105/test_runtime_matrix.py
       - name: Rebuild exact current WU-104 upstream candidate
         run: |
           set -euo pipefail
@@ -71,5 +73,6 @@ jobs:
           path: |
             n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
             n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+            contracts/WU105_RUNTIME_MATRIX_V1.json
           if-no-files-found: ignore
           retention-days: 30
