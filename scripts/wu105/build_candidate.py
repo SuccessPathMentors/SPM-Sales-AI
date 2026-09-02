@@ -5,13 +5,16 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
-EXPECTED_WU104_BASELINE_SHA256 = "d0c2ad10c3455b435868a8b7d4c874d31d27ae35e64844d62713d1a5ba74e45f"
+EXPECTED_WU104_BASELINE_SHA256 = "32721cae2b09531d8f4860373c37911ace9e95b6818babdca880fa08ef1b7bc9"
+EXPECTED_WU104_NODE_COUNT = 126
 PROMPT_NODE = "Build WU96-Aware Sales Agent Prompt"
 GENERATOR_NODE = "Generate WU92 Sales Agent Response"
 OVERLAY_NODE = "Apply WU105 Golden Intent Prompt Overlay"
 REQUIRED_WU104_NODES = {
     "Build WU104 Short Query Decision",
+    "Apply WU104 Short Trial Inquiry Guard",
     "Persist WU104 Awaited Context Hint",
+    "Persist WU104 Final Asked Field",
     "Apply WU104 Clarification Response Override",
 }
 
@@ -66,14 +69,14 @@ return [{{json:{{...j,sales_agent_prompt:String(j.sales_agent_prompt||'')+overla
         "id": "wu105-golden-intent-overlay-v1",
         "name": OVERLAY_NODE,
         "notesInFlow": True,
-        "notes": "WU-105 STAGING-only prompt overlay. Inherits current WU-104 staging candidate; no classifier/source/action permission changes. Production remains read-only."
+        "notes": "WU-105 STAGING-only prompt overlay. Inherits locked WU-104 CR-104-05 candidate exactly; no classifier/source/action permission changes. Production remains read-only."
     }
 
 
 def build(baseline: Path, manifest_path: Path, output: Path):
     actual = sha256(baseline)
     if actual != EXPECTED_WU104_BASELINE_SHA256:
-        raise SystemExit(f"WU-104 upstream baseline SHA mismatch: {actual}")
+        raise SystemExit(f"WU-104 locked upstream baseline SHA mismatch: {actual}")
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("schema") != "SPM_WU105_GOLDEN_INTENTS_V1":
@@ -82,6 +85,9 @@ def build(baseline: Path, manifest_path: Path, output: Path):
         raise SystemExit("WU-105 golden manifest must contain 8-15 intents")
 
     workflow = json.loads(baseline.read_text(encoding="utf-8"))
+    if len(workflow.get("nodes", [])) != EXPECTED_WU104_NODE_COUNT:
+        raise SystemExit(f"WU-104 locked upstream node count mismatch: {len(workflow.get('nodes', []))}")
+
     candidate = deepcopy(workflow)
     candidate["name"] = "[STAGING] SPM_WU105_GOLDEN_INTENTS_V1"
     candidate["active"] = False
@@ -89,7 +95,7 @@ def build(baseline: Path, manifest_path: Path, output: Path):
     names = [n.get("name") for n in candidate.get("nodes", [])]
     missing_wu104 = sorted(REQUIRED_WU104_NODES - set(names))
     if missing_wu104:
-        raise SystemExit("WU-105 refuses a baseline without current WU-104 controls: " + ", ".join(missing_wu104))
+        raise SystemExit("WU-105 refuses a baseline without locked WU-104 controls: " + ", ".join(missing_wu104))
     if OVERLAY_NODE in names:
         raise SystemExit("WU-105 overlay node already exists")
     if names.count(PROMPT_NODE) != 1 or names.count(GENERATOR_NODE) != 1:
@@ -121,7 +127,7 @@ def build(baseline: Path, manifest_path: Path, output: Path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--baseline", required=True, type=Path, help="Current deterministic WU-104 staging candidate, not Production")
+    parser.add_argument("--baseline", required=True, type=Path, help="Locked WU-104 CR-104-05 staging candidate artifact, never Production")
     parser.add_argument("--manifest", default=Path("contracts/WU105_GOLDEN_INTENTS_V1.json"), type=Path)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
