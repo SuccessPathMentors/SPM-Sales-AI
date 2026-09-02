@@ -160,15 +160,43 @@ Acceptance coverage:
 
 **Owner screenshot evidence:** supplied in chat on 2026-09-03.
 
+## Test 06 — Trial Details vs Free-Trial Action / Confusion Pair
+
+**Intent:** `trial_details`
+
+**Fresh-session prompt:** `How does the free trial work?`
+
+**Observed response:** `Our free trial includes an initial assessment to identify your child's level, gaps, and challenges, plus a free trial for each new student and subject. After about 4-6 lessons, a follow-up assessment may review progress and provide feedback to parents. Lessons are delivered mainly via Google Meet, and a larger screen with stable internet is preferred for the best experience.`
+
+**Result:** `PASS` for WU-105 intent/flow behavior.
+
+Evidence:
+- question was handled as informational `trial_details`, not as an immediate `free_trial` booking/action request;
+- answered the current question before any intake or registration step;
+- did not ask for parent/guardian name;
+- did not start registration automatically;
+- did not claim a trial was booked, confirmed, or scheduled;
+- zero unnecessary follow-up questions;
+- preserved the `trial_details` vs `free_trial` confusion-pair distinction.
+
+Acceptance coverage:
+- AC-04 answer-first: PASS;
+- AC-09 confusion-pair separation (`trial_details` vs `free_trial`): PASS for this representative case;
+- action boundary / no false success: PASS.
+
+Content QA note (non-blocking for this intent-routing test): the exact policy statements in the returned content — especially `free trial for each new student and subject` and `After about 4-6 lessons` — should remain source-gated to the approved KB/policy record. This test certifies intent separation and flow behavior; it does not independently re-approve those policy facts.
+
+**Owner screenshot evidence:** supplied in chat on 2026-09-03.
+
 ## Running certification summary
 
-- Customer-output tests attempted: `5`
-- Current passing customer-output cases: `5 / 5`
+- Customer-output tests attempted: `6`
+- Current passing customer-output cases: `6 / 6`
 - Initial failures encountered and repaired: `1`
 - CRs opened: `1` (`CR-105-01`)
 - CR-105-01 CI/deployment/readback: `PASS`
 - CR-105-01 exact customer-output retest: `PASS`
 - Current blocking runtime defect: `NONE`
-- Next representative case: `free_trial` vs `trial_details` confusion-pair separation.
+- Next representative case: explicit `free_trial` action request should enter intake/action flow without false booking success.
 
-Owner screenshot evidence for Tests 01-05 supplied in chat on 2026-09-03.
+Owner screenshot evidence for Tests 01-06 supplied in chat on 2026-09-03.
