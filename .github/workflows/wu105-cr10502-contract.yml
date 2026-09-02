@@ -1,0 +1,79 @@
+name: WU105 CR-105-02 contract
+
+on:
+  push:
+    branches:
+      - wu105-planning
+    paths:
+      - 'scripts/wu105/apply_cr10502.py'
+      - 'scripts/wu105/test_cr10502.py'
+      - '.github/workflows/wu105-cr10502-contract.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  WU104_LOCK_RUN_ID: '33663124381'
+  WU104_ARTIFACT_NAME: wu104-cr10405-evidence
+  WU104_UPSTREAM: locked-wu104/n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+  WU104_EXPECTED_SHA256: 32721cae2b09531d8f4860373c37911ace9e95b6818babdca880fa08ef1b7bc9
+  WU105_BASE: /tmp/SPM_WU105_CR10501_BASE.json
+  WU105_BASE_EXPECTED_SHA256: e40610b13ec61a781acf44842b74955a88a11286e83baa7e121aee349cc9dcf0
+  WU105_FINAL: n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download exact locked WU-104 CR-104-05 evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.WU104_ARTIFACT_NAME }}
+          path: locked-wu104
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.WU104_LOCK_RUN_ID }}
+      - name: Build exact CR-105-01 base candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/main:work-units/WU-104.lock.md > /tmp/WU-104.lock.md
+          grep -q '^Status: LOCKED$' /tmp/WU-104.lock.md
+          grep -q "$WU104_EXPECTED_SHA256" /tmp/WU-104.lock.md
+          test "$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')" = "$WU104_EXPECTED_SHA256"
+          python scripts/wu105/build_candidate.py \
+            --baseline "$WU104_UPSTREAM" \
+            --manifest contracts/WU105_GOLDEN_INTENTS_V1.json \
+            --output "$WU105_BASE"
+          actual="$(sha256sum "$WU105_BASE" | awk '{print $1}')"
+          echo "WU105_CR10501_BASE_SHA256=$actual"
+          test "$actual" = "$WU105_BASE_EXPECTED_SHA256"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_BASE"]))["nodes"]))')" = "128"
+      - name: Test CR-105-02 semantic guard and topology
+        run: python scripts/wu105/test_cr10502.py --input "$WU105_BASE"
+      - name: Build CR-105-02 final candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu105/apply_cr10502.py --input "$WU105_BASE" --output "$WU105_FINAL"
+          echo "WU105_CR10502_FINAL_SHA256=$(sha256sum "$WU105_FINAL" | awk '{print $1}')"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_FINAL"]))["nodes"]))')" = "129"
+      - name: Upload CR-105-02 deterministic evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu105-cr10502-candidate
+          path: |
+            n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+            contracts/WU105_RUNTIME_MATRIX_V1.json
+          if-no-files-found: ignore
+          retention-days: 30
