@@ -1,6 +1,6 @@
 # WU-105 Runtime Golden Intent Certification Evidence
 
-Status: IN_PROGRESS — CR-105-02 DEPLOYED / TEST-07 RETEST PENDING
+Status: IN_PROGRESS — TEST-07 RETEST PASS / NEXT RUNTIME CASE PENDING
 Workflow: `[STAGING] SPM_WU105_GOLDEN_INTENTS_V1`
 Workflow ID: `KXfalaYSCLdgmf4X`
 Current Candidate SHA-256: `7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e`
@@ -32,27 +32,27 @@ CR-105-01 remains deployed on inactive STAGING and passed CI, remote readback, a
 
 **Initial result:** `FAIL`
 
-Assessment:
-- Grade 8 and Math were recognized: PASS;
+Initial assessment:
+- Grade 8 and Math recognized: PASS;
 - no false booking/confirmation claim: PASS;
-- explicit request to **start a free trial** was honored as conversion/intake intent: FAIL;
-- response entered generic subject/learning-need discovery instead of the `free_trial` progression/intake path: FAIL.
+- explicit request to start a free trial honored as conversion/intake intent: FAIL;
+- response entered generic subject/learning-need discovery instead of `free_trial` progression/intake: FAIL.
 
 ### Root cause boundary
 The locked classifier contract already defines explicit `start/request/arrange/book/receive a free trial` wording as `free_trial`, and WU95 already treats `free_trial` as a lead/conversion intent. If `free_trial` reaches WU95, the deterministic lead truth guard renders the smallest missing lead field instead of a generic subject answer.
 
-The observed customer output therefore showed that the explicit free-trial action meaning was being lost before WU95 lead progression for this compound `free trial + Grade 8 + Math` message.
+The observed customer output showed that explicit free-trial action meaning was being lost before WU95 lead progression for this compound `free trial + Grade 8 + Math` message.
 
 ## CR-105-02 — Explicit Free-Trial Action Semantic Guard
 
-A narrow deterministic WU-105 guard was added **after locked WU-104 short-trial handling and before WU89 classifier-context capture**:
+A narrow deterministic WU-105 guard was added after locked WU-104 short-trial handling and before WU89 classifier-context capture:
 
 `Apply WU104 Short Trial Inquiry Guard -> Apply WU105 Explicit Free Trial Action Guard -> Capture WU89 Classifier Context`
 
 Behavior:
 - detects only unmistakable action wording such as `I want to start/book/request a free trial`;
 - reuses the existing authoritative `free_trial` taxonomy row rather than creating a new intent;
-- narrow remap scope is limited to common semantic-confusion intents;
+- narrow remap scope limited to common semantic-confusion intents;
 - does not override `human_handoff`, complaint, technical support, payment, not-interested/opt-out, refund, cancellation, or security precedence;
 - leaves `free trial?`, `How does the free trial work?`, Arabic informational trial questions, and French informational trial questions outside this action guard;
 - runs after WU-104, so locked `free trial? -> trial_details` behavior remains authoritative;
@@ -95,19 +95,42 @@ Deployment:
 
 Deployment evidence artifact: `wu105-cr10502-staging-update-evidence` / ID `9870629751`.
 
-The one-time deployment workflow was removed after successful update.
+### Exact customer-output retest after CR-105-02
 
-**Exact retest status:** `PENDING OWNER SCREENSHOT` using the same fresh-session prompt:
+**Prompt:**
 `I want to start a free trial for my son in Grade 8 Math.`
+
+**Observed response:**
+`What is the parent or guardian's name?`
+
+**Retest result:** `PASS`
+
+Retest evidence:
+- explicit request now enters the `free_trial` intake/conversion path;
+- Grade 8 and Math are retained and not re-asked;
+- only the smallest missing lead field is requested;
+- no generic subject discovery response;
+- no claim that the trial is booked, confirmed, or scheduled;
+- no irreversible action is claimed;
+- informational `trial_details` behavior from Test 06 remains separately validated.
+
+Acceptance coverage from Test 07 retest:
+- AC-04 current request handled directly: PASS;
+- AC-05 no-reask known grade/subject: PASS;
+- AC-09 `trial_details` vs `free_trial` confusion pair: PASS in both directions across Tests 06-07;
+- action boundary / no false success: PASS.
+
+**Owner screenshot evidence:** supplied in chat on 2026-09-03 after CR-105-02 deployment.
 
 ## Running certification summary
 
 - Customer-output tests attempted: `7`
-- Passing before Test 07 retest: `6 / 7`
+- Current passing customer-output cases: `7 / 7`
 - Initial failures encountered: `2` (Test 04, Test 07)
-- Repaired and retested: `1` (Test 04 via CR-105-01)
-- CR-105-02 static/deployment/readback: `PASS`
-- Current blocking runtime gate: exact Test 07 customer-output retest
-- Next action after PASS: continue Golden Intent runtime certification.
+- Repaired and exact-retested: `2 / 2`
+- CR-105-01 static/deployment/readback/retest: `PASS`
+- CR-105-02 static/deployment/readback/retest: `PASS`
+- Current blocking runtime defect: `NONE`
+- Next representative case: `price_objection` response quality and no invented discount / no pressure.
 
 Owner screenshot evidence for Tests 01-07 supplied in chat on 2026-09-03.
