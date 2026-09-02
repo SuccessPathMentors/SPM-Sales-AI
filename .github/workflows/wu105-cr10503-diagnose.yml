@@ -25,7 +25,7 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Read-only inspect WU-105 STAGING response-rewrite topology
+      - name: Read-only inspect WU92 validator and local topology
         shell: bash
         run: |
           set -euo pipefail
@@ -37,32 +37,25 @@ jobs:
           req=urllib.request.Request(f'{base}/workflows/{wid}',headers={'accept':'application/json','X-N8N-API-KEY':key},method='GET')
           with urllib.request.urlopen(req,timeout=45) as r:
               wf=json.loads(r.read().decode())
-          print('WORKFLOW',wf.get('id'),wf.get('name'),'active=',wf.get('active'),'nodes=',len(wf.get('nodes',[])),'version=',wf.get('versionId'))
           con=wf.get('connections',{})
           incoming={}
           for src,v in con.items():
               for group in v.get('main',[]):
                   for e in group:
                       incoming.setdefault(e.get('node'),[]).append(src)
-          needles=['We can proceed with that step','system check or action succeeds','refund','Deterministic Action Gateway','Restore Final Response Payload','Build Telemetry Envelope','RC3 Chat Response','Apply WU104 Clarification Response Override','Apply WU97 Fail-Closed Privacy Security Guard','Apply WU94 Scheduling Truth Guard','Resolve WU95 Conversion Mode']
-          matches=[]
-          for n in wf.get('nodes',[]):
-              name=str(n.get('name',''))
-              p=json.dumps(n.get('parameters',{}),ensure_ascii=False)
-              hits=[x for x in needles if x.lower() in (name+' '+p).lower()]
-              if hits:
-                  matches.append((name,n.get('type'),hits,p))
-          for name,typ,hits,p in matches:
-              outs=[[x.get('node') for x in g] for g in con.get(name,{}).get('main',[])]
-              print('\nNODE:',name)
-              print('TYPE:',typ)
-              print('HITS:',hits)
-              print('IN:',incoming.get(name,[]))
-              print('OUT:',outs)
-              for needle in ['We can proceed with that step','system check or action succeeds']:
-                  idx=p.lower().find(needle.lower())
-                  if idx>=0:
-                      lo=max(0,idx-900); hi=min(len(p),idx+1600)
-                      print('SNIPPET:',p[lo:hi])
-          print('\nMATCH_COUNT',len(matches))
+          names=['Generate WU92 Sales Agent Response','Validate + Guard WU92 Sales Agent Output','Apply WU92 Sales Agent Policy Guard','Apply WU93 Commercial Guard','Apply WU94 Scheduling Truth Guard','Apply WU105 Availability Answer-First Guard']
+          nodes={n.get('name'):n for n in wf.get('nodes',[])}
+          print('WORKFLOW',wf.get('id'),'active=',wf.get('active'),'nodes=',len(nodes),'version=',wf.get('versionId'))
+          for name in names:
+              n=nodes.get(name)
+              print('\n===',name,'===')
+              if not n:
+                  print('MISSING'); continue
+              print('TYPE',n.get('type'))
+              print('IN',incoming.get(name,[]))
+              print('OUT',[[x.get('node') for x in g] for g in con.get(name,{}).get('main',[])])
+              if name=='Validate + Guard WU92 Sales Agent Output':
+                  print('JSCODE_BEGIN')
+                  print(n.get('parameters',{}).get('jsCode',''))
+                  print('JSCODE_END')
           PY
