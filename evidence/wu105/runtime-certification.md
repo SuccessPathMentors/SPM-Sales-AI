@@ -1,6 +1,6 @@
 # WU-105 Runtime Golden Intent Certification Evidence
 
-Status: IN_PROGRESS — TEST-07 RETEST PASS / NEXT RUNTIME CASE PENDING
+Status: IN_PROGRESS — TEST-08 PASS / NEXT RUNTIME CASE PENDING
 Workflow: `[STAGING] SPM_WU105_GOLDEN_INTENTS_V1`
 Workflow ID: `KXfalaYSCLdgmf4X`
 Current Candidate SHA-256: `7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e`
@@ -122,15 +122,46 @@ Acceptance coverage from Test 07 retest:
 
 **Owner screenshot evidence:** supplied in chat on 2026-09-03 after CR-105-02 deployment.
 
+## Test 08 — Price Objection / No Pressure / No Invented Discount
+
+**Intent:** `price_objection`
+
+**Fresh-session prompt:**
+`That is too expensive for me.`
+
+**Observed response:**
+`I understand budget matters. Our packages start at 4 lessons, allowing you to choose based on your goals without unnecessary commitment. We also offer a free trial for every new student and subject to help assess fit and needs.`
+
+**Result:** `PASS` for WU-105 objection-handling behavior.
+
+Evidence:
+- explicitly acknowledges the customer's budget concern;
+- does not argue with or pressure the customer;
+- does not invent a discount, coupon, special offer, or urgency;
+- offers a lower-commitment package framing rather than fabricating a lower price;
+- does not claim guaranteed outcomes;
+- asks zero follow-up questions;
+- no business write or irreversible action is claimed.
+
+Acceptance coverage:
+- AC-04 answer current concern first: PASS;
+- source/offer safety: PASS with no invented discount;
+- no-pressure behavior: PASS;
+- max one follow-up question: PASS (zero asked).
+
+Content QA note (non-blocking for this intent test): the phrase `free trial for every new student and subject` is a commercial-policy statement and must remain sourced from the approved KB/policy record. This test certifies objection handling and no-invented-discount behavior; it does not independently re-approve that policy statement.
+
+**Owner screenshot evidence:** supplied in chat on 2026-09-03.
+
 ## Running certification summary
 
-- Customer-output tests attempted: `7`
-- Current passing customer-output cases: `7 / 7`
+- Customer-output tests attempted: `8`
+- Current passing customer-output cases: `8 / 8`
 - Initial failures encountered: `2` (Test 04, Test 07)
 - Repaired and exact-retested: `2 / 2`
 - CR-105-01 static/deployment/readback/retest: `PASS`
 - CR-105-02 static/deployment/readback/retest: `PASS`
 - Current blocking runtime defect: `NONE`
-- Next representative case: `price_objection` response quality and no invented discount / no pressure.
+- Next representative case: `teacher_quality` source-truth / no invented credentials.
 
-Owner screenshot evidence for Tests 01-07 supplied in chat on 2026-09-03.
+Owner screenshot evidence for Tests 01-08 supplied in chat on 2026-09-03.
