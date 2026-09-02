@@ -1,4 +1,4 @@
-name: WU105 Test10 focused source diagnosis
+name: WU105 Test10 source-loader diagnosis
 
 on:
   push:
@@ -25,54 +25,35 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: Read-only inspect refund classifier and policy-source wiring
+      - name: Read-only inspect WU91 Google Sheets source loaders
         shell: bash
         run: |
           set -euo pipefail
           python - <<'PY'
-          import json, os, re, urllib.request
+          import json, os, urllib.request
           base=os.environ['N8N_API_BASE_URL'].rstrip('/')
           key=os.environ['N8N_API_KEY']
           wid=os.environ['TARGET_WORKFLOW_ID']
           req=urllib.request.Request(f'{base}/workflows/{wid}',headers={'accept':'application/json','X-N8N-API-KEY':key},method='GET')
           with urllib.request.urlopen(req,timeout=45) as r:
               wf=json.loads(r.read().decode())
-          nodes={n.get('name'):n for n in wf.get('nodes',[])}
           con=wf.get('connections',{})
           incoming={}
           for src,v in con.items():
               for group in v.get('main',[]):
                   for e in group:
                       incoming.setdefault(e.get('node'),[]).append(src)
-          print('WORKFLOW',wf.get('id'),'active=',wf.get('active'),'nodes=',len(nodes),'version=',wf.get('versionId'))
-          print('\nPOLICY_NAMED_NODES')
-          for name,n in nodes.items():
-              if re.search(r'polic|refund|cancell',name,re.I):
-                  print(name,'TYPE',n.get('type'),'IN',incoming.get(name,[]),'OUT',[[x.get('node') for x in g] for g in con.get(name,{}).get('main',[])])
-                  params=n.get('parameters',{})
-                  if n.get('type')!='n8n-nodes-base.code':
-                      print('PARAM_KEYS',sorted(params.keys()))
-                      print('PARAMS',json.dumps(params,ensure_ascii=False)[:4000])
-          for name in ['Validate SPM V2 Classifier Output','Route WU91 Source Family','Resolve WU91 Source Plan','Rank + Compact WU91 Source Evidence']:
-              n=nodes.get(name)
-              print('\n===',name,'===')
-              if not n:
-                  print('MISSING'); continue
-              print('TYPE',n.get('type'),'IN',incoming.get(name,[]),'OUT',[[x.get('node') for x in g] for g in con.get(name,{}).get('main',[])])
-              code=n.get('parameters',{}).get('jsCode','')
-              if name=='Validate SPM V2 Classifier Output':
-                  for needle in ['deterministicOverride','refund','cancellation']:
-                      print('\nNEEDLE',needle)
-                      start=0; count=0
-                      low=code.lower(); nn=needle.lower()
-                      while True:
-                          idx=low.find(nn,start)
-                          if idx<0 or count>=10: break
-                          print(code[max(0,idx-900):min(len(code),idx+1600)])
-                          print('---')
-                          start=idx+len(nn); count+=1
-              elif code:
-                  print(code)
-              else:
-                  print(json.dumps(n.get('parameters',{}),ensure_ascii=False)[:8000])
+          print('WORKFLOW',wf.get('id'),'active=',wf.get('active'),'nodes=',len(wf.get('nodes',[])),'version=',wf.get('versionId'))
+          for n in wf.get('nodes',[]):
+              name=n.get('name','')
+              typ=n.get('type','')
+              if typ=='n8n-nodes-base.googleSheets' and ('WU91' in name or 'POLIC' in name.upper() or 'CONFIG' in name.upper()):
+                  print('\nNODE',name)
+                  print('IN',incoming.get(name,[]))
+                  print('OUT',[[x.get('node') for x in g] for g in con.get(name,{}).get('main',[])])
+                  p=n.get('parameters',{})
+                  safe={k:v for k,v in p.items() if k not in ['authentication']}
+                  print('PARAMS',json.dumps(safe,ensure_ascii=False,indent=2)[:12000])
+                  creds=n.get('credentials',{})
+                  print('CREDENTIAL_TYPES',list(creds.keys()))
           PY
