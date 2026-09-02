@@ -1,0 +1,120 @@
+name: WU105 CR-105-02 one-time inactive staging update
+
+on:
+  push:
+    branches:
+      - wu105-planning
+    paths:
+      - '.github/workflows/wu105-cr10502-one-time-update.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  WU104_LOCK_RUN_ID: '33663124381'
+  WU104_ARTIFACT_NAME: wu104-cr10405-evidence
+  WU104_UPSTREAM: locked-wu104/n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+  WU104_EXPECTED_SHA256: 32721cae2b09531d8f4860373c37911ace9e95b6818babdca880fa08ef1b7bc9
+  WU105_BASE: /tmp/SPM_WU105_CR10501_BASE.json
+  WU105_BASE_EXPECTED_SHA256: e40610b13ec61a781acf44842b74955a88a11286e83baa7e121aee349cc9dcf0
+  WU105_FINAL: n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+  WU105_FINAL_EXPECTED_SHA256: 7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e
+  WU105_TARGET_WORKFLOW_ID: KXfalaYSCLdgmf4X
+  PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
+  WU101_STAGING_ID: mMZVFxJIxE7a9SSW
+  WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
+  WU103_STAGING_ID: 5COEoxXjk8AvuGBa
+  WU104_STAGING_ID: Bt3PvOIbFzU0O9gk
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Download exact locked WU-104 CR-104-05 evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.WU104_ARTIFACT_NAME }}
+          path: locked-wu104
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.WU104_LOCK_RUN_ID }}
+      - name: Verify lock and protected target identities
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/main:work-units/WU-104.lock.md > /tmp/WU-104.lock.md
+          grep -q '^Status: LOCKED$' /tmp/WU-104.lock.md
+          grep -q "$WU104_EXPECTED_SHA256" /tmp/WU-104.lock.md
+          test "$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')" = "$WU104_EXPECTED_SHA256"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$PRODUCTION_WORKFLOW_ID"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$WU101_STAGING_ID"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$WU102_STAGING_ID"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$WU103_STAGING_ID"
+          test "$WU105_TARGET_WORKFLOW_ID" != "$WU104_STAGING_ID"
+      - name: Build exact CR-105-01 base and CR-105-02 final candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/wu105/build_candidate.py \
+            --baseline "$WU104_UPSTREAM" \
+            --manifest contracts/WU105_GOLDEN_INTENTS_V1.json \
+            --output "$WU105_BASE"
+          test "$(sha256sum "$WU105_BASE" | awk '{print $1}')" = "$WU105_BASE_EXPECTED_SHA256"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_BASE"]))["nodes"]))')" = "128"
+          python scripts/wu105/test_cr10502.py --input "$WU105_BASE"
+          mkdir -p n8n/generated
+          python scripts/wu105/apply_cr10502.py --input "$WU105_BASE" --output "$WU105_FINAL"
+          actual="$(sha256sum "$WU105_FINAL" | awk '{print $1}')"
+          echo "WU105_CR10502_FINAL_SHA256=$actual"
+          test "$actual" = "$WU105_FINAL_EXPECTED_SHA256"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_FINAL"]))["nodes"]))')" = "129"
+      - name: Update existing inactive WU-105 STAGING only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact "$WU105_FINAL" \
+            --environment staging \
+            --expected-sha256 "$WU105_FINAL_EXPECTED_SHA256" \
+            --mode apply \
+            --target-workflow-id "$WU105_TARGET_WORKFLOW_ID" \
+            --result-file wu105-cr10502-deployment-result.json
+      - name: Verify exact remote CR-105-02 readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          r=json.load(open('wu105-cr10502-deployment-result.json'))
+          assert r['target_workflow_id']==os.environ['WU105_TARGET_WORKFLOW_ID']
+          assert r['artifact_sha256']==os.environ['WU105_FINAL_EXPECTED_SHA256']
+          assert r['published_or_activated'] is False
+          assert r['remote_active_after'] is False
+          assert r['node_count']==129
+          PY
+          N8N_TARGET_WORKFLOW_ID="$WU105_TARGET_WORKFLOW_ID" python scripts/wu105/verify_cr10502_remote.py
+      - name: Upload CR-105-02 deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu105-cr10502-staging-update-evidence
+          path: |
+            n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
+            wu105-cr10502-deployment-result.json
+          if-no-files-found: ignore
+          retention-days: 30
