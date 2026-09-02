@@ -1,0 +1,85 @@
+name: WU104 context binding live fix
+
+on:
+  push:
+    branches:
+      - 'wu104-context-binding-live-fix'
+    paths:
+      - '.github/workflows/wu104-context-binding-live-fix.yml'
+      - 'scripts/wu104/**'
+      - 'scripts/n8n/deploy_nonprod.py'
+
+permissions:
+  contents: read
+
+env:
+  BASELINE: n8n/workflows/production/SPM_RC4_3_3_PRODUCTION_FINAL_2026-08-28.json
+  CANDIDATE: n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+  EXPECTED_SHA256: d0c2ad10c3455b435868a8b7d4c874d31d27ae35e64844d62713d1a5ba74e45f
+  N8N_TARGET_WORKFLOW_ID: Bt3PvOIbFzU0O9gk
+  PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
+
+jobs:
+  deploy-corrected-wu104-staging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Build and validate exact corrected WU-104 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu104/build_context_await_candidate.py --baseline "$BASELINE" --output "$CANDIDATE"
+          python scripts/wu104/test_contracts.py
+          python scripts/wu104/test_core.py
+          python scripts/wu104/test_candidate.py
+          python scripts/wu104/test_context_await_candidate.py
+          python scripts/wu104/test_context_await_signals.py
+          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+          echo "WU104_CORRECTED_SHA256=$actual"
+          test "$actual" = "$EXPECTED_SHA256"
+      - name: Hard-stop protected targets
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$N8N_TARGET_WORKFLOW_ID" != "$PRODUCTION_WORKFLOW_ID"
+          test "$N8N_TARGET_WORKFLOW_ID" != "mMZVFxJIxE7a9SSW"
+          test "$N8N_TARGET_WORKFLOW_ID" != "1kaRBBFVJYbPxvQG"
+          test "$N8N_TARGET_WORKFLOW_ID" != "5COEoxXjk8AvuGBa"
+      - name: Apply corrected candidate to inactive WU-104 STAGING only
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact "$CANDIDATE" \
+            --environment staging \
+            --expected-sha256 "$EXPECTED_SHA256" \
+            --target-workflow-id "$N8N_TARGET_WORKFLOW_ID" \
+            --mode apply \
+            --result-file wu104-context-fix-deployment-result.json
+      - name: Verify remote WU-104 STAGING readback
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/wu104/verify_remote_staging.py
+      - name: Upload deployment evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu104-context-binding-live-fix-evidence
+          path: |
+            n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+            wu104-context-fix-deployment-result.json
+          if-no-files-found: ignore
+          retention-days: 30
