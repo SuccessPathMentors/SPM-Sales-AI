@@ -16,13 +16,15 @@ PROTECTED_IDS = {
     "Bt3PvOIbFzU0O9gk": "WU-104 STAGING",
 }
 EXPECTED_NAME = "[STAGING] SPM_WU105_GOLDEN_INTENTS_V1"
-EXPECTED_NODE_COUNT = 125
+EXPECTED_NODE_COUNT = 127
 OVERLAY = "Apply WU105 Golden Intent Prompt Overlay"
 PROMPT = "Build WU96-Aware Sales Agent Prompt"
 GENERATOR = "Generate WU92 Sales Agent Response"
 REQUIRED_WU104 = [
     "Build WU104 Short Query Decision",
+    "Apply WU104 Short Trial Inquiry Guard",
     "Persist WU104 Awaited Context Hint",
+    "Persist WU104 Final Asked Field",
     "Apply WU104 Clarification Response Override",
 ]
 
@@ -51,6 +53,15 @@ if len(wf.get("nodes", [])) != EXPECTED_NODE_COUNT:
 for name in REQUIRED_WU104 + [OVERLAY, PROMPT, GENERATOR]:
     if name not in nodes:
         errors.append(f"required inherited/owned node missing: {name}")
+
+if "Persist WU104 Awaited Context Hint" in nodes:
+    code = nodes["Persist WU104 Awaited Context Hint"].get("parameters", {}).get("jsCode", "")
+    if "SPM_WU104_KNOWN_SLOT_RECONCILE_V1" not in code:
+        errors.append("CR-104-04 known-slot reconciliation signature missing")
+if "Apply WU104 Short Trial Inquiry Guard" in nodes:
+    code = nodes["Apply WU104 Short Trial Inquiry Guard"].get("parameters", {}).get("jsCode", "")
+    if "SPM_WU104_SHORT_SEMANTIC_GUARD_V1" not in code:
+        errors.append("CR-104-05 short-trial guard signature missing")
 
 if OVERLAY in nodes:
     overlay = nodes[OVERLAY]
@@ -103,15 +114,20 @@ if targets(PROMPT) != [[OVERLAY]]:
 if targets(OVERLAY) != [[GENERATOR]]:
     errors.append("WU-105 overlay must feed existing response generator")
 
-# Critical inherited WU-104 topology remains intact.
-if targets("Merge Durable Sales State + Decide Journey [WU90]") != [["Persist WU104 Awaited Context Hint"]]:
-    errors.append("WU-104 awaited-context upstream topology changed")
-if targets("Persist WU104 Awaited Context Hint") != [["Serialize WU90 Production Sales State"]]:
-    errors.append("WU-104 awaited-context downstream topology changed")
-if targets("Build Telemetry Envelope") != [["Apply WU104 Clarification Response Override"]]:
-    errors.append("WU-104 clarification response override upstream changed")
-if targets("Apply WU104 Clarification Response Override") != [["Redact WU97 Observability Telemetry"]]:
-    errors.append("WU-104 clarification response override downstream changed")
+# Locked WU-104 CR-104-03/04/05 topology must remain intact.
+expected_topology = {
+    "Build WU104 Short Query Decision": [["Apply WU104 Short Trial Inquiry Guard"]],
+    "Apply WU104 Short Trial Inquiry Guard": [["Capture WU89 Classifier Context"]],
+    "Merge Durable Sales State + Decide Journey [WU90]": [["Persist WU104 Awaited Context Hint"]],
+    "Persist WU104 Awaited Context Hint": [["Serialize WU90 Production Sales State"]],
+    "Apply WU97 Fail-Closed Privacy Security Guard": [["Persist WU104 Final Asked Field"]],
+    "Persist WU104 Final Asked Field": [["Serialize WU95 STAGING Sales State"]],
+    "Build Telemetry Envelope": [["Apply WU104 Clarification Response Override"]],
+    "Apply WU104 Clarification Response Override": [["Redact WU97 Observability Telemetry"]],
+}
+for name, expected in expected_topology.items():
+    if targets(name) != expected:
+        errors.append(f"locked WU-104 topology changed at {name}: {targets(name)!r}")
 
 # WU-102 queue and STAGING memory isolation remain inherited.
 q = nodes.get("Upsert WU102 Unanswered [STAGING]", {})
@@ -134,6 +150,8 @@ observed = {
     "versionId": wf.get("versionId"),
     "node_count": len(wf.get("nodes", [])),
     "wu104_nodes_present": [x for x in REQUIRED_WU104 if x in nodes],
+    "wu104_cr10404_signature": "SPM_WU104_KNOWN_SLOT_RECONCILE_V1" in nodes.get("Persist WU104 Awaited Context Hint", {}).get("parameters", {}).get("jsCode", ""),
+    "wu104_cr10405_signature": "SPM_WU104_SHORT_SEMANTIC_GUARD_V1" in nodes.get("Apply WU104 Short Trial Inquiry Guard", {}).get("parameters", {}).get("jsCode", ""),
     "wu105_overlay_present": OVERLAY in nodes,
     "wu102_queue_operation": q.get("parameters", {}).get("operation"),
     "wu102_queue_matching_columns": qcols.get("matchingColumns"),
