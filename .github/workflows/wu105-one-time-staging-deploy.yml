@@ -22,7 +22,6 @@ env:
   WU104_EXPECTED_SHA256: 32721cae2b09531d8f4860373c37911ace9e95b6818babdca880fa08ef1b7bc9
   WU105_CANDIDATE: n8n/generated/SPM_WU105_STAGING_GOLDEN_INTENTS_CANDIDATE.json
   WU105_EXPECTED_SHA256: f02ab822c37e8cad6b45f83934361bc2388e540070b2c38b15ce631f93f6171c
-  WU105_EXPECTED_NAME: '[STAGING] SPM_WU105_GOLDEN_INTENTS_V1'
   PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
   WU101_STAGING_ID: mMZVFxJIxE7a9SSW
   WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
@@ -80,81 +79,25 @@ jobs:
           echo "WU105_CANDIDATE_SHA256=$actual"
           test "$actual" = "$WU105_EXPECTED_SHA256"
           test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_CANDIDATE"]))["nodes"]))')" = "127"
-      - name: Resolve exact WU-105 STAGING target fail-closed
-        id: target
+      - name: Prove previous attempt performed no write
         shell: bash
         run: |
           set -euo pipefail
-          python - <<'PY'
-          import json, os, sys, urllib.parse, urllib.request
-          base=os.environ['N8N_API_BASE_URL'].rstrip('/')
-          key=os.environ['N8N_API_KEY']
-          expected=os.environ['WU105_EXPECTED_NAME']
-          protected={
-            os.environ['PRODUCTION_WORKFLOW_ID'], os.environ['WU101_STAGING_ID'],
-            os.environ['WU102_STAGING_ID'], os.environ['WU103_STAGING_ID'],
-            os.environ['WU104_STAGING_ID'],
-          }
-          matches=[]
-          cursor=None
-          seen=set()
-          for _ in range(50):
-              params={'limit':'100'}
-              if cursor: params['cursor']=cursor
-              url=base+'/workflows?'+urllib.parse.urlencode(params)
-              req=urllib.request.Request(url,headers={'accept':'application/json','X-N8N-API-KEY':key})
-              with urllib.request.urlopen(req,timeout=45) as resp:
-                  data=json.loads(resp.read().decode('utf-8'))
-              rows=data.get('data',[])
-              if not isinstance(rows,list):
-                  raise SystemExit('Unexpected n8n workflow list response')
-              for wf in rows:
-                  wid=str(wf.get('id') or '')
-                  if wid and wid not in seen:
-                      seen.add(wid)
-                      if wf.get('name')==expected:
-                          matches.append(wf)
-              cursor=data.get('nextCursor')
-              if not cursor: break
-          else:
-              raise SystemExit('n8n workflow pagination exceeded safety limit')
-          if len(matches)>1:
-              raise SystemExit(f'Duplicate exact WU-105 STAGING workflows found: {[m.get("id") for m in matches]}')
-          if matches:
-              wf=matches[0]
-              wid=str(wf.get('id') or '')
-              if wid in protected:
-                  raise SystemExit(f'Protected workflow ID collision: {wid}')
-              if wf.get('active') is True:
-                  raise SystemExit(f'Existing exact WU-105 workflow is active; refusing update: {wid}')
-              mode='UPDATE_EXISTING_INACTIVE'
-          else:
-              wid=''
-              mode='CREATE_NEW_INACTIVE'
-          out=os.environ['GITHUB_OUTPUT']
-          with open(out,'a',encoding='utf-8') as f:
-              f.write(f'target_id={wid}\n')
-              f.write(f'resolve_mode={mode}\n')
-          print(json.dumps({'exact_name':expected,'match_count':len(matches),'target_id':wid or None,'resolve_mode':mode},indent=2))
-          PY
-      - name: Apply only to resolved inactive WU-105 STAGING
+          # Run 33667092500 failed at LIST before deploy_nonprod.py apply; its apply/readback steps were skipped.
+          # Repository evidence before that run records WU-105 target ID as pending and all prior deployer runs as dry-run/NONE.
+          test ! -f wu105-one-time-deployment-result.json
+          echo 'CREATE_ONLY_RETRY_ALLOWED_AFTER_PREWRITE_403'
+      - name: Create one inactive WU-105 STAGING workflow only
         shell: bash
         run: |
           set -euo pipefail
-          target='${{ steps.target.outputs.target_id }}'
-          args=(
-            --artifact "$WU105_CANDIDATE"
-            --environment staging
-            --expected-sha256 "$WU105_EXPECTED_SHA256"
-            --mode apply
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact "$WU105_CANDIDATE" \
+            --environment staging \
+            --expected-sha256 "$WU105_EXPECTED_SHA256" \
+            --mode apply \
+            --allow-create \
             --result-file wu105-one-time-deployment-result.json
-          )
-          if [[ -n "$target" ]]; then
-            args+=(--target-workflow-id "$target")
-          else
-            args+=(--allow-create)
-          fi
-          python scripts/n8n/deploy_nonprod.py "${args[@]}"
       - name: Verify remote WU-105 STAGING readback
         shell: bash
         run: |
