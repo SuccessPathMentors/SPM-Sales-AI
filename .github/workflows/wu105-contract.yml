@@ -1,0 +1,33 @@
+name: WU-105 golden intent contract
+
+on:
+  pull_request:
+    paths:
+      - 'contracts/WU105_*'
+      - 'scripts/wu105/**'
+      - 'work-units/WU-105.md'
+      - '.github/workflows/wu105-contract.yml'
+  push:
+    branches:
+      - 'wu105-planning'
+    paths:
+      - 'contracts/WU105_*'
+      - 'scripts/wu105/**'
+      - 'work-units/WU-105.md'
+      - '.github/workflows/wu105-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate WU-105 golden manifest and protected Production baseline
+        run: python scripts/wu105/test_manifest.py
