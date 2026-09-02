@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = json.loads((ROOT / "contracts" / "WU105_GOLDEN_INTENTS_V1.json").read_text(encoding="utf-8"))
 MATRIX = json.loads((ROOT / "contracts" / "WU105_RUNTIME_MATRIX_V1.json").read_text(encoding="utf-8"))
-EXPECTED_CANDIDATE_SHA = "f02ab822c37e8cad6b45f83934361bc2388e540070b2c38b15ce631f93f6171c"
+EXPECTED_CANDIDATE_SHA = "e40610b13ec61a781acf44842b74955a88a11286e83baa7e121aee349cc9dcf0"
 REQUIRED_CASES = {
     "fresh_direct",
     "context_no_reask",
@@ -65,7 +65,7 @@ def main():
         require(confusion["neighbor"] in next(x for x in MANIFEST["intents"] if x["intent"] == intent)["confusion_pairs"], f"runtime confusion neighbor is not frozen in manifest for {intent}")
         unavailable = row["source_unavailable"]
         require(unavailable.get("expected"), f"source-unavailable safe outcome missing for {intent}")
-        total_scenarios += 8  # EN/AR/FR direct + five specialized cases
+        total_scenarios += 8
 
     require(multilingual_prompts == len(rows) * 3, "multilingual direct prompt coverage mismatch")
     require(total_scenarios == len(rows) * 8, "scenario count mismatch")
