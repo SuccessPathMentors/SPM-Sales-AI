@@ -5,10 +5,15 @@ import json
 from copy import deepcopy
 from pathlib import Path
 
-EXPECTED_BASELINE_SHA256 = "680496f2b68b13dd7105e72fd132a2066d70ec969e6e0675f138ebb1fb16fe39"
+EXPECTED_WU104_BASELINE_SHA256 = "d0c2ad10c3455b435868a8b7d4c874d31d27ae35e64844d62713d1a5ba74e45f"
 PROMPT_NODE = "Build WU96-Aware Sales Agent Prompt"
 GENERATOR_NODE = "Generate WU92 Sales Agent Response"
 OVERLAY_NODE = "Apply WU105 Golden Intent Prompt Overlay"
+REQUIRED_WU104_NODES = {
+    "Build WU104 Short Query Decision",
+    "Persist WU104 Awaited Context Hint",
+    "Apply WU104 Clarification Response Override",
+}
 
 
 def sha256(path: Path) -> str:
@@ -61,14 +66,14 @@ return [{{json:{{...j,sales_agent_prompt:String(j.sales_agent_prompt||'')+overla
         "id": "wu105-golden-intent-overlay-v1",
         "name": OVERLAY_NODE,
         "notesInFlow": True,
-        "notes": "WU-105 STAGING-only prompt overlay. No classifier/source/action permission changes. Production baseline remains read-only."
+        "notes": "WU-105 STAGING-only prompt overlay. Inherits current WU-104 staging candidate; no classifier/source/action permission changes. Production remains read-only."
     }
 
 
 def build(baseline: Path, manifest_path: Path, output: Path):
     actual = sha256(baseline)
-    if actual != EXPECTED_BASELINE_SHA256:
-        raise SystemExit(f"Baseline SHA mismatch: {actual}")
+    if actual != EXPECTED_WU104_BASELINE_SHA256:
+        raise SystemExit(f"WU-104 upstream baseline SHA mismatch: {actual}")
 
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     if manifest.get("schema") != "SPM_WU105_GOLDEN_INTENTS_V1":
@@ -82,6 +87,9 @@ def build(baseline: Path, manifest_path: Path, output: Path):
     candidate["active"] = False
 
     names = [n.get("name") for n in candidate.get("nodes", [])]
+    missing_wu104 = sorted(REQUIRED_WU104_NODES - set(names))
+    if missing_wu104:
+        raise SystemExit("WU-105 refuses a baseline without current WU-104 controls: " + ", ".join(missing_wu104))
     if OVERLAY_NODE in names:
         raise SystemExit("WU-105 overlay node already exists")
     if names.count(PROMPT_NODE) != 1 or names.count(GENERATOR_NODE) != 1:
@@ -105,6 +113,7 @@ def build(baseline: Path, manifest_path: Path, output: Path):
 
     output.parent.mkdir(parents=True, exist_ok=True)
     output.write_text(json.dumps(candidate, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    print(f"WU105_UPSTREAM_WU104_SHA256={actual}")
     print(f"WU105_CANDIDATE={output}")
     print(f"WU105_CANDIDATE_SHA256={sha256(output)}")
     print(f"WU105_NODE_COUNT={len(candidate.get('nodes', []))}")
@@ -112,7 +121,7 @@ def build(baseline: Path, manifest_path: Path, output: Path):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--baseline", required=True, type=Path)
+    parser.add_argument("--baseline", required=True, type=Path, help="Current deterministic WU-104 staging candidate, not Production")
     parser.add_argument("--manifest", default=Path("contracts/WU105_GOLDEN_INTENTS_V1.json"), type=Path)
     parser.add_argument("--output", required=True, type=Path)
     args = parser.parse_args()
