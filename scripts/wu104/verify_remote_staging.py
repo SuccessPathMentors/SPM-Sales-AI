@@ -39,9 +39,12 @@ required = [
     'Upsert WU102 Unanswered [STAGING]',
     'Build WU104 Short Query Decision',
     'Persist WU104 Awaited Context Hint',
+    'Persist WU104 Final Asked Field',
     'Apply WU104 Clarification Response Override',
     'Merge Durable Sales State + Decide Journey [WU90]',
     'Serialize WU90 Production Sales State',
+    'Apply WU97 Fail-Closed Privacy Security Guard',
+    'Serialize WU95 Production Sales State',
     'Capture WU89 Classifier Context',
     'Build Telemetry Envelope',
     'Redact WU97 Observability Telemetry',
@@ -57,11 +60,12 @@ if wf.get('active') is True:
     errors.append('remote WU-104 workflow unexpectedly active')
 if wf.get('name') != EXPECTED_NAME:
     errors.append(f'remote workflow name mismatch: {wf.get("name")!r}')
-if len(wf.get('nodes', [])) != 124:
+if len(wf.get('nodes', [])) != 125:
     errors.append(f'remote node count mismatch: {len(wf.get("nodes", []))}')
 
 builder_js = nodes['Build WU104 Short Query Decision'].get('parameters', {}).get('jsCode', '')
 persist_js = nodes['Persist WU104 Awaited Context Hint'].get('parameters', {}).get('jsCode', '')
+asked_js = nodes['Persist WU104 Final Asked Field'].get('parameters', {}).get('jsCode', '')
 override_js = nodes['Apply WU104 Clarification Response Override'].get('parameters', {}).get('jsCode', '')
 for token in [
     'SPM_WU104_SHORT_QUERY_DECISION_V1',
@@ -92,7 +96,23 @@ for token in [
     'secret_values_logged:false',
 ]:
     if token not in persist_js:
-        errors.append(f'WU-104 await-context token missing: {token}')
+        errors.append(f'WU-104 early await-context token missing: {token}')
+for token in [
+    'SPM_WU104_FINAL_ASKED_FIELD_WRITE_V1',
+    'intake_question_candidate',
+    'purposeful_question',
+    'questionPresent',
+    "source='WU92_INTAKE_NEXT_FIELD'",
+    "status='PERSISTED_FROM_FINAL_QUESTION'",
+    'state.journey.awaiting_entity=safe',
+    'state.journey.awaiting_entity=registrationAwait',
+    'state.journey.awaiting_entity=null',
+    'raw_message_logged:false',
+    'raw_session_logged:false',
+    'secret_values_logged:false',
+]:
+    if token not in asked_js:
+        errors.append(f'WU-104 final asked-field token missing: {token}')
 for token in ['sales_agent_output', 'answer_text:text', 'ASK_ONE_CLARIFYING_QUESTION', 'SAFE_FALLBACK_OR_HUMAN_HELP']:
     if token not in override_js:
         errors.append(f'WU-104 response override token missing: {token}')
@@ -115,9 +135,13 @@ for upstream in [
 if targets('Build WU104 Short Query Decision') != [['Capture WU89 Classifier Context']]:
     errors.append('WU-104 decision downstream mismatch')
 if targets('Merge Durable Sales State + Decide Journey [WU90]') != [['Persist WU104 Awaited Context Hint']]:
-    errors.append('WU-104 awaited-context upstream mismatch')
+    errors.append('WU-104 early awaited-context upstream mismatch')
 if targets('Persist WU104 Awaited Context Hint') != [['Serialize WU90 Production Sales State']]:
-    errors.append('WU-104 awaited-context downstream mismatch')
+    errors.append('WU-104 early awaited-context downstream mismatch')
+if targets('Apply WU97 Fail-Closed Privacy Security Guard') != [['Persist WU104 Final Asked Field']]:
+    errors.append('WU-104 final asked-field upstream mismatch')
+if targets('Persist WU104 Final Asked Field') != [['Serialize WU95 Production Sales State']]:
+    errors.append('WU-104 final asked-field downstream mismatch')
 if targets('Build Telemetry Envelope') != [['Apply WU104 Clarification Response Override']]:
     errors.append('WU-104 response override upstream mismatch')
 if targets('Apply WU104 Clarification Response Override') != [['Redact WU97 Observability Telemetry']]:
