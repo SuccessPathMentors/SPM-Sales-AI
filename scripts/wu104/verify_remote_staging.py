@@ -44,7 +44,7 @@ required = [
     'Merge Durable Sales State + Decide Journey [WU90]',
     'Serialize WU90 Production Sales State',
     'Apply WU97 Fail-Closed Privacy Security Guard',
-    'Serialize WU95 Production Sales State',
+    'Serialize WU95 STAGING Sales State',
     'Capture WU89 Classifier Context',
     'Build Telemetry Envelope',
     'Redact WU97 Observability Telemetry',
@@ -140,7 +140,7 @@ if targets('Persist WU104 Awaited Context Hint') != [['Serialize WU90 Production
     errors.append('WU-104 early awaited-context downstream mismatch')
 if targets('Apply WU97 Fail-Closed Privacy Security Guard') != [['Persist WU104 Final Asked Field']]:
     errors.append('WU-104 final asked-field upstream mismatch')
-if targets('Persist WU104 Final Asked Field') != [['Serialize WU95 Production Sales State']]:
+if targets('Persist WU104 Final Asked Field') != [['Serialize WU95 STAGING Sales State']]:
     errors.append('WU-104 final asked-field downstream mismatch')
 if targets('Build Telemetry Envelope') != [['Apply WU104 Clarification Response Override']]:
     errors.append('WU-104 response override upstream mismatch')
