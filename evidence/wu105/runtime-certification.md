@@ -1,6 +1,6 @@
 # WU-105 Runtime Golden Intent Certification Evidence
 
-Status: IN_PROGRESS — CR-105-01 DEPLOYED / TEST-04 RETEST PENDING
+Status: IN_PROGRESS — CR-105-01 RETEST PASS / NEXT RUNTIME CASE PENDING
 Workflow: `[STAGING] SPM_WU105_GOLDEN_INTENTS_V1`
 Workflow ID: `KXfalaYSCLdgmf4X`
 Current Candidate SHA-256: `e40610b13ec61a781acf44842b74955a88a11286e83baa7e121aee349cc9dcf0`
@@ -109,15 +109,40 @@ STAGING update:
 - Redis STAGING isolation retained;
 - Production untouched.
 
-**Retest status:** `PENDING OWNER SCREENSHOT` using the exact same fresh-session prompt.
+### Exact retest after CR-105-01
+
+**Prompt:** `Is Saturday available for a Grade 8 Math lesson?`
+
+**Observed response:** `I need to check the live schedule before I can tell you whether your requested day or time has an open tutoring slot.`
+
+**Retest result:** `PASS`
+
+Retest evidence:
+- answers the availability question directly;
+- correctly states that live schedule verification is required;
+- does not claim Saturday is available before checking the live source;
+- does not claim a lesson was booked or confirmed;
+- does not re-ask Grade 8 or Math;
+- asks zero unnecessary follow-up questions;
+- keeps availability distinct from a schedule/booking action request.
+
+Acceptance coverage from the retest:
+- AC-04 answer-first: PASS for availability representative case;
+- AC-05 no-reask trusted context: PASS;
+- AC-08 live-source/high-risk truth gating: PASS for availability representative case;
+- AC-09 availability vs schedule-request confusion distinction: PASS for this representative case.
+
+**Owner screenshot evidence:** supplied in chat on 2026-09-03 after CR-105-01 deployment.
 
 ## Running certification summary
 
 - Customer-output tests attempted: `4`
-- PASS: `3`
-- Initial FAIL requiring repair: `1`
+- Current passing customer-output cases: `4 / 4`
+- Initial failures encountered and repaired: `1`
 - CRs opened: `1` (`CR-105-01`)
 - CR-105-01 CI/deployment/readback: `PASS`
-- Pending: Test 04 exact customer-output retest
+- CR-105-01 exact customer-output retest: `PASS`
+- Current blocking runtime defect: `NONE`
+- Next representative case: `schedule_request` action-boundary / no false confirmation.
 
 Owner screenshot evidence for Tests 01-04 supplied in chat on 2026-09-03.
