@@ -32,6 +32,8 @@ def build(baseline_path):
     base = load_base_builder()
     wf = copy.deepcopy(base.build(baseline_path))
 
+    # Early deterministic hint from WU90 required entities. This remains useful when
+    # the journey contract already knows the next required field before response planning.
     persist_name = 'Persist WU104 Awaited Context Hint'
     persist_js = r"""const j=$input.first().json||{};
 const state=(j.sales_state&&typeof j.sales_state==='object')?JSON.parse(JSON.stringify(j.sales_state)):{};
@@ -83,7 +85,6 @@ return [{json:{...j,sales_state:state,wu104_await_context_write:evidence}}];"""
         'position': [-79856, 6064],
         'parameters': {'jsCode': persist_js},
     }
-
     wf['nodes'].append(persist_node)
 
     upstream = 'Merge Durable Sales State + Decide Journey [WU90]'
@@ -93,6 +94,78 @@ return [{json:{...j,sales_state:state,wu104_await_context_write:evidence}}];"""
         raise RuntimeError(f'unexpected WU90 serialization connection: {existing!r}')
     wf['connections'][upstream] = {'main': [[{'node': persist_name, 'type': 'main', 'index': 0}]]}
     wf['connections'][persist_name] = {'main': [[{'node': downstream, 'type': 'main', 'index': 0}]]}
+
+    # Final asked-field persistence. WU92 may ask a useful discovery question even when
+    # WU90 required_missing_fields is empty. Persist only a whitelisted next_field when
+    # the final guarded response actually contains a question, immediately before the
+    # later WU95 Redis state save. Registration awaiting_field remains authoritative.
+    asked_name = 'Persist WU104 Final Asked Field'
+    asked_js = r"""const j=$input.first().json||{};
+const state=(j.sales_state&&typeof j.sales_state==='object')?JSON.parse(JSON.stringify(j.sales_state)):{};
+state.journey=(state.journey&&typeof state.journey==='object')?state.journey:{};
+const conv=(state.conversion&&typeof state.conversion==='object')?state.conversion:{};
+const registrationAwait=String(conv.awaiting_field||'').trim();
+const intake=(j.intake_question_candidate&&typeof j.intake_question_candidate==='object')?j.intake_question_candidate:null;
+const rawField=String(intake?.next_field||'').trim().toLowerCase().replace(/[-\s]+/g,'_');
+const aliases={
+ grade:'grade',grade_level:'grade',student_grade:'grade',
+ subject:'subject',student_subject:'subject',subjects:'subject',
+ city:'location',location:'location',student_city:'location',parent_city:'location',
+ day:'day',date:'day',lesson_day:'day',schedule_day:'day',scheduling_day:'day',scheduling_date:'day',
+ time:'time',lesson_time:'time',schedule_time:'time',scheduling_time:'time',time_window:'time',scheduling_time_window:'time'
+};
+const safe=aliases[rawField]||null;
+const out=(j.sales_agent_output&&typeof j.sales_agent_output==='object')?j.sales_agent_output:{};
+const purposeful=String(out.purposeful_question||'').trim();
+const answer=String(out.answer_text||'');
+const questionPresent=Boolean(purposeful)||/[?؟]/u.test(answer);
+let status='CLEARED_NO_FINAL_QUESTION';
+let persisted=null;
+let source='FINAL_RESPONSE_NO_QUESTION';
+if(registrationAwait){
+ status='REGISTRATION_AWAITING_FIELD_AUTHORITATIVE';
+ persisted=registrationAwait;
+ source='CONVERSION_AWAITING_FIELD';
+ state.journey.awaiting_entity=registrationAwait;
+}else if(questionPresent&&safe){
+ status='PERSISTED_FROM_FINAL_QUESTION';
+ persisted=safe;
+ source='WU92_INTAKE_NEXT_FIELD';
+ state.journey.awaiting_entity=safe;
+}else{
+ state.journey.awaiting_entity=null;
+ if(questionPresent&&!safe){status='QUESTION_PRESENT_NO_SAFE_FIELD';source='NO_WHITELISTED_NEXT_FIELD';}
+}
+state.updated_at=new Date().toISOString();
+const evidence={
+ schema:'SPM_WU104_FINAL_ASKED_FIELD_WRITE_V1',
+ status,
+ persisted_entity:persisted,
+ source,
+ question_present:questionPresent,
+ intake_next_field_present:Boolean(rawField),
+ raw_message_logged:false,
+ raw_session_logged:false,
+ secret_values_logged:false
+};
+return [{json:{...j,sales_state:state,wu104_final_asked_field_write:evidence}}];"""
+    asked_node = {
+        'id': '10400000-0000-4000-8000-000000000104',
+        'name': asked_name,
+        'type': 'n8n-nodes-base.code',
+        'typeVersion': 2,
+        'position': [-69456, 6064],
+        'parameters': {'jsCode': asked_js},
+    }
+    wf['nodes'].append(asked_node)
+
+    final_upstream = 'Apply WU97 Fail-Closed Privacy Security Guard'
+    final_downstream = 'Serialize WU95 Production Sales State'
+    final_existing = wf['connections'].get(final_upstream, {}).get('main', [])
+    if final_existing != [[{'node': final_downstream, 'type': 'main', 'index': 0}]]:
+        raise RuntimeError(f'unexpected final WU95 serialization connection: {final_existing!r}')
+    wf['connections'][final_upstream] = {'main': [[{'node': asked_name, 'type': 'main', 'index': 0}]]}
+    wf['connections'][asked_name] = {'main': [[{'node': final_downstream, 'type': 'main', 'index': 0}]]}
 
     return wf
 
@@ -111,7 +184,7 @@ def main():
         'sha256': sha256(out),
         'node_count': len(wf['nodes']),
         'connection_sources': len(wf['connections']),
-        'cr': 'CR-104-01',
+        'cr': 'CR-104-02',
         'production_modified': False,
     }, indent=2))
 
