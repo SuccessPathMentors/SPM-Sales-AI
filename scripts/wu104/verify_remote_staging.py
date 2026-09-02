@@ -38,7 +38,10 @@ required = [
     'Build WU102 Unanswered Queue Decision',
     'Upsert WU102 Unanswered [STAGING]',
     'Build WU104 Short Query Decision',
+    'Persist WU104 Awaited Context Hint',
     'Apply WU104 Clarification Response Override',
+    'Merge Durable Sales State + Decide Journey [WU90]',
+    'Serialize WU90 Production Sales State',
     'Capture WU89 Classifier Context',
     'Build Telemetry Envelope',
     'Redact WU97 Observability Telemetry',
@@ -54,10 +57,11 @@ if wf.get('active') is True:
     errors.append('remote WU-104 workflow unexpectedly active')
 if wf.get('name') != EXPECTED_NAME:
     errors.append(f'remote workflow name mismatch: {wf.get("name")!r}')
-if len(wf.get('nodes', [])) != 123:
+if len(wf.get('nodes', [])) != 124:
     errors.append(f'remote node count mismatch: {len(wf.get("nodes", []))}')
 
 builder_js = nodes['Build WU104 Short Query Decision'].get('parameters', {}).get('jsCode', '')
+persist_js = nodes['Persist WU104 Awaited Context Hint'].get('parameters', {}).get('jsCode', '')
 override_js = nodes['Apply WU104 Clarification Response Override'].get('parameters', {}).get('jsCode', '')
 for token in [
     'SPM_WU104_SHORT_QUERY_DECISION_V1',
@@ -77,11 +81,22 @@ for token in [
 ]:
     if token not in builder_js:
         errors.append(f'WU-104 decision token missing: {token}')
+for token in [
+    'SPM_WU104_AWAIT_CONTEXT_WRITE_V1',
+    'state.journey.awaiting_entity=safe',
+    'state.journey.awaiting_entity=registrationAwait',
+    'state.journey.awaiting_entity=null',
+    "source='WU90_REQUIRED_MISSING_FIELDS'",
+    'raw_message_logged:false',
+    'raw_session_logged:false',
+    'secret_values_logged:false',
+]:
+    if token not in persist_js:
+        errors.append(f'WU-104 await-context token missing: {token}')
 for token in ['sales_agent_output', 'answer_text:text', 'ASK_ONE_CLARIFYING_QUESTION', 'SAFE_FALLBACK_OR_HUMAN_HELP']:
     if token not in override_js:
         errors.append(f'WU-104 response override token missing: {token}')
 
-# No WU-104 LLM node may exist.
 for n in wf.get('nodes', []):
     if 'WU104' in n.get('name','') and n.get('type') in {
         '@n8n/n8n-nodes-langchain.lmChatOpenAi', '@n8n/n8n-nodes-langchain.agent'
@@ -99,12 +114,15 @@ for upstream in [
         errors.append(f'classifier convergence mismatch for {upstream}')
 if targets('Build WU104 Short Query Decision') != [['Capture WU89 Classifier Context']]:
     errors.append('WU-104 decision downstream mismatch')
+if targets('Merge Durable Sales State + Decide Journey [WU90]') != [['Persist WU104 Awaited Context Hint']]:
+    errors.append('WU-104 awaited-context upstream mismatch')
+if targets('Persist WU104 Awaited Context Hint') != [['Serialize WU90 Production Sales State']]:
+    errors.append('WU-104 awaited-context downstream mismatch')
 if targets('Build Telemetry Envelope') != [['Apply WU104 Clarification Response Override']]:
     errors.append('WU-104 response override upstream mismatch')
 if targets('Apply WU104 Clarification Response Override') != [['Redact WU97 Observability Telemetry']]:
     errors.append('WU-104 response override downstream mismatch')
 
-# Locked WU-102 queue behavior must still be present and fail-open.
 q = nodes['Upsert WU102 Unanswered [STAGING]']
 qcols = q.get('parameters', {}).get('columns', {})
 if q.get('parameters', {}).get('operation') != 'appendOrUpdate':
@@ -114,16 +132,10 @@ if qcols.get('matchingColumns') != ['queue_event_id']:
 if q.get('onError') != 'continueRegularOutput':
     errors.append('WU-102 queue fail-open changed')
 
-# WU-101/WU-102 STAGING sinks remain isolated.
-for sink_name in ['Upsert WU101 Analytics [STAGING]', 'Upsert WU102 Unanswered [STAGING]']:
-    if '[STAGING]' not in sink_name:
-        errors.append(f'non-staging locked sink name: {sink_name}')
-
 memory_key = nodes['Redis Chat Memory'].get('parameters', {}).get('sessionKey')
 if memory_key != "={{ 'spm:staging:chat:' + $json.sessionId }}":
     errors.append('Redis Chat Memory STAGING isolation mismatch')
 
-# Save AI memory must remain downstream of WU97 redaction and consume answer_text.
 mem_text = json.dumps(nodes['Save AI Message to Chat History'], ensure_ascii=False)
 if 'Redact WU97 Observability Telemetry' not in mem_text or 'sales_agent_output.answer_text' not in mem_text:
     errors.append('AI memory/redaction path changed')
