@@ -99,7 +99,7 @@ jobs:
           actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
           echo "WU105_CANDIDATE_SHA256=$actual"
           echo "sha=$actual" >> "$GITHUB_OUTPUT"
-          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "127"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "128"
       - name: Existing non-production deployer dry-run
         run: |
           set -euo pipefail
@@ -168,7 +168,7 @@ jobs:
           mkdir -p n8n/generated
           python scripts/wu105/build_candidate.py --baseline "$WU104_UPSTREAM" --manifest contracts/WU105_GOLDEN_INTENTS_V1.json --output "$CANDIDATE"
           test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "${{ needs.validate.outputs.candidate_sha }}"
-          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "127"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "128"
       - name: Hard-stop protected target checks
         shell: bash
         run: |
