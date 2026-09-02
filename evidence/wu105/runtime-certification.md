@@ -1,6 +1,6 @@
 # WU-105 Runtime Golden Intent Certification Evidence
 
-Status: IN_PROGRESS — TEST-08 PASS / NEXT RUNTIME CASE PENDING
+Status: IN_PROGRESS — TEST-09 PASS / NEXT RUNTIME CASE PENDING
 Workflow: `[STAGING] SPM_WU105_GOLDEN_INTENTS_V1`
 Workflow ID: `KXfalaYSCLdgmf4X`
 Current Candidate SHA-256: `7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e`
@@ -153,15 +153,45 @@ Content QA note (non-blocking for this intent test): the phrase `free trial for 
 
 **Owner screenshot evidence:** supplied in chat on 2026-09-03.
 
+## Test 09 — Teacher Quality / Source Truth / No Invented Credentials
+
+**Intent:** `teacher_quality`
+
+**Fresh-session prompt:**
+`How do you make sure your tutors are qualified?`
+
+**Observed response:**
+`At Success Path Mentors, we carefully select tutors based on their qualifications, subject expertise, and ability to meet the student's learning needs. We match tutors considering subject, grade, curriculum, and preferred language, then confirm their availability to ensure a good fit.`
+
+**Result:** `PASS` for WU-105 teacher-quality behavior.
+
+Evidence:
+- answered the teacher-quality question directly;
+- did not enter registration/intake before answering;
+- did not invent a numeric rating, years-of-experience claim, pass rate, or named certification;
+- did not claim every tutor has a specific degree or credential;
+- used general tutor-selection/matching criteria rather than unsupported quantified claims;
+- asked zero follow-up questions;
+- no business write or irreversible action was claimed.
+
+Acceptance coverage:
+- AC-04 answer-first: PASS;
+- AC-08 source-truth / no-invented-high-risk-detail representative case: PASS;
+- max one follow-up question: PASS (zero asked).
+
+Content QA note (non-blocking for this intent-flow test): the exact criteria stated — `qualifications`, `subject expertise`, `subject`, `grade`, `curriculum`, and `preferred language` — must remain aligned with the approved teacher-quality/matching KB. This runtime test certifies that the agent did not manufacture specific credentials or quantified experience claims.
+
+**Owner screenshot evidence:** supplied in chat on 2026-09-03.
+
 ## Running certification summary
 
-- Customer-output tests attempted: `8`
-- Current passing customer-output cases: `8 / 8`
+- Customer-output tests attempted: `9`
+- Current passing customer-output cases: `9 / 9`
 - Initial failures encountered: `2` (Test 04, Test 07)
 - Repaired and exact-retested: `2 / 2`
 - CR-105-01 static/deployment/readback/retest: `PASS`
 - CR-105-02 static/deployment/readback/retest: `PASS`
 - Current blocking runtime defect: `NONE`
-- Next representative case: `teacher_quality` source-truth / no invented credentials.
+- Next representative case: `refund_policy` source-truth / no invented eligibility, amount, timing, or promise.
 
-Owner screenshot evidence for Tests 01-08 supplied in chat on 2026-09-03.
+Owner screenshot evidence for Tests 01-09 supplied in chat on 2026-09-03.
