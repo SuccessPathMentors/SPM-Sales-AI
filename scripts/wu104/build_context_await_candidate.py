@@ -100,7 +100,8 @@ state.journey=(state.journey&&typeof state.journey==='object')?state.journey:{};
 const conv=(state.conversion&&typeof state.conversion==='object')?state.conversion:{};
 const registrationAwait=String(conv.awaiting_field||'').trim();
 const intake=(j.intake_question_candidate&&typeof j.intake_question_candidate==='object')?j.intake_question_candidate:null;
-const rawField=String(intake?.next_field||'').trim().toLowerCase().replace(/[-\s]+/g,'_');
+const missing=Array.isArray(j.journey_decision?.required_missing_fields)?j.journey_decision.required_missing_fields:[];
+const normalizeField=v=>String(v||'').trim().toLowerCase().replace(/[-\s]+/g,'_');
 const aliases={
  grade:'grade',grade_level:'grade',student_grade:'grade',
  subject:'subject',student_subject:'subject',subjects:'subject',
@@ -108,27 +109,44 @@ const aliases={
  day:'day',date:'day',lesson_day:'day',schedule_day:'day',scheduling_day:'day',scheduling_date:'day',
  time:'time',lesson_time:'time',schedule_time:'time',scheduling_time:'time',time_window:'time',scheduling_time_window:'time'
 };
-const safe=aliases[rawField]||null;
+const rawField=normalizeField(intake?.next_field);
+const rawMissing=normalizeField(missing[0]);
+const safeIntake=aliases[rawField]||null;
+const safeMissing=aliases[rawMissing]||null;
 const out=(j.sales_agent_output&&typeof j.sales_agent_output==='object')?j.sales_agent_output:{};
 const purposeful=String(out.purposeful_question||'').trim();
-const answer=String(out.answer_text||'');
+const answer=String(out.answer_text||'').trim();
 const questionPresent=Boolean(purposeful)||/[?؟]/u.test(answer);
+const wu104Decision=(j.wu104_short_query_decision&&typeof j.wu104_short_query_decision==='object')?j.wu104_short_query_decision:{};
+const wu104Clarification=wu104Decision.clarification_required===true||String(wu104Decision.safe_action||'')==='ASK_ONE_CLARIFYING_QUESTION';
+const q=(purposeful||answer).normalize('NFKC').toLowerCase().replace(/\s+/g,' ').slice(0,1200);
+function detectAskedField(text){
+ if(!text)return null;
+ if(/\b(?:which|what)\s+subject\b/u.test(text)||/\bsubject\b.{0,70}\b(?:need|needs|help|tutoring|study|learn)\b/u.test(text)||/(?:ما|أي|اي)\s+(?:هي\s+)?(?:المادة|مادة)\b/u.test(text)||/(?:المادة|مادة).{0,70}(?:يحتاج|تحتاج|مساعدة|دروس|حصص)/u.test(text)||/\b(?:quelle?|quel)\s+mati[eè]re\b/u.test(text)||/\bmati[eè]re\b.{0,70}\b(?:besoin|aide|tutorat|cours)\b/u.test(text))return 'subject';
+ if(/\b(?:which|what)\s+(?:grade|school grade|level)\b/u.test(text)||/(?:أي|اي|ما)\s+(?:هو\s+)?(?:الصف|صف|المستوى)/u.test(text)||/\bquel(?:le)?\s+(?:classe|niveau)\b/u.test(text))return 'grade';
+ if(/\b(?:which|what)\s+(?:city|location)\b/u.test(text)||/\bwhere\s+(?:are you|is the student|do you live|are you located)\b/u.test(text)||/(?:أي|اي|ما)\s+(?:هي\s+)?(?:المدينة|مدينة|المنطقة)/u.test(text)||/\bquel(?:le)?\s+(?:ville|localisation)\b/u.test(text))return 'location';
+ if(/\b(?:which|what)\s+day\b/u.test(text)||/(?:أي|اي|ما)\s+(?:هو\s+)?(?:اليوم|يوم)/u.test(text)||/\bquel\s+jour\b/u.test(text))return 'day';
+ if(/\b(?:which|what)\s+time\b/u.test(text)||/\bwhat\s+time\s+(?:works|is best|would work)\b/u.test(text)||/(?:أي|اي|ما)\s+(?:هو\s+)?(?:الوقت|وقت)|الساعة\s+كام/u.test(text)||/\bquelle\s+heure\b/u.test(text))return 'time';
+ return null;
+}
+const inferred=questionPresent&&!wu104Clarification?detectAskedField(q):null;
+let safe=inferred||safeIntake||safeMissing||null;
 let status='CLEARED_NO_FINAL_QUESTION';
 let persisted=null;
-let source='FINAL_RESPONSE_NO_QUESTION';
+let source=inferred?'FINAL_RESPONSE_QUESTION_PATTERN':(safeIntake?'WU92_INTAKE_NEXT_FIELD':(safeMissing?'WU90_REQUIRED_MISSING_FIELDS':'FINAL_RESPONSE_NO_QUESTION'));
 if(registrationAwait){
  status='REGISTRATION_AWAITING_FIELD_AUTHORITATIVE';
  persisted=registrationAwait;
  source='CONVERSION_AWAITING_FIELD';
  state.journey.awaiting_entity=registrationAwait;
-}else if(questionPresent&&safe){
+}else if(questionPresent&&!wu104Clarification&&safe){
  status='PERSISTED_FROM_FINAL_QUESTION';
  persisted=safe;
- source='WU92_INTAKE_NEXT_FIELD';
  state.journey.awaiting_entity=safe;
 }else{
  state.journey.awaiting_entity=null;
- if(questionPresent&&!safe){status='QUESTION_PRESENT_NO_SAFE_FIELD';source='NO_WHITELISTED_NEXT_FIELD';}
+ if(wu104Clarification){status='WU104_CLARIFICATION_NOT_SLOT_BINDABLE';source='WU104_CLARIFICATION_GUARD';}
+ else if(questionPresent&&!safe){status='QUESTION_PRESENT_NO_SAFE_FIELD';source='NO_WHITELISTED_NEXT_FIELD';}
 }
 state.updated_at=new Date().toISOString();
 const evidence={
@@ -138,6 +156,9 @@ const evidence={
  source,
  question_present:questionPresent,
  intake_next_field_present:Boolean(rawField),
+ required_missing_field_present:Boolean(rawMissing),
+ final_question_field_detected:Boolean(inferred),
+ wu104_clarification_guard:Boolean(wu104Clarification),
  raw_message_logged:false,
  raw_session_logged:false,
  secret_values_logged:false
@@ -178,7 +199,7 @@ def main():
         'sha256': sha256(out),
         'node_count': len(wf['nodes']),
         'connection_sources': len(wf['connections']),
-        'cr': 'CR-104-02',
+        'cr': 'CR-104-03',
         'production_modified': False,
     }, indent=2))
 
