@@ -16,10 +16,13 @@ PROTECTED_IDS = {
     "Bt3PvOIbFzU0O9gk": "WU-104 STAGING",
 }
 EXPECTED_NAME = "[STAGING] SPM_WU105_GOLDEN_INTENTS_V1"
-EXPECTED_NODE_COUNT = 127
+EXPECTED_NODE_COUNT = 128
 OVERLAY = "Apply WU105 Golden Intent Prompt Overlay"
+AVAILABILITY_GUARD = "Apply WU105 Availability Answer-First Guard"
 PROMPT = "Build WU96-Aware Sales Agent Prompt"
 GENERATOR = "Generate WU92 Sales Agent Response"
+SCHEDULING_GUARD = "Apply WU94 Scheduling Truth Guard"
+CONVERSION_NODE = "Resolve WU95 Conversion Mode"
 REQUIRED_WU104 = [
     "Build WU104 Short Query Decision",
     "Apply WU104 Short Trial Inquiry Guard",
@@ -50,7 +53,7 @@ if wf.get("name") != EXPECTED_NAME:
     errors.append(f"remote workflow name mismatch: {wf.get('name')!r}")
 if len(wf.get("nodes", [])) != EXPECTED_NODE_COUNT:
     errors.append(f"remote node count mismatch: {len(wf.get('nodes', []))}")
-for name in REQUIRED_WU104 + [OVERLAY, PROMPT, GENERATOR]:
+for name in REQUIRED_WU104 + [OVERLAY, AVAILABILITY_GUARD, PROMPT, GENERATOR, SCHEDULING_GUARD, CONVERSION_NODE]:
     if name not in nodes:
         errors.append(f"required inherited/owned node missing: {name}")
 
@@ -97,6 +100,36 @@ if OVERLAY in nodes:
         if token not in code:
             errors.append(f"WU-105 overlay token missing: {token}")
 
+if AVAILABILITY_GUARD in nodes:
+    guard = nodes[AVAILABILITY_GUARD]
+    if guard.get("type") != "n8n-nodes-base.code":
+        errors.append("CR-105-01 availability guard is not deterministic Code node")
+    if guard.get("credentials"):
+        errors.append("CR-105-01 availability guard unexpectedly contains credentials")
+    code = guard.get("parameters", {}).get("jsCode", "")
+    for token in [
+        "SPM_WU105_AVAILABILITY_ANSWER_FIRST_GUARD_V1",
+        "intent==='availability'",
+        "!availabilityVerified",
+        "wu92SafetyRewrite",
+        "UNVERIFIED_AVAILABILITY_CLAIM_REWRITTEN",
+        "UNVERIFIED_BOOKING_CLAIM_REWRITTEN",
+        "open tutoring slot",
+        "source_action_gates_authoritative:true",
+        "action_mutated:false",
+        "purposeful_question_mutated:false",
+        "irreversible_action_allowed:false",
+        "raw_message_logged:false",
+        "raw_session_logged:false",
+        "secret_values_logged:false",
+    ]:
+        if token not in code:
+            errors.append(f"CR-105-01 availability guard token missing: {token}")
+    if "o.proposed_action=" in code:
+        errors.append("CR-105-01 availability guard mutates proposed_action")
+    if "o.purposeful_question=" in code:
+        errors.append("CR-105-01 availability guard mutates purposeful_question")
+
 for n in wf.get("nodes", []):
     if "WU105" in n.get("name", "") and n.get("type") in {
         "@n8n/n8n-nodes-langchain.lmChatOpenAi",
@@ -113,8 +146,12 @@ if targets(PROMPT) != [[OVERLAY]]:
     errors.append("prompt must feed WU-105 overlay exactly once")
 if targets(OVERLAY) != [[GENERATOR]]:
     errors.append("WU-105 overlay must feed existing response generator")
+if targets(SCHEDULING_GUARD) != [[AVAILABILITY_GUARD]]:
+    errors.append("WU94 scheduling guard must feed CR-105-01 availability guard")
+if targets(AVAILABILITY_GUARD) != [[CONVERSION_NODE]]:
+    errors.append("CR-105-01 availability guard must feed existing WU95 conversion node")
 
-# Locked WU-104 CR-104-03/04/05 topology must remain intact.
+# Locked WU-104 CR-104-03/04/05 topology remains intact except the two explicitly owned WU-105 interpositions above.
 expected_topology = {
     "Build WU104 Short Query Decision": [["Apply WU104 Short Trial Inquiry Guard"]],
     "Apply WU104 Short Trial Inquiry Guard": [["Capture WU89 Classifier Context"]],
@@ -153,6 +190,7 @@ observed = {
     "wu104_cr10404_signature": "SPM_WU104_KNOWN_SLOT_RECONCILE_V1" in nodes.get("Persist WU104 Awaited Context Hint", {}).get("parameters", {}).get("jsCode", ""),
     "wu104_cr10405_signature": "SPM_WU104_SHORT_SEMANTIC_GUARD_V1" in nodes.get("Apply WU104 Short Trial Inquiry Guard", {}).get("parameters", {}).get("jsCode", ""),
     "wu105_overlay_present": OVERLAY in nodes,
+    "wu105_availability_guard_present": AVAILABILITY_GUARD in nodes,
     "wu102_queue_operation": q.get("parameters", {}).get("operation"),
     "wu102_queue_matching_columns": qcols.get("matchingColumns"),
     "chat_memory_session_key": memory_key,
