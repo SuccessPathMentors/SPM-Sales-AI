@@ -1,7 +1,7 @@
 {
   "schema": "SPM_WU105_RUNTIME_MATRIX_V1",
   "version": "1.0",
-  "candidate_sha256": "43ac3b2be6ae51b99b16f4e3166e0c9e0e055ccbc0b67d48871346d594415eed",
+  "candidate_sha256": "f02ab822c37e8cad6b45f83934361bc2388e540070b2c38b15ce631f93f6171c",
   "golden_manifest": "contracts/WU105_GOLDEN_INTENTS_V1.json",
   "global_assertions": {
     "answer_current_question_first": true,
