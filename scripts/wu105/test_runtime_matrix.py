@@ -5,7 +5,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = json.loads((ROOT / "contracts" / "WU105_GOLDEN_INTENTS_V1.json").read_text(encoding="utf-8"))
 MATRIX = json.loads((ROOT / "contracts" / "WU105_RUNTIME_MATRIX_V1.json").read_text(encoding="utf-8"))
-EXPECTED_CANDIDATE_SHA = "43ac3b2be6ae51b99b16f4e3166e0c9e0e055ccbc0b67d48871346d594415eed"
+EXPECTED_CANDIDATE_SHA = "f02ab822c37e8cad6b45f83934361bc2388e540070b2c38b15ce631f93f6171c"
 REQUIRED_CASES = {
     "fresh_direct",
     "context_no_reask",
