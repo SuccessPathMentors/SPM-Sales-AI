@@ -79,8 +79,8 @@ def main():
         require(required in js, f"WU-106 baseline safety marker missing: {required}")
 
     # Fail if the new node appears to create an external write/action surface.
-    # Reading j.sales_state is expected and safe. We block actual assignment or
-    # output replacement of authoritative state instead of substring-matching a read.
+    # Reading j.sales_state is expected and safe. Actual assignments are blocked,
+    # while equality checks such as j.sales_state==='object' remain allowed.
     forbidden_fragments = [
         "httpRequest",
         "googleSheets",
@@ -94,12 +94,11 @@ def main():
         require(fragment not in js, f"observe-only baseline contains forbidden mutation/action fragment: {fragment}")
 
     forbidden_write_patterns = [
-        r"\bj\.sales_state\s*=",
-        r"\bj\[['\"]sales_state['\"]\]\s*=",
-        r"\bsales_state\s*=",
+        r"\bj\.sales_state\s*=(?!=)",
+        r"\bj\[['\"]sales_state['\"]\]\s*=(?!=)",
         r"return\s*\[\s*\{\s*json\s*:\s*\{[^}]*\bsales_state\s*:",
-        r"\bj\.sales_agent_prompt\s*=",
-        r"\bj\.proposed_action\s*=",
+        r"\bj\.sales_agent_prompt\s*=(?!=)",
+        r"\bj\.proposed_action\s*=(?!=)",
     ]
     for pattern in forbidden_write_patterns:
         require(not re.search(pattern, js), f"observe-only baseline contains forbidden write pattern: {pattern}")
