@@ -46,20 +46,27 @@ CR-106-02 root control:
 
 ## GJ-05 — Availability → Requested Slot → Safe Alternative
 Initial result: FAIL ❌
-Current status: RETEST PENDING after CR-106-03
+Final result after CR-106-03: PASS ✅
 
-Owner-observed failing sequence:
+Owner-observed corrected sequence:
 1. `My son is in Grade 8 and needs Math tutoring. Is Saturday at 6 PM Toronto time available?`
-2. bot incorrectly asked the owner to confirm timezone/city even though `Toronto time` was explicitly supplied;
+2. bot did not re-ask for timezone/city; it stated that live tutor availability must be checked to confirm the requested time;
 3. `Please schedule Saturday at 6 PM.`
-4. bot remained action-safe and did not falsely claim booking success;
+4. bot remained action-safe and did not falsely claim that the booking was completed;
 5. `If 6 PM is not available, what other time could work?`
-6. bot incorrectly returned the generic action-system-check fallback instead of treating the turn as an alternative availability inquiry.
+6. bot correctly treated the turn as an alternative-availability inquiry and replied that the live schedule must be checked for other available times while preserving the currently requested time as the preference unless the customer chooses another time.
 
-Failure classification:
-- `Toronto time` was not normalized by WU89 into the canonical scheduling timezone, so downstream WU90/WU94 treated timezone as missing;
-- the alternative-slot wording did not match the existing explicit-availability recovery because it contained no repeated day word, so it remained on the schedule/action path;
-- action honesty itself remained intact: no invented slot and no false booking confirmation.
+Observed PASS evidence:
+- `Toronto time` no longer caused a timezone/city re-ask;
+- Saturday + 6 PM remained the requested scheduling preference;
+- the explicit schedule request did not produce a false `booked` or `confirmed` claim;
+- the alternative-slot question no longer fell into the generic action fallback;
+- the response explicitly required a live schedule check before offering another slot;
+- the system preserved the existing requested time instead of silently replacing it;
+- no invented alternative slot was presented.
+
+UX note — non-blocking:
+- wording such as `Our team will coordinate suitable options for you` is broader than necessary and could be tightened later to avoid implying an automatic human follow-up. It did not claim booking, handoff, or action success and therefore is not a GJ-05 failure.
 
 ### CR-106-03 root remediation
 Candidate: `2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f` (141 nodes).
@@ -91,14 +98,14 @@ STAGING deployment:
 - remote readback: `WU106_CR10603_REMOTE_PASS`;
 - Production write performed: false.
 
-GJ-05 remains RETEST PENDING until owner-visible Test Chat confirms the corrected three-turn journey.
+Certification scope: GJ-05 customer-visible behavior is now PASS after CR-106-03.
 
 ## Progress
 - GJ-01: PASS
 - GJ-02: PASS
 - GJ-03: PASS
 - GJ-04: PASS after CR-106-02
-- GJ-05: RETEST PENDING after CR-106-03
+- GJ-05: PASS after CR-106-03
 - GJ-06 → GJ-12: PENDING
 
-Current certified owner-observed live journey score: `4 / 12 PASS`.
+Current certified owner-observed live journey score: `5 / 12 PASS`.
