@@ -6,7 +6,7 @@ from pathlib import Path
 
 CR_NODE = "Apply WU106 Journey Transition Recovery [CR-106-01]"
 SOURCE_NODE = "Build WU104 Short Query Decision"
-TARGET_NODE = "Capture WU89 Classifier Context"
+TARGET_NODE = "Apply WU104 Short Trial Inquiry Guard"
 
 
 def require(cond, msg):
@@ -84,7 +84,7 @@ def main():
     names = [n.get("name") for n in wf.get("nodes", [])]
     require(names.count(CR_NODE) == 1, "CR-106-01 node must exist exactly once")
     require(target_of(wf, SOURCE_NODE) == CR_NODE, "CR-106-01 must be directly after WU104 short-query decision")
-    require(target_of(wf, CR_NODE) == TARGET_NODE, "CR-106-01 must return to WU89 capture")
+    require(target_of(wf, CR_NODE) == TARGET_NODE, "CR-106-01 must return to locked WU104 short-trial guard")
     node = next(n for n in wf["nodes"] if n.get("name") == CR_NODE)
     require(node.get("type") == "n8n-nodes-base.code", "CR-106-01 must be deterministic Code node")
     js = str(node.get("parameters", {}).get("jsCode", ""))
@@ -103,7 +103,6 @@ def main():
     for forbidden in ["httpRequest", "googleSheets", "redis", "executeWorkflow", "booking_id=", "lead_upsert"]:
         require(forbidden not in js, f"CR-106-01 introduced forbidden action surface: {forbidden}")
 
-    # GJ-04 defect #1: a plausible name must bind to the active registration awaiting_field.
     r = run_js(js, base_payload("Ahmed", "parent_name"))
     ev = r["wu106_cr10601_recovery"]
     require(ev["applied"] is True and ev["reason"] == "REGISTRATION_AWAITED_FIELD_RECOVERED", "parent_name recovery did not apply")
@@ -113,12 +112,10 @@ def main():
     require(r["sales_state"]["clarification"]["active"] is False, "guard must clear stale clarification state")
     require(r["classification"]["spm_intent"] == "unknown_intent", "registration field recovery must not invent an intent")
 
-    # Random conversational text must not be mistaken for a person's name.
     r = run_js(js, base_payload("Maybe later", "parent_name"))
     require(r["wu106_cr10601_recovery"]["applied"] is False, "conversational phrase must not bind as parent_name")
     require(r["classifier_route"] == "clarify", "unsafe free text must remain fail-closed")
 
-    # GJ-04 defect #2: explicit day availability must override stale registration clarification.
     r = run_js(js, base_payload("Is Saturday available?", "student_name"))
     ev = r["wu106_cr10601_recovery"]
     require(ev["applied"] is True and ev["reason"] == "EXPLICIT_AVAILABILITY_CURRENT_MESSAGE_OVERRIDE", "explicit availability recovery did not apply")
@@ -128,12 +125,10 @@ def main():
     require(r["sales_state"]["conversion"]["awaiting_field"] == "student_name", "availability interrupt must preserve registration awaiting state")
     require(r["customer_clarification_required"] is False, "availability override must clear stale clarification")
 
-    # A clear human-handoff intent remains authoritative and is never bound to a registration field.
     r = run_js(js, base_payload("I want to speak with a person", "parent_name", intent="human_handoff", confidence=0.99, ambiguous=False, route="direct"))
     require(r["wu106_cr10601_recovery"]["applied"] is False, "human_handoff must not be overridden")
     require(r["classification"]["spm_intent"] == "human_handoff", "human_handoff intent changed")
 
-    # A clear schedule request is not silently rewritten as an availability inquiry.
     r = run_js(js, base_payload("Please schedule it for Saturday at 6 PM.", "student_name", intent="schedule_request", confidence=0.99, ambiguous=False, route="direct"))
     require(r["wu106_cr10601_recovery"]["applied"] is False, "schedule request must not be rewritten")
     require(r["classification"]["spm_intent"] == "schedule_request", "schedule request intent changed")
@@ -145,6 +140,7 @@ def main():
         "explicit_availability_current_message_override": True,
         "handoff_precedence_preserved": True,
         "schedule_request_distinction_preserved": True,
+        "locked_short_trial_guard_preserved_downstream": True,
         "production_mutation": False,
     }, indent=2))
 
