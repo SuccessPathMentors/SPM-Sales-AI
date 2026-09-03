@@ -1,0 +1,145 @@
+{
+  "schema": "SPM_WU106_RUNTIME_MATRIX_V1",
+  "version": "1.0",
+  "journey_manifest": "contracts/WU106_GOLDEN_JOURNEYS_V1.json",
+  "state_contract": "contracts/WU106_JOURNEY_STATE_V1.json",
+  "journey_count": 12,
+  "variants_per_journey": 4,
+  "planned_scenario_count": 48,
+  "variant_definitions": {
+    "V1_BASE_CONTINUITY": {
+      "purpose": "Exercise the intended multi-turn journey in order.",
+      "required_assertions": ["current_intent_correct", "compatible_context_preserved", "no_false_action_success"]
+    },
+    "V2_KNOWN_CONTEXT_NO_REASK": {
+      "purpose": "Seed trusted context before the journey and prove known fields are not unnecessarily re-asked.",
+      "required_assertions": ["known_fields_reused", "no_unnecessary_reask", "active_objective_tracks_current_turn"]
+    },
+    "V3_OVERRIDE_OR_ACTION_SAFETY": {
+      "purpose": "Inject the journey-specific correction, interruption, or action-boundary risk.",
+      "required_assertions": ["precedence_rule_respected", "locked_upstream_guard_preserved", "irreversible_action_not_invented"]
+    },
+    "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": {
+      "purpose": "Exercise language continuity, stale-context resistance, or the highest-risk edge for that journey.",
+      "required_assertions": ["current_message_wins", "state_scope_remains_valid", "no_cross_context_contamination"]
+    }
+  },
+  "global_assertions": [
+    "wu104_ambiguity_and_awaited_binding_authoritative",
+    "wu105_golden_intent_contract_authoritative",
+    "production_mutation_allowed_false",
+    "action_pending_not_equal_action_success",
+    "no_raw_secret_or_payment_credential_persistence",
+    "support_complaint_handoff_override_sales_when_applicable"
+  ],
+  "journey_matrix": [
+    {
+      "journey_id": "GJ-01",
+      "variants": {
+        "V1_BASE_CONTINUITY": "subject inquiry -> pricing -> package comparison",
+        "V2_KNOWN_CONTEXT_NO_REASK": "seed Grade 8 Math; ask price then package difference without re-asking grade/subject",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "after package comparison user asks to register; registration must start intake without claiming completion",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "after pricing/package context switch clearly to Physics; current subject inquiry overrides package context"
+      }
+    },
+    {
+      "journey_id": "GJ-02",
+      "variants": {
+        "V1_BASE_CONTINUITY": "subject inquiry -> pricing -> price objection -> explicit free trial request",
+        "V2_KNOWN_CONTEXT_NO_REASK": "seed Grade 8 Math and quoted packages; objection must not restart discovery",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "price objection followed by trial request must not invent discount or claim trial booked",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "after objection user asks unrelated teacher-quality question; current question wins without losing compatible student context"
+      }
+    },
+    {
+      "journey_id": "GJ-03",
+      "variants": {
+        "V1_BASE_CONTINUITY": "trial details -> explicit start trial -> registration intake",
+        "V2_KNOWN_CONTEXT_NO_REASK": "seed grade/subject before trial details; explicit start reuses both",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "information-only trial question must not collect parent data until explicit start request",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "explicit start trial after long informational exchange still enters free-trial intake, not stale trial-details mode"
+      }
+    },
+    {
+      "journey_id": "GJ-04",
+      "variants": {
+        "V1_BASE_CONTINUITY": "registration -> availability question -> schedule request",
+        "V2_KNOWN_CONTEXT_NO_REASK": "seed Grade 8 Math and parent intake fields; scheduling cannot restart registration fields",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "availability question must not become booking; later schedule request remains unconfirmed until action success",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "schedule request after registration interruption must preserve compatible student data and current requested day/time"
+      }
+    },
+    {
+      "journey_id": "GJ-05",
+      "variants": {
+        "V1_BASE_CONTINUITY": "ask availability -> request specific slot -> receive/consider safe alternative",
+        "V2_KNOWN_CONTEXT_NO_REASK": "seed subject/grade/timezone/day/time; live-check response cannot re-ask all known fields",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "no live result means LIVE_CHECK_REQUIRED; alternative cannot be presented as booked",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "customer changes requested time; new time replaces stale requested time without altering subject/grade"
+      }
+    },
+    {
+      "journey_id": "GJ-06",
+      "variants": {
+        "V1_BASE_CONTINUITY": "known Grade 8 Math -> explicit correction to Grade 9",
+        "V2_KNOWN_CONTEXT_NO_REASK": "correction updates grade while preserving Math and does not ask grade again",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "correction during scheduling must not imply schedule/booking success",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "correct subject after earlier grade correction; latest explicit field values win independently"
+      }
+    },
+    {
+      "journey_id": "GJ-07",
+      "variants": {
+        "V1_BASE_CONTINUITY": "son Grade 8 Math -> explicit switch to daughter Grade 10 Physics",
+        "V2_KNOWN_CONTEXT_NO_REASK": "safe parent-shared location/language may carry; old child grade/subject may not",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "student switch during registration must not submit or merge two child records silently",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "switch child and language in same/current adjacent turn; new child context and current language both win"
+      }
+    },
+    {
+      "journey_id": "GJ-08",
+      "variants": {
+        "V1_BASE_CONTINUITY": "active sales discussion -> explicit human handoff request",
+        "V2_KNOWN_CONTEXT_NO_REASK": "known contact/handoff context is reused only if collection is authorized",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "human request suspends sales and cannot claim handoff success without runtime success",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "after handoff request, a stale sales objective must not continue unless customer explicitly returns to it"
+      }
+    },
+    {
+      "journey_id": "GJ-09",
+      "variants": {
+        "V1_BASE_CONTINUITY": "pricing/sales -> technical support or complaint interruption",
+        "V2_KNOWN_CONTEXT_NO_REASK": "support answer may use relevant known context but must not restart sales discovery",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "support/complaint priority stops conversion pressure and action assumptions",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "customer later explicitly returns to pricing; resume only on that new signal and with compatible context"
+      }
+    },
+    {
+      "journey_id": "GJ-10",
+      "variants": {
+        "V1_BASE_CONTINUITY": "active pricing/trial journey -> general refund policy -> customer returns to pricing",
+        "V2_KNOWN_CONTEXT_NO_REASK": "policy answer does not erase compatible prior grade/subject/package context",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "general refund policy inquiry must never become refund execution or guaranteed eligibility",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "if customer asks a new unrelated subject after policy answer, new subject wins rather than auto-resuming pricing"
+      }
+    },
+    {
+      "journey_id": "GJ-11",
+      "variants": {
+        "V1_BASE_CONTINUITY": "long subject -> pricing -> objection -> trial-details chain -> new clear subject inquiry",
+        "V2_KNOWN_CONTEXT_NO_REASK": "compatible parent context may persist while incompatible stale sales objective is ignored",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "new clear scheduling/action request after long history still respects live/action gates",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "new Grade 10 Physics statement must override old Grade 8 Math/trial state without contamination"
+      }
+    },
+    {
+      "journey_id": "GJ-12",
+      "variants": {
+        "V1_BASE_CONTINUITY": "same-language multi-turn EN journey with preserved semantic state",
+        "V2_KNOWN_CONTEXT_NO_REASK": "EN -> AR language switch during known Grade 8 Math journey; do not restart intake",
+        "V3_OVERRIDE_OR_ACTION_SAFETY": "AR -> EN switch during scheduling/trial action must preserve action safety and not imply success",
+        "V4_EDGE_LANGUAGE_OR_STALE_CONTEXT": "French continuity path preserves current grade/subject and responds in French without stale-language capture"
+      }
+    }
+  ]
+}
