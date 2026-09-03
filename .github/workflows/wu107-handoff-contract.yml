@@ -1,0 +1,34 @@
+name: WU-107 handoff contract
+
+on:
+  pull_request:
+    paths:
+      - 'work-units/WU-107.md'
+      - 'contracts/wu107-handoff-contract.json'
+      - 'contracts/wu107-handoff-scenarios.json'
+      - 'scripts/validate_wu107_handoff_contract.py'
+      - '.github/workflows/wu107-handoff-contract.yml'
+  push:
+    branches:
+      - wu107-human-handoff
+    paths:
+      - 'work-units/WU-107.md'
+      - 'contracts/wu107-handoff-contract.json'
+      - 'contracts/wu107-handoff-scenarios.json'
+      - 'scripts/validate_wu107_handoff_contract.py'
+      - '.github/workflows/wu107-handoff-contract.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    name: WU107 handoff truth contract
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Validate truth, idempotency, privacy and scenario coverage
+        run: python scripts/validate_wu107_handoff_contract.py
