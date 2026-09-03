@@ -1,0 +1,149 @@
+name: WU-106 one-time inactive STAGING create
+
+on:
+  push:
+    branches:
+      - wu106-planning
+    paths:
+      - '.github/workflows/wu106-one-time-staging-create.yml'
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: wu106-one-time-staging-create
+  cancel-in-progress: false
+
+env:
+  WU104_LOCK_RUN_ID: '33663124381'
+  WU104_ARTIFACT_NAME: wu104-cr10405-evidence
+  WU104_UPSTREAM: locked-wu104/n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+  WU104_EXPECTED_SHA256: 32721cae2b09531d8f4860373c37911ace9e95b6818babdca880fa08ef1b7bc9
+  CR10501: /tmp/SPM_WU105_CR10501.json
+  CR10501_SHA: e40610b13ec61a781acf44842b74955a88a11286e83baa7e121aee349cc9dcf0
+  CR10502: /tmp/SPM_WU105_CR10502.json
+  CR10502_SHA: 7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e
+  CR10503: /tmp/SPM_WU105_CR10503.json
+  CR10503_SHA: aaaa139faa67815f4196fb9779232471c4c8b051a26f0ba0a3be4c56231d4653
+  WU105_FINAL: /tmp/SPM_WU105_FINAL_CR10504.json
+  WU105_FINAL_SHA: 42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1
+  CANDIDATE: n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
+  FINAL_SHA: 134b2d861d6c5060ca52d8fd838b2cdd7d5d88ffa74855e3de1665e302afda67
+  PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
+  WU101_STAGING_ID: mMZVFxJIxE7a9SSW
+  WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
+  WU103_STAGING_ID: 5COEoxXjk8AvuGBa
+  WU104_STAGING_ID: Bt3PvOIbFzU0O9gk
+  WU105_STAGING_ID: KXfalaYSCLdgmf4X
+
+jobs:
+  create:
+    if: github.event.head_commit.message == 'WU-106: one-time inactive STAGING create'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
+    steps:
+      - name: Checkout exact branch head
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download exact locked WU-104 CR-104-05 evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.WU104_ARTIFACT_NAME }}
+          path: locked-wu104
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.WU104_LOCK_RUN_ID }}
+
+      - name: Verify locked lineage and rebuild WU-106 candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/main:work-units/WU-105.lock.md > /tmp/WU-105.lock.md
+          grep -q '^Status: LOCKED$' /tmp/WU-105.lock.md
+          grep -q "$WU105_FINAL_SHA" /tmp/WU-105.lock.md
+          test "$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')" = "$WU104_EXPECTED_SHA256"
+          python scripts/wu105/build_candidate.py --baseline "$WU104_UPSTREAM" --manifest contracts/WU105_GOLDEN_INTENTS_V1.json --output "$CR10501"
+          test "$(sha256sum "$CR10501" | awk '{print $1}')" = "$CR10501_SHA"
+          python scripts/wu105/apply_cr10502.py --input "$CR10501" --output "$CR10502"
+          test "$(sha256sum "$CR10502" | awk '{print $1}')" = "$CR10502_SHA"
+          python scripts/wu105/apply_cr10503.py --input "$CR10502" --output "$CR10503"
+          test "$(sha256sum "$CR10503" | awk '{print $1}')" = "$CR10503_SHA"
+          python scripts/wu105/apply_cr10504.py --input "$CR10503" --output "$WU105_FINAL"
+          test "$(sha256sum "$WU105_FINAL" | awk '{print $1}')" = "$WU105_FINAL_SHA"
+          mkdir -p n8n/generated
+          python scripts/wu106/build_candidate.py --baseline "$WU105_FINAL" --output "$CANDIDATE"
+          python scripts/wu106/test_candidate.py --baseline "$WU105_FINAL" --candidate "$CANDIDATE"
+          test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$FINAL_SHA"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "132"
+
+      - name: Assert all locked workflow IDs are protected
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "$PRODUCTION_WORKFLOW_ID"
+          test -n "$WU105_STAGING_ID"
+          python - <<'PY'
+          protected={
+            'CMBMpxX5AqqK2UTn','mMZVFxJIxE7a9SSW','1kaRBBFVJYbPxvQG',
+            '5COEoxXjk8AvuGBa','Bt3PvOIbFzU0O9gk','KXfalaYSCLdgmf4X'
+          }
+          assert len(protected)==6
+          print('WU106_ONE_TIME_PROTECTED_IDS_PASS')
+          PY
+
+      - name: Create exactly one new inactive non-production WU-106 workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          unset N8N_TARGET_WORKFLOW_ID || true
+          python scripts/n8n/deploy_nonprod.py \
+            --artifact "$CANDIDATE" \
+            --environment staging \
+            --expected-sha256 "$FINAL_SHA" \
+            --mode apply \
+            --allow-create \
+            --result-file wu106-one-time-create-result.json
+
+      - name: Verify created ID is new and remote content is exact WU-106 STAGING shape
+        shell: bash
+        run: |
+          set -euo pipefail
+          target="$(python - <<'PY'
+          import json
+          d=json.load(open('wu106-one-time-create-result.json'))
+          assert d['status']=='PASS_APPLY'
+          assert d['operation']=='CREATE_INACTIVE_NONPROD'
+          assert d['remote_active_after'] is False
+          print(d['target_workflow_id'])
+          PY
+          )"
+          for denied in "$PRODUCTION_WORKFLOW_ID" "$WU101_STAGING_ID" "$WU102_STAGING_ID" "$WU103_STAGING_ID" "$WU104_STAGING_ID" "$WU105_STAGING_ID"; do
+            test "$target" != "$denied"
+          done
+          N8N_TARGET_WORKFLOW_ID="$target" python scripts/wu106/verify_remote_staging.py
+          echo "WU106_CREATED_WORKFLOW_ID=$target"
+
+      - name: Upload one-time create evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu106-one-time-staging-create-evidence
+          path: |
+            n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
+            contracts/WU106_CANDIDATE_IDENTITY_V1.json
+            wu106-one-time-create-result.json
+          if-no-files-found: ignore
+          retention-days: 30
