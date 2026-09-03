@@ -8,7 +8,7 @@ from pathlib import Path
 EXPECTED_BASE_SHA256 = "134b2d861d6c5060ca52d8fd838b2cdd7d5d88ffa74855e3de1665e302afda67"
 EXPECTED_BASE_NODE_COUNT = 132
 SOURCE_NODE = "Build WU104 Short Query Decision"
-TARGET_NODE = "Capture WU89 Classifier Context"
+TARGET_NODE = "Apply WU104 Short Trial Inquiry Guard"
 CR_NODE = "Apply WU106 Journey Transition Recovery [CR-106-01]"
 
 
@@ -116,7 +116,7 @@ return [{json:{...j,classification:c,sales_state:state,classifier_route:classifi
         "name": CR_NODE,
         "notesInFlow": True,
         "notes": (
-            "CR-106-01 STAGING-only deterministic recovery for two GJ-04 failures: bind a plausible short value to a known active-registration awaiting_field, and allow an explicit day-availability question to override stale registration clarification. No external action or Production mutation is introduced."
+            "CR-106-01 STAGING-only deterministic recovery for two GJ-04 failures. It is inserted after the locked WU-104 short-query decision and before the locked WU-104 short-trial guard, so CR-104-05 remains authoritative downstream. No external action or Production mutation is introduced."
         ),
     }
 
