@@ -1,10 +1,14 @@
 # WU-107 — STAGING Runtime Certification Plan
 
-Status: PREPARED — STAGING CREATION PENDING
+Status: STAGING_CREATED_INACTIVE — OWNER-OBSERVED LIVE TESTING READY
+STAGING workflow: `RtI7hxjNb6Z0JL0D` (`[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1`)
+STAGING version: `f52c7000-539f-4675-9fe8-2addc9354077`
+Remote readback: `WU107_REMOTE_PASS`
 Candidate SHA-256: `fc4263b6bf029195a58b819ce4b06d6f499090d39017ff6ca906f173b7443f59`
 Candidate nodes: 151
 Upstream WU-106: LOCKED, SHA `2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f`
 Production mutation: PROHIBITED
+Activation/publish during certification: PROHIBITED
 
 ## Certification objective
 Prove in the real inactive n8n STAGING workflow that WU-107 creates one durable, idempotent, privacy-minimized handoff queue record and never converts queue evidence into false human-acceptance truth.
@@ -184,6 +188,11 @@ Minimum exit expectation:
 - WU-106 material regression: none;
 - remote workflow remains inactive;
 - Production remains untouched.
+
+## Current gate
+All automated pre-runtime gates are complete: exact-lineage CI, handoff contract, provider-neutral executable tests, zero-write dry-run, inactive STAGING creation, and remote exact-content readback.
+
+The next required gate is **owner-observed n8n Test Chat / manual execution evidence on the inactive STAGING workflow**. The workflow must remain inactive throughout testing.
 
 ## Runtime exit states
 After execution, WU-107 may advance to:
