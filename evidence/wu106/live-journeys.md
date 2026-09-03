@@ -48,16 +48,27 @@ Observed PASS evidence:
 ## GJ-04 — Registration → Availability → Schedule Request
 Initial result: FAIL ❌
 CR-106-01 live retest: FAIL ❌
-Current status: RETEST PENDING after CR-106-02 root-cause deployment
+Final result after CR-106-02: PASS ✅
 
-Observed failure sequence:
+Owner-observed corrected sequence:
 1. `I want to register my son for Grade 8 Math tutoring.`
 2. bot requested parent/guardian name
 3. `Ahmed`
-4. bot incorrectly returned `Could you tell me what you mean by that?`
-5. `Is Saturday available?`
-6. bot again incorrectly returned clarification
-7. final schedule-request response remained action-safe but the journey had already failed upstream.
+4. bot accepted `Ahmed` as the awaited parent/guardian field and moved to the student-name field without clarification
+5. `Omar`
+6. bot accepted `Omar` and moved to the phone field
+7. `Is Saturday available?`
+8. bot suspended the still-open registration intake objective and answered the availability objective safely: it stated that a live schedule check is required before confirming whether the requested day/time has a slot.
+
+Observed PASS evidence:
+- `Ahmed` no longer triggered `Could you tell me what you mean by that?`;
+- awaited registration field binding continued across turns;
+- the student-name field advanced correctly after the parent name was supplied;
+- explicit availability wording overrode the stale awaiting phone field without losing control of the journey;
+- no re-ask of Grade 8 or Math;
+- no false availability claim;
+- no false booking/confirmation claim;
+- current-message priority over stale registration context was demonstrated in live Test Chat.
 
 ### Why CR-106-01 was insufficient
 CR-106-01 could recover the short registration value only when the canonical registration continuation state (`registration_active` / `awaiting_field`) was already present in the next-turn payload. Live testing showed that this precondition was not reliable. Its availability override was also still coupled to classifier/clarification conditions rather than being fully current-message deterministic.
@@ -97,13 +108,13 @@ STAGING deployment:
 - WU102 queue idempotency and chat-memory isolation: PASS;
 - Production write performed: false.
 
-GJ-04 remains FAIL/RETEST PENDING until owner-visible Test Chat proves the corrected journey. No prior PASS journey is reopened by this change.
+Certification scope: customer-visible behavior PASS after CR-106-02. Internal state lineage is separately covered by exact-lineage deterministic CI and remote topology/readback checks.
 
 ## Progress
 - GJ-01: PASS
 - GJ-02: PASS
 - GJ-03: PASS
-- GJ-04: RETEST PENDING after CR-106-02
+- GJ-04: PASS after CR-106-02
 - GJ-05 → GJ-12: PENDING
 
-Current certified owner-observed live journey score: `3 / 12 PASS`.
+Current certified owner-observed live journey score: `4 / 12 PASS`.
