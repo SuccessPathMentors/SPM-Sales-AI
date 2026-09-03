@@ -3,7 +3,7 @@
   "version": "1.0",
   "work_unit": "WU-106",
   "change_request": "CR-106-03",
-  "status": "OFFLINE_CANDIDATE_CI_PENDING",
+  "status": "STAGING_DEPLOYED_RETEST_PENDING",
   "purpose": "Root repair for explicit city-time scheduling context and alternative-slot availability questions discovered by GJ-05.",
   "previous_live_result": {
     "journey": "GJ-05",
@@ -40,10 +40,32 @@
     "patch_scope": "deterministic current-message scheduling normalization only",
     "marker": "SPM_WU106_CR10603_SCHEDULING_NORMALIZATION_V1"
   },
+  "offline_certification": {
+    "github_actions_run_id": 33770742954,
+    "job_id": 100700026305,
+    "result": "SUCCESS",
+    "executable_result": "WU106_CR10603_GJ05_ROOT_FIX_EXECUTABLE_PASS",
+    "artifact_name": "wu106-cr10603-candidate",
+    "artifact_id": 9899485591,
+    "artifact_zip_sha256": "e5e3054134f5f85ee6e7548ea25e00c0fc056c70e613fba259d6bb93f5824143",
+    "journey_contract": "PASS",
+    "runtime_matrix_48_scenarios": "PASS"
+  },
   "target_staging": {
     "workflow_id": "vvHvidUHVxM5wTVT",
     "workflow_name": "[STAGING] SPM_WU106_END_TO_END_JOURNEYS_V1",
-    "deployment_status": "PENDING",
+    "deployment_status": "PASS_APPLY",
+    "operation": "UPDATE_INACTIVE_NONPROD",
+    "remote_version_id": "a353d744-8e37-4a8b-ada5-5c43bfc5e0fc",
+    "remote_node_count": 141,
+    "remote_active": false,
+    "published_or_activated": false,
+    "remote_readback": "WU106_CR10603_REMOTE_PASS",
+    "github_actions_run_id": 33770812500,
+    "job_id": 100700266169,
+    "evidence_artifact_name": "wu106-cr10603-staging-update-evidence",
+    "evidence_artifact_id": 9899523432,
+    "evidence_artifact_zip_sha256": "3ee3c432e5308838ada85bca20e6e4fdc2c93bee743d92b3ff0bf8f35d6d5f92",
     "remote_active_required": false,
     "production_write_performed": false
   },
