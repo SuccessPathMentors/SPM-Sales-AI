@@ -7,6 +7,7 @@ on:
       - 'work-units/WU-105.lock.md'
       - 'contracts/WU106_GOLDEN_JOURNEYS_V1.json'
       - 'contracts/WU106_GOLDEN_JOURNEY_MANIFEST_V1.schema.json'
+      - 'contracts/WU106_JOURNEY_STATE_V1.json'
       - 'scripts/wu106/**'
       - '.github/workflows/wu106-contract.yml'
   workflow_dispatch:
@@ -29,16 +30,21 @@ jobs:
       - name: Validate WU-106 Golden Journey contract
         run: python scripts/wu106/test_journey_manifest.py
 
+      - name: Validate WU-106 journey state and transition contract
+        run: python scripts/wu106/test_state_contract.py
+
       - name: Confirm no Production authorization in WU-106 contract
         shell: bash
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          p = Path('contracts/WU106_GOLDEN_JOURNEYS_V1.json')
-          d = json.loads(p.read_text())
-          assert d['global_rules']['production_mutation_allowed'] is False
-          assert d['global_rules']['irreversible_action_allowed'] is False
-          assert d['global_rules']['second_wu106_agent_allowed'] is False
+          manifest = json.loads(Path('contracts/WU106_GOLDEN_JOURNEYS_V1.json').read_text())
+          state = json.loads(Path('contracts/WU106_JOURNEY_STATE_V1.json').read_text())
+          assert manifest['global_rules']['production_mutation_allowed'] is False
+          assert manifest['global_rules']['irreversible_action_allowed'] is False
+          assert manifest['global_rules']['second_wu106_agent_allowed'] is False
+          assert state['production_rules']['production_mutation_allowed'] is False
+          assert state['production_rules']['production_activation_allowed'] is False
           print('WU106_PRODUCTION_HARD_STOP_PASS')
           PY
