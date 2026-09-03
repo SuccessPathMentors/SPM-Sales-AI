@@ -1,0 +1,106 @@
+{
+  "contract": "WU-107 Human Handoff Execution",
+  "version": "1.0.0",
+  "upstream": "WU-106 LOCKED",
+  "states": ["NONE", "REQUESTED", "QUEUED", "ACCEPTED", "FAILED", "CANCELLED"],
+  "initial_state": "NONE",
+  "terminal_states": ["ACCEPTED", "FAILED", "CANCELLED"],
+  "allowed_transitions": {
+    "NONE": ["REQUESTED"],
+    "REQUESTED": ["QUEUED", "FAILED", "CANCELLED"],
+    "QUEUED": ["ACCEPTED", "FAILED", "CANCELLED"],
+    "ACCEPTED": [],
+    "FAILED": [],
+    "CANCELLED": []
+  },
+  "reason_codes": [
+    "EXPLICIT_HUMAN_REQUEST",
+    "TECHNICAL_SUPPORT",
+    "COMPLAINT_ESCALATION",
+    "REPEATED_FAILURE_OR_LOOP",
+    "OUT_OF_SCOPE_SUPPORT",
+    "ACCOUNT_OR_CONTACT_SENSITIVE_CHANGE",
+    "OTHER_APPROVED_HANDOFF"
+  ],
+  "required_request_fields": [
+    "handoff_schema",
+    "handoff_event_id",
+    "created_at",
+    "workflow_release",
+    "channel",
+    "handoff_session_key",
+    "correlation_id",
+    "reason_code",
+    "source_intent",
+    "source_stage",
+    "priority",
+    "requested_language",
+    "customer_context_summary",
+    "support_context_flags",
+    "handoff_state",
+    "attempt_count",
+    "idempotency_key",
+    "downstream_receipt_present",
+    "downstream_acceptance_present",
+    "pii_policy_version"
+  ],
+  "forbidden_default_fields": [
+    "password",
+    "api_key",
+    "token",
+    "secret",
+    "card_number",
+    "bank_account",
+    "raw_conversation",
+    "raw_session_id"
+  ],
+  "truth_rules": {
+    "REQUESTED": {
+      "queue_receipt_required": false,
+      "human_acceptance_required": false,
+      "may_claim_human_received": false
+    },
+    "QUEUED": {
+      "queue_receipt_required": true,
+      "human_acceptance_required": false,
+      "may_claim_human_received": false
+    },
+    "ACCEPTED": {
+      "queue_receipt_required": true,
+      "human_acceptance_required": true,
+      "may_claim_human_received": true
+    },
+    "FAILED": {
+      "queue_receipt_required": false,
+      "human_acceptance_required": false,
+      "may_claim_human_received": false
+    },
+    "CANCELLED": {
+      "queue_receipt_required": false,
+      "human_acceptance_required": false,
+      "may_claim_human_received": false
+    }
+  },
+  "priority_levels": ["NORMAL", "HIGH", "URGENT"],
+  "retry_policy": {
+    "max_attempts": 3,
+    "retryable_classes": ["TIMEOUT", "RATE_LIMIT", "TRANSIENT_5XX"],
+    "non_retryable_classes": ["AUTHORIZATION", "VALIDATION", "POLICY_REJECTED"],
+    "idempotency_required": true
+  },
+  "provider_contract": {
+    "must_accept_idempotency_key": true,
+    "must_return_structured_result": true,
+    "allowed_results": ["accepted_for_queue", "failed"],
+    "queue_receipt_is_not_human_acceptance": true,
+    "whatsapp_notification_is_out_of_scope_for_wu107": true
+  },
+  "p0_invariants": [
+    "NO_FALSE_HUMAN_ACCEPTANCE",
+    "NO_DUPLICATE_HANDOFF_CASE",
+    "NO_SECRET_OR_UNRESTRICTED_CHAT_EXPORT",
+    "NO_CLASSIFIER_DERIVED_EXECUTION_SUCCESS",
+    "SUPPORT_CAN_INTERRUPT_SALES",
+    "PRODUCTION_MUTATION_PROHIBITED"
+  ]
+}
