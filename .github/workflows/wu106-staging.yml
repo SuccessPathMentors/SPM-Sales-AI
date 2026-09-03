@@ -2,8 +2,7 @@ name: WU-106 end-to-end journey staging
 
 on:
   pull_request:
-    branches:
-      - main
+    branches: [main]
     paths:
       - "contracts/WU106_*"
       - "scripts/wu106/**"
@@ -44,8 +43,10 @@ env:
   WU106_BASELINE_SHA: 134b2d861d6c5060ca52d8fd838b2cdd7d5d88ffa74855e3de1665e302afda67
   CR10601: /tmp/SPM_WU106_CR10601.json
   CR10601_SHA: 5db680c1e2b51d35408f78077ef4bb098da542bdf5e071125532948ad6783e2e
+  CR10602: /tmp/SPM_WU106_CR10602.json
+  CR10602_SHA: 50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014
   CANDIDATE: n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
-  FINAL_SHA: 50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014
+  FINAL_SHA: 2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f
   EXPECTED_WU106_STAGING_ID: vvHvidUHVxM5wTVT
   PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
   WU101_STAGING_ID: mMZVFxJIxE7a9SSW
@@ -56,7 +57,7 @@ env:
 
 jobs:
   validate:
-    name: WU106 CR-106-02 final candidate and non-production dry-run
+    name: WU106 CR-106-03 final candidate and non-production dry-run
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -74,7 +75,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           run-id: ${{ env.WU104_LOCK_RUN_ID }}
-      - name: Rebuild exact locked lineage and CR-106-02
+      - name: Rebuild exact locked lineage through CR-106-03
         id: build
         shell: bash
         run: |
@@ -96,43 +97,45 @@ jobs:
           python scripts/wu106/apply_cr10601.py --input "$WU106_BASELINE" --output "$CR10601"
           python scripts/wu106/test_cr10601.py --candidate "$CR10601"
           test "$(sha256sum "$CR10601" | awk '{print $1}')" = "$CR10601_SHA"
+          python scripts/wu106/apply_cr10602.py --input "$CR10601" --output "$CR10602"
+          python scripts/wu106/test_cr10602.py --candidate "$CR10602"
+          test "$(sha256sum "$CR10602" | awk '{print $1}')" = "$CR10602_SHA"
           mkdir -p n8n/generated
-          python scripts/wu106/apply_cr10602.py --input "$CR10601" --output "$CANDIDATE"
-          python scripts/wu106/test_cr10602.py --candidate "$CANDIDATE"
+          python scripts/wu106/apply_cr10603.py --input "$CR10602" --output "$CANDIDATE"
+          python scripts/wu106/test_cr10603.py --candidate "$CANDIDATE"
           actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
           test "$actual" = "$FINAL_SHA"
-          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "139"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "141"
           python scripts/wu106/test_journey_manifest.py
           python scripts/wu106/test_state_contract.py
           python scripts/wu106/test_runtime_matrix.py
           python - <<'PY'
-          import json, os
-          d=json.load(open('contracts/WU106_CR10602_IDENTITY_V1.json'))
+          import json,os
+          d=json.load(open('contracts/WU106_CR10603_IDENTITY_V1.json'))
           assert d['candidate']['candidate_sha256']==os.environ['FINAL_SHA']
-          assert d['candidate']['node_count']==139
+          assert d['candidate']['node_count']==141
           assert d['target_staging']['workflow_id']==os.environ['EXPECTED_WU106_STAGING_ID']
           assert d['candidate']['production_mutation_allowed'] is False
-          print('WU106_CR10602_IDENTITY_PASS')
+          print('WU106_CR10603_IDENTITY_PASS')
           PY
           echo "sha=$actual" >> "$GITHUB_OUTPUT"
       - name: Non-production deployer dry-run
-        run: |
-          python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "${{ steps.build.outputs.sha }}" --target-workflow-id "$EXPECTED_WU106_STAGING_ID" --mode dry-run --result-file wu106-dry-run-result.json
-      - name: Upload CR-106-02 dry-run evidence
+        run: python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "${{ steps.build.outputs.sha }}" --target-workflow-id "$EXPECTED_WU106_STAGING_ID" --mode dry-run --result-file wu106-dry-run-result.json
+      - name: Upload CR-106-03 dry-run evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wu106-cr10602-final-candidate-and-dry-run
+          name: wu106-cr10603-final-candidate-and-dry-run
           path: |
             n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
-            contracts/WU106_CR10602_IDENTITY_V1.json
+            contracts/WU106_CR10603_IDENTITY_V1.json
             contracts/WU106_RUNTIME_MATRIX_V1.json
             wu106-dry-run-result.json
           if-no-files-found: ignore
           retention-days: 30
 
   deploy-staging:
-    name: WU106 CR-106-02 ${{ inputs.mode }} to existing staging
+    name: WU106 CR-106-03 ${{ inputs.mode }} to existing staging
     if: github.event_name == 'workflow_dispatch'
     needs: validate
     runs-on: ubuntu-latest
@@ -156,7 +159,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           run-id: ${{ env.WU104_LOCK_RUN_ID }}
-      - name: Rebuild exact CR-106-02 candidate before any write
+      - name: Rebuild exact CR-106-03 candidate before any write
         shell: bash
         run: |
           set -euo pipefail
@@ -176,28 +179,31 @@ jobs:
           test "$(sha256sum "$WU106_BASELINE" | awk '{print $1}')" = "$WU106_BASELINE_SHA"
           python scripts/wu106/apply_cr10601.py --input "$WU106_BASELINE" --output "$CR10601"
           test "$(sha256sum "$CR10601" | awk '{print $1}')" = "$CR10601_SHA"
+          python scripts/wu106/apply_cr10602.py --input "$CR10601" --output "$CR10602"
+          python scripts/wu106/test_cr10602.py --candidate "$CR10602"
+          test "$(sha256sum "$CR10602" | awk '{print $1}')" = "$CR10602_SHA"
           mkdir -p n8n/generated
-          python scripts/wu106/apply_cr10602.py --input "$CR10601" --output "$CANDIDATE"
-          python scripts/wu106/test_cr10602.py --candidate "$CANDIDATE"
+          python scripts/wu106/apply_cr10603.py --input "$CR10602" --output "$CANDIDATE"
+          python scripts/wu106/test_cr10603.py --candidate "$CANDIDATE"
           test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$FINAL_SHA"
-          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "139"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "141"
       - name: Apply only to existing inactive WU-106 STAGING
         if: inputs.mode == 'apply'
         run: python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "$FINAL_SHA" --target-workflow-id "$EXPECTED_WU106_STAGING_ID" --mode apply --result-file wu106-deployment-result.json
       - name: Dry-run when requested
         if: inputs.mode == 'dry-run'
         run: python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "$FINAL_SHA" --target-workflow-id "$EXPECTED_WU106_STAGING_ID" --mode dry-run --result-file wu106-deployment-result.json
-      - name: Verify remote CR-106-02 after apply
+      - name: Verify remote CR-106-03 after apply
         if: inputs.mode == 'apply'
         run: N8N_TARGET_WORKFLOW_ID="$EXPECTED_WU106_STAGING_ID" python scripts/wu106/verify_remote_staging.py
-      - name: Upload WU-106 CR-106-02 deployment evidence
+      - name: Upload WU-106 CR-106-03 deployment evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wu106-cr10602-staging-${{ inputs.mode }}-evidence
+          name: wu106-cr10603-staging-${{ inputs.mode }}-evidence
           path: |
             n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
-            contracts/WU106_CR10602_IDENTITY_V1.json
+            contracts/WU106_CR10603_IDENTITY_V1.json
             wu106-deployment-result.json
           if-no-files-found: ignore
           retention-days: 30
