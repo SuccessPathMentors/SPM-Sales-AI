@@ -24,13 +24,13 @@ Production mutation allowed: false
 
 ## Owner-observed live score
 `0 / 15 fully certified`
-Customer-facing checkpoints observed: `2 / 15`
+Customer-facing checkpoints observed: `3 / 15`
 
 | Test | Result | Evidence / finding |
 |---|---|---|
-| RT-107-01 — EN explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Owner Test Chat, session suffix `c9543…`: input `I want to speak with a person.` Response: `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` Queue truth represented correctly; internal execution/Redis evidence remains pending. |
-| RT-107-02 — Same-session repeat / idempotency | PASS-CUSTOMER-FACING / INTERNAL PENDING | Same session immediately repeated with `Can I speak to a person please?` Response: `Your request is already in the support queue. A specific team member has not yet been confirmed as having accepted the case.` This correctly signals reuse of an existing handoff and avoids implying a second case or human acceptance. Internal evidence must still confirm same active generation/idempotency key and zero duplicate logical records. |
-| RT-107-03 — AR explicit human request | PENDING | — |
+| RT-107-01 — EN explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Session suffix `c9543…`: `I want to speak with a person.` Response: `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` |
+| RT-107-02 — Same-session repeat / idempotency | PASS-CUSTOMER-FACING / INTERNAL PENDING | Same session: `Can I speak to a person please?` Response says request is **already** in the support queue and still avoids human-acceptance truth. Internal duplicate-record/idempotency evidence remains pending. |
+| RT-107-03 — AR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | New session suffix `d7b60…`: `بدي احكي مع شخص من الفريق`. Arabic response states the request was placed in the support queue and explicitly says acceptance by a specific staff member has not yet been confirmed. No staff name, case ID, queue position, ETA, or false acceptance claim. Internal execution/Redis evidence remains pending. |
 | RT-107-04 — FR explicit human request | PENDING | — |
 | RT-107-05 — Technical support interrupts sales | PENDING | — |
 | RT-107-06 — Complaint escalation | PENDING | — |
@@ -44,51 +44,51 @@ Customer-facing checkpoints observed: `2 / 15`
 | RT-107-14 — Redis load failure injection | PENDING | — |
 | RT-107-15 — Redis save failure injection | PENDING | — |
 
-## RT-107-01 owner evidence
-Observed input:
+## Customer-facing PASS evidence so far
 
-`I want to speak with a person.`
+### RT-107-01 — English
+Input: `I want to speak with a person.`
 
-Observed response:
+Observed response: `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
 
-`Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
+Visible verdict: PASS.
 
-Customer-facing verdict: PASS.
+### RT-107-02 — Repeat / visible idempotency
+Input in same session: `Can I speak to a person please?`
 
-## RT-107-02 owner evidence
-Same-session input:
+Observed response: `Your request is already in the support queue. A specific team member has not yet been confirmed as having accepted the case.`
 
-`Can I speak to a person please?`
+Visible verdict: PASS.
 
-Observed response:
+### RT-107-03 — Arabic
+Input: `بدي احكي مع شخص من الفريق`
 
-`Your request is already in the support queue. A specific team member has not yet been confirmed as having accepted the case.`
+Observed Arabic behavior:
+- response remained in Arabic;
+- the request was represented as placed in the support queue;
+- the response explicitly stated that acceptance by a specific employee had not yet been confirmed;
+- no invented staff identity, case ID, queue position, or ETA appeared.
 
-Customer-facing verdict: PASS.
+Visible verdict: PASS.
 
-Why this passes the visible idempotency gate:
-- the second response says the request is **already** in the queue;
-- it does not imply a new/second case was created;
-- it does not fabricate case ID, queue position, staff name, or ETA;
-- it still explicitly avoids human-acceptance truth.
-
-Still required before RT-107-01/02 are fully certified:
-- exactly one durable logical handoff record for the active generation;
-- same idempotency key/generation reused on repeat;
-- `handoff_state=QUEUED`;
+## Internal evidence still required before RT-107-01/02/03 become fully certified
+- correct reason code per test (`EXPLICIT_HUMAN_REQUEST` for the explicit human-request cases);
+- exactly one durable logical handoff record per active generation;
+- same idempotency key/generation reused on repeat for RT-107-02;
+- `handoff_state=QUEUED` after verified Redis write;
 - `queue_receipt_verified=true`;
 - `human_acceptance_verified=false`;
-- no prohibited raw PII/chat/session/secret content in the queue record.
+- no prohibited raw PII/chat/session/secret content in queue records.
 
-## Next owner-observed test — RT-107-03
+## Next owner-observed test — RT-107-04
 Start a **new Test Chat session** and send exactly:
 
-`بدي احكي مع شخص من الفريق`
+`Je veux parler à une personne de l'équipe.`
 
 Expected:
-- Arabic response;
-- handoff request is placed in the support queue;
-- no wording equivalent to `تم استلام طلبك من موظف` unless separate authoritative acceptance evidence exists;
+- response remains in French;
+- request is represented as placed in the support queue;
+- no claim that a specific person has received/accepted the case;
 - no invented staff name, case ID, queue position, or ETA.
 
 ## P0 stop conditions
