@@ -1,0 +1,78 @@
+{
+  "schema": "SPM_WU106_CR10603_IDENTITY_V1",
+  "version": "1.0",
+  "work_unit": "WU-106",
+  "change_request": "CR-106-03",
+  "status": "STAGING_DEPLOYED_RETEST_PENDING",
+  "purpose": "Root repair for explicit city-time scheduling context and alternative-slot availability questions discovered by GJ-05.",
+  "previous_live_result": {
+    "journey": "GJ-05",
+    "result": "FAIL",
+    "observed_failures": [
+      "Toronto time was re-asked as missing timezone despite being explicitly supplied",
+      "alternative-slot question fell into generic action fallback instead of availability inquiry"
+    ]
+  },
+  "candidate": {
+    "name": "[STAGING] SPM_WU106_END_TO_END_JOURNEYS_V1",
+    "candidate_sha256": "2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f",
+    "node_count": 141,
+    "input_cr10602_sha256": "50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014",
+    "production_mutation_allowed": false,
+    "active_required": false
+  },
+  "root_cause_controls": {
+    "explicit_city_time_alias_is_not_country_inference": true,
+    "toronto_mississauga_milton_time_alias_to_iana": "America/Toronto",
+    "deterministic_schedule_day_time_preference_capture": true,
+    "alternative_slot_question_maps_to_availability": true,
+    "existing_requested_preference_preserved": true,
+    "live_schedule_required_for_alternative_slots": true,
+    "invented_slot_allowed": false,
+    "booking_claim_without_tool_success_allowed": false
+  },
+  "new_nodes": [
+    "Apply WU106 Alternative Slot Recovery [CR-106-03]",
+    "Apply WU106 Alternative Availability Response Guard [CR-106-03]"
+  ],
+  "patched_locked_descendant_node": {
+    "node": "Validate + Normalize WU89 Entities",
+    "patch_scope": "deterministic current-message scheduling normalization only",
+    "marker": "SPM_WU106_CR10603_SCHEDULING_NORMALIZATION_V1"
+  },
+  "offline_certification": {
+    "github_actions_run_id": 33770742954,
+    "job_id": 100700026305,
+    "result": "SUCCESS",
+    "executable_result": "WU106_CR10603_GJ05_ROOT_FIX_EXECUTABLE_PASS",
+    "artifact_name": "wu106-cr10603-candidate",
+    "artifact_id": 9899485591,
+    "artifact_zip_sha256": "e5e3054134f5f85ee6e7548ea25e00c0fc056c70e613fba259d6bb93f5824143",
+    "journey_contract": "PASS",
+    "runtime_matrix_48_scenarios": "PASS"
+  },
+  "target_staging": {
+    "workflow_id": "vvHvidUHVxM5wTVT",
+    "workflow_name": "[STAGING] SPM_WU106_END_TO_END_JOURNEYS_V1",
+    "deployment_status": "PASS_APPLY",
+    "operation": "UPDATE_INACTIVE_NONPROD",
+    "remote_version_id": "a353d744-8e37-4a8b-ada5-5c43bfc5e0fc",
+    "remote_node_count": 141,
+    "remote_active": false,
+    "published_or_activated": false,
+    "remote_readback": "WU106_CR10603_REMOTE_PASS",
+    "github_actions_run_id": 33770812500,
+    "job_id": 100700266169,
+    "evidence_artifact_name": "wu106-cr10603-staging-update-evidence",
+    "evidence_artifact_id": 9899523432,
+    "evidence_artifact_zip_sha256": "3ee3c432e5308838ada85bca20e6e4fdc2c93bee743d92b3ff0bf8f35d6d5f92",
+    "remote_active_required": false,
+    "production_write_performed": false
+  },
+  "locked_upstream": {
+    "work_unit": "WU-105",
+    "final_cr": "CR-105-04",
+    "candidate_sha256": "42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1",
+    "node_count": 131
+  }
+}

@@ -1,0 +1,56 @@
+name: WU-106 journey contract
+
+on:
+  pull_request:
+    paths:
+      - 'work-units/WU-106.md'
+      - 'work-units/WU-105.lock.md'
+      - 'contracts/WU106_GOLDEN_JOURNEYS_V1.json'
+      - 'contracts/WU106_GOLDEN_JOURNEY_MANIFEST_V1.schema.json'
+      - 'contracts/WU106_JOURNEY_STATE_V1.json'
+      - 'contracts/WU106_RUNTIME_MATRIX_V1.json'
+      - 'scripts/wu106/**'
+      - '.github/workflows/wu106-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate WU-106 Golden Journey contract
+        run: python scripts/wu106/test_journey_manifest.py
+
+      - name: Validate WU-106 journey state and transition contract
+        run: python scripts/wu106/test_state_contract.py
+
+      - name: Validate WU-106 48-scenario deterministic runtime matrix
+        run: python scripts/wu106/test_runtime_matrix.py
+
+      - name: Confirm no Production authorization in WU-106 contract
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          manifest = json.loads(Path('contracts/WU106_GOLDEN_JOURNEYS_V1.json').read_text())
+          state = json.loads(Path('contracts/WU106_JOURNEY_STATE_V1.json').read_text())
+          matrix = json.loads(Path('contracts/WU106_RUNTIME_MATRIX_V1.json').read_text())
+          assert manifest['global_rules']['production_mutation_allowed'] is False
+          assert manifest['global_rules']['irreversible_action_allowed'] is False
+          assert manifest['global_rules']['second_wu106_agent_allowed'] is False
+          assert state['production_rules']['production_mutation_allowed'] is False
+          assert state['production_rules']['production_activation_allowed'] is False
+          assert matrix['planned_scenario_count'] == 48
+          print('WU106_PRODUCTION_HARD_STOP_PASS')
+          PY

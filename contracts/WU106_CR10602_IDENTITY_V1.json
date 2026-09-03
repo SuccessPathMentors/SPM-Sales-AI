@@ -1,0 +1,78 @@
+{
+  "schema": "SPM_WU106_CR10602_IDENTITY_V1",
+  "version": "1.0",
+  "work_unit": "WU-106",
+  "change_request": "CR-106-02",
+  "status": "STAGING_DEPLOYED_RETEST_PENDING",
+  "purpose": "Root-cause repair for durable registration continuation and explicit availability transitions across turns.",
+  "previous_live_result": {
+    "journey": "GJ-04",
+    "cr10601_retest": "FAIL",
+    "observed_failures": [
+      "parent_name short reply was still clarified instead of bound",
+      "explicit Saturday availability inquiry was still clarified"
+    ]
+  },
+  "candidate": {
+    "name": "[STAGING] SPM_WU106_END_TO_END_JOURNEYS_V1",
+    "candidate_sha256": "50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014",
+    "node_count": 139,
+    "input_cr10601_sha256": "5db680c1e2b51d35408f78077ef4bb098da542bdf5e071125532948ad6783e2e",
+    "production_mutation_allowed": false,
+    "active_required": false
+  },
+  "root_cause_controls": {
+    "dedicated_registration_control_namespace": "spm:staging:regctrl:<session_id>",
+    "control_pii_storage": false,
+    "control_raw_message_storage": false,
+    "canonical_sales_state_remains_authoritative": true,
+    "strong_classifier_cannot_override_active_awaited_registration_slot": true,
+    "explicit_availability_current_message_has_deterministic_priority": true,
+    "human_support_optout_precedence_preserved": true
+  },
+  "new_nodes": [
+    "Load WU106 Registration Control [CR-106-02]",
+    "Merge WU106 Durable Registration Control [CR-106-02]",
+    "Apply WU106 Root Journey Recovery [CR-106-02]",
+    "Build WU106 Registration Control Snapshot [CR-106-02]",
+    "Save WU106 Registration Control [CR-106-02]",
+    "Restore After WU106 Registration Control Save [CR-106-02]"
+  ],
+  "offline_certification": {
+    "github_actions_run_id": 33766888766,
+    "job_id": 100686947243,
+    "result": "SUCCESS",
+    "executable_result": "WU106_CR10602_ROOT_CAUSE_EXECUTABLE_PASS",
+    "artifact_name": "wu106-cr10602-candidate",
+    "artifact_id": 9897888639,
+    "artifact_zip_sha256": "be78bdb4b8c7ba4446f6c0861b8f76d7ece93568277e268105d78339d16c1052",
+    "journey_manifest": "PASS",
+    "journey_state_contract": "PASS",
+    "runtime_matrix_48_scenarios": "PASS",
+    "multi_turn_simulation": "PASS"
+  },
+  "target_staging": {
+    "workflow_id": "vvHvidUHVxM5wTVT",
+    "workflow_name": "[STAGING] SPM_WU106_END_TO_END_JOURNEYS_V1",
+    "deployment_status": "PASS_APPLY",
+    "operation": "UPDATE_INACTIVE_NONPROD",
+    "remote_version_id": "1734f210-1fc3-4a90-96ca-de09edde4c23",
+    "remote_node_count": 139,
+    "remote_active": false,
+    "published_or_activated": false,
+    "remote_readback": "WU106_CR10602_REMOTE_PASS",
+    "github_actions_run_id": 33767318872,
+    "job_id": 100688392540,
+    "evidence_artifact_name": "wu106-cr10602-staging-update-evidence",
+    "evidence_artifact_id": 9898090717,
+    "evidence_artifact_zip_sha256": "89a6dc5cdbe93b71e4dbea2559544c58f9d614c09ec724103c7e7c13b8810e1b",
+    "remote_active_required": false,
+    "production_write_performed": false
+  },
+  "locked_upstream": {
+    "work_unit": "WU-105",
+    "final_cr": "CR-105-04",
+    "candidate_sha256": "42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1",
+    "node_count": 131
+  }
+}

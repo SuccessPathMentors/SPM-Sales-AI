@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "SPM_WU106_GOLDEN_JOURNEY_MANIFEST_V1",
+  "type": "object",
+  "required": ["schema", "version", "depends_on", "taxonomy", "journey_count", "global_rules", "state_classes", "journeys"],
+  "properties": {
+    "schema": {"const": "SPM_WU106_GOLDEN_JOURNEYS_V1"},
+    "version": {"const": "1.0"},
+    "taxonomy": {"const": "SPM_V2_62_INTENTS"},
+    "journey_count": {"const": 12},
+    "depends_on": {
+      "type": "object",
+      "required": ["wu105_lock", "wu105_final_cr", "wu105_candidate_sha256"],
+      "properties": {
+        "wu105_lock": {"const": true},
+        "wu105_final_cr": {"const": "CR-105-04"},
+        "wu105_candidate_sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}
+      },
+      "additionalProperties": false
+    },
+    "global_rules": {
+      "type": "object",
+      "required": [
+        "reuse_trusted_context",
+        "do_not_reask_known_fields",
+        "current_message_overrides_stale_context",
+        "explicit_correction_overrides_prior_value",
+        "action_pending_is_not_action_success",
+        "availability_requires_live_source",
+        "booking_success_requires_action_success",
+        "registration_success_requires_action_success",
+        "refund_success_requires_action_success",
+        "handoff_success_requires_action_success",
+        "support_complaint_handoff_can_interrupt_sales",
+        "child_context_switch_requires_boundary",
+        "wu104_rules_authoritative",
+        "wu105_rules_authoritative",
+        "new_taxonomy_intents_allowed",
+        "second_wu106_agent_allowed",
+        "production_mutation_allowed",
+        "irreversible_action_allowed"
+      ]
+    },
+    "state_classes": {
+      "type": "array",
+      "minItems": 7,
+      "uniqueItems": true,
+      "items": {"type": "string"}
+    },
+    "journeys": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "turn_intents", "must_not", "transition_contract", "live_priority"],
+        "properties": {
+          "id": {"type": "string", "pattern": "^GJ-(0[1-9]|1[0-2])$"},
+          "name": {"type": "string", "minLength": 8},
+          "turn_intents": {"type": "array", "minItems": 2, "items": {"type": "string", "minLength": 2}},
+          "must_reuse": {"type": "array", "items": {"type": "string"}},
+          "must_replace": {"type": "array", "items": {"type": "string"}},
+          "must_create_boundary": {"type": "array", "items": {"type": "string"}},
+          "must_suspend": {"type": "array", "items": {"type": "string"}},
+          "must_not": {"type": "array", "minItems": 2, "items": {"type": "string"}},
+          "transition_contract": {"type": "string", "minLength": 20},
+          "live_priority": {"enum": ["HIGH", "CRITICAL"]},
+          "required_language_paths": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

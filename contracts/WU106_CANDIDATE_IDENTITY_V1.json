@@ -1,0 +1,47 @@
+{
+  "schema": "SPM_WU106_CANDIDATE_IDENTITY_V1",
+  "version": "1.0",
+  "stage": "OBSERVE_ONLY_BASELINE",
+  "candidate_name": "[STAGING] SPM_WU106_END_TO_END_JOURNEYS_V1",
+  "candidate_sha256": "134b2d861d6c5060ca52d8fd838b2cdd7d5d88ffa74855e3de1665e302afda67",
+  "node_count": 132,
+  "locked_upstream": {
+    "work_unit": "WU-105",
+    "final_cr": "CR-105-04",
+    "candidate_sha256": "42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1",
+    "node_count": 131
+  },
+  "delta": {
+    "added_nodes": 1,
+    "added_node_name": "Build WU106 Journey Orchestration Envelope",
+    "existing_nodes_mutated": 0,
+    "new_external_node_types": 0,
+    "prompt_mutated": false,
+    "authoritative_sales_state_mutated": false,
+    "action_permission_mutated": false,
+    "irreversible_action_allowed": false
+  },
+  "offline_certification": {
+    "github_actions_run_id": 33700001249,
+    "result": "SUCCESS",
+    "artifact_name": "wu106-observe-only-candidate",
+    "artifact_id": 9873158651,
+    "artifact_zip_sha256": "25d866bc6109d1a56b245499d6fc9416bd6e069c9cec954a5f8b746d15b1d410"
+  },
+  "deployment": {
+    "staging_deployed": true,
+    "operation": "CREATE_INACTIVE_NONPROD",
+    "workflow_id": "vvHvidUHVxM5wTVT",
+    "remote_version_id": "de2d9eb9-5632-4ebc-988f-a555253daa82",
+    "remote_active": false,
+    "published_or_activated": false,
+    "github_actions_run_id": 33700339495,
+    "evidence_artifact_name": "wu106-one-time-staging-create-evidence",
+    "evidence_artifact_id": 9873274375,
+    "evidence_artifact_zip_sha256": "796ae4c94de402db8e6ed990b1959f8e266a25810f38634f7cda93da61bf2d07",
+    "remote_readback": "PASS",
+    "production_write_performed": false,
+    "production_mutation_allowed": false,
+    "production_activation_allowed": false
+  }
+}
