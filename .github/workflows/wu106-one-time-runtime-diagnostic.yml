@@ -1,0 +1,46 @@
+name: WU-106 one-time runtime diagnostic
+
+on:
+  push:
+    branches:
+      - wu106-planning
+    paths:
+      - '.github/workflows/wu106-one-time-runtime-diagnostic.yml'
+
+permissions:
+  contents: read
+
+env:
+  N8N_TARGET_WORKFLOW_ID: vvHvidUHVxM5wTVT
+  WU106_DIAGNOSTIC_LIMIT: '12'
+  WU106_DIAGNOSTIC_OUT: wu106-runtime-diagnostic.json
+
+jobs:
+  diagnose:
+    if: "${{ github.event.head_commit.message == 'WU-106: run one-time runtime diagnostic' }}"
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: wu106-planning
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read recent WU-106 STAGING executions only
+        run: python scripts/wu106/diagnose_recent_runtime.py
+      - name: Upload privacy-safe diagnostic
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu106-runtime-diagnostic
+          path: wu106-runtime-diagnostic.json
+          if-no-files-found: ignore
+          retention-days: 7
