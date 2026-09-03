@@ -1,6 +1,6 @@
 # WU-107 — Owner-Observed Runtime Certification Results
 
-Status: RUNTIME_CERT_COMPLETE — 15/15 PASS / FINAL REVIEW PENDING
+Status: RUNTIME_CERT_COMPLETE — 15/15 PASS / FINAL REVIEW COMPLETE
 Issue: #67
 PR: #68
 STAGING workflow: `RtI7hxjNb6Z0JL0D` (`[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1`)
@@ -94,8 +94,18 @@ STAGING update/readback:
 ## Execution-API observation
 A separate read-only attempt to fetch n8n execution data through the configured API key returned HTTP 403. The audit performed no write and was removed. Internal certification therefore executes the exact JavaScript embedded in the reconstructed candidate Code nodes with controlled fixtures, in addition to the live owner-observed customer-facing journeys and remote candidate readback.
 
+## Final remote confirmation
+A fresh read-only remote audit was executed after CR-107-02 deployment and final material review:
+- run: `33811422682`
+- job: `100833880066`
+- `WU107_CR10702_REMOTE_PASS`
+- `WU107_FINAL_REMOTE_IDENTITY_ASSERT_PASS`
+- remote version remained `79a38b64-336a-4bfd-8c65-ed5b0ef1f247`
+- `active=false`
+- Production write: false
+
 ## Next gate
-Run final regression/material review on the exact CR-107-02 candidate and current remote identity. If all review gates pass, WU-107 may move to `READY_FOR_REVIEW — OWNER LOCK PENDING`.
+No additional WU-107 runtime test is pending. The remaining gate is explicit Owner approval for LOCK.
 
 ## Lock rule
 WU-107 cannot be locked without explicit Owner approval.
