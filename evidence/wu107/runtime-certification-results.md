@@ -23,13 +23,13 @@ Production mutation allowed: false
 - One-time creation workflow removed from branch: PASS
 
 ## Owner-observed live score
-`0 / 15 fully certified`  
-Customer-facing checkpoints observed: `1 / 15`
+`0 / 15 fully certified`
+Customer-facing checkpoints observed: `2 / 15`
 
 | Test | Result | Evidence / finding |
 |---|---|---|
-| RT-107-01 — EN explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Owner Test Chat, session suffix `c9543…`: input `I want to speak with a person.` Response: `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` This correctly represents queue truth and explicitly avoids false human-acceptance truth. Internal execution/Redis evidence (`EXPLICIT_HUMAN_REQUEST`, one durable record, `queue_receipt_verified=true`, `human_acceptance_verified=false`) remains to be confirmed before the test is fully certified. |
-| RT-107-02 — Same-session repeat / idempotency | PENDING | — |
+| RT-107-01 — EN explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Owner Test Chat, session suffix `c9543…`: input `I want to speak with a person.` Response: `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` Queue truth represented correctly; internal execution/Redis evidence remains pending. |
+| RT-107-02 — Same-session repeat / idempotency | PASS-CUSTOMER-FACING / INTERNAL PENDING | Same session immediately repeated with `Can I speak to a person please?` Response: `Your request is already in the support queue. A specific team member has not yet been confirmed as having accepted the case.` This correctly signals reuse of an existing handoff and avoids implying a second case or human acceptance. Internal evidence must still confirm same active generation/idempotency key and zero duplicate logical records. |
 | RT-107-03 — AR explicit human request | PENDING | — |
 | RT-107-04 — FR explicit human request | PENDING | — |
 | RT-107-05 — Technical support interrupts sales | PENDING | — |
@@ -49,38 +49,47 @@ Observed input:
 
 `I want to speak with a person.`
 
-Observed customer-visible response:
+Observed response:
 
 `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
 
 Customer-facing verdict: PASS.
 
-Why this passes the truth-language gate:
-- the bot states that the request is in the support queue;
-- it does not claim that a named/specific staff member received or accepted it;
-- it explicitly says acceptance has not yet been confirmed;
-- there is no invented ETA, case owner, or staff identity.
-
-Still required for full RT-107-01 certification:
-- execution reason `EXPLICIT_HUMAN_REQUEST`;
-- exactly one durable WU-107 queue record;
-- `handoff_state=QUEUED`;
-- `queue_receipt_verified=true`;
-- `human_acceptance_verified=false`;
-- no prohibited PII in the queue record.
-
-## Next owner-observed test — RT-107-02
-Use the **same Test Chat session** immediately after RT-107-01 and send:
+## RT-107-02 owner evidence
+Same-session input:
 
 `Can I speak to a person please?`
 
-Expected customer-facing behavior:
-- the request is already in the support queue / existing handoff is reused;
-- no second logical case is implied;
-- no new staff acceptance is claimed;
-- no fabricated case ID, staff name, or ETA.
+Observed response:
 
-Internal evidence later must confirm that the same active handoff generation/record was reused and no duplicate logical queue record was created.
+`Your request is already in the support queue. A specific team member has not yet been confirmed as having accepted the case.`
+
+Customer-facing verdict: PASS.
+
+Why this passes the visible idempotency gate:
+- the second response says the request is **already** in the queue;
+- it does not imply a new/second case was created;
+- it does not fabricate case ID, queue position, staff name, or ETA;
+- it still explicitly avoids human-acceptance truth.
+
+Still required before RT-107-01/02 are fully certified:
+- exactly one durable logical handoff record for the active generation;
+- same idempotency key/generation reused on repeat;
+- `handoff_state=QUEUED`;
+- `queue_receipt_verified=true`;
+- `human_acceptance_verified=false`;
+- no prohibited raw PII/chat/session/secret content in the queue record.
+
+## Next owner-observed test — RT-107-03
+Start a **new Test Chat session** and send exactly:
+
+`بدي احكي مع شخص من الفريق`
+
+Expected:
+- Arabic response;
+- handoff request is placed in the support queue;
+- no wording equivalent to `تم استلام طلبك من موظف` unless separate authoritative acceptance evidence exists;
+- no invented staff name, case ID, queue position, or ETA.
 
 ## P0 stop conditions
 Testing stops and WU-107 becomes BLOCKED if any of these are observed:
