@@ -47,9 +47,30 @@ Observed PASS evidence:
 
 Certification scope: customer-visible behavior PASS. Internal state trace not visible in screenshot and therefore not claimed from this evidence alone.
 
+## GJ-03 — Trial Details → Explicit Trial Start → Registration Intake
+Result: PASS ✅
+
+Observed sequence:
+1. `My son is in Grade 8 and needs Math tutoring.`
+2. `How does the free trial work?`
+3. `Okay, I want to start the free trial.`
+4. `I want to register him for tutoring.`
+
+Observed PASS evidence:
+- initial response recognized Grade 8 + Math;
+- trial-details question was answered informationally and did not begin registration intake;
+- explicit trial-start request transitioned into intake and asked for the parent/guardian name;
+- registration request stayed in intake and continued requesting the same still-missing parent/guardian name;
+- asking for parent/guardian name again was not an unnecessary re-ask because the owner had not supplied that field;
+- no re-ask of Grade 8 or Math;
+- no claim that the trial was booked or that registration was completed/confirmed.
+
+Certification scope: customer-visible behavior PASS. Internal state trace not visible in screenshot and therefore not claimed from this evidence alone.
+
 ## Progress
 - GJ-01: PASS
 - GJ-02: PASS
-- GJ-03 → GJ-12: PENDING
+- GJ-03: PASS
+- GJ-04 → GJ-12: PENDING
 
-Current owner-observed live journey score: `2 / 12 PASS`.
+Current owner-observed live journey score: `3 / 12 PASS`.
