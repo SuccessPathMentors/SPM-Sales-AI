@@ -1,8 +1,8 @@
 {
   "schema": "SPM_WU107_CANDIDATE_IDENTITY_V1",
-  "version": "1.3",
+  "version": "1.4",
   "work_unit": "WU-107",
-  "status": "CR10702_OFFLINE_CERTIFIED_STAGING_UPDATE_PENDING",
+  "status": "CR10702_STAGING_DEPLOYED_INTERNAL_CERT_COMPLETE",
   "purpose": "Deterministic human-handoff execution with verifiable queue truth, idempotency, bounded retry, privacy minimization, and explicit separation of queue receipt from human acceptance.",
   "candidate": {
     "release": "CR-107-02",
@@ -22,16 +22,14 @@
   },
   "cr10701": {
     "trigger": "RT-107-05 technical-support handoff routing failure",
-    "fix": "Consume authoritative current-turn WU96/WU106 support signals, including technical_issue, without letting sticky support state alone initiate handoff.",
     "changed_node": "Build WU107 Handoff Execution Request [STAGING]",
     "support_signal_regression_result": "CR10701_SUPPORT_SIGNAL_RECOVERY_PASS",
     "runtime_retest": "RT-107-05 PASS"
   },
   "cr10702": {
     "trigger": "RT-107-12 internal P0: persisted ACCEPTED label survived without authoritative acceptance evidence",
-    "root_cause": "The existing-result node gated customer wording with an acceptance boolean but still derived internal handoff_state, success, and fail_closed from the raw persisted state.",
-    "fix": "Derive effective truth from evidence. ACCEPTED requires durable queue receipt plus downstream_acceptance_present=true; ACCEPTED without human evidence downgrades to QUEUED when receipt remains verified, otherwise fails closed.",
     "changed_node": "Apply WU107 Existing Handoff Result",
+    "truth_rule": "ACCEPTED requires verified queue receipt plus downstream_acceptance_present=true. An unverified ACCEPTED label reconciles to QUEUED when receipt remains verified, otherwise fails closed.",
     "topology_changed": false,
     "static_result": "CR10702_ACCEPTANCE_EVIDENCE_RECONCILIATION_STATIC_PASS",
     "internal_runtime_result": "WU107_INTERNAL_RUNTIME_PATH_CERT_PASS"
@@ -89,25 +87,42 @@
       "operation": "UPDATE_INACTIVE_NONPROD",
       "candidate_sha256": "a258d9c294fe56c43ea120b14739119f294f7254b03cbecd9f21bf7831ac8809",
       "workflow_id": "RtI7hxjNb6Z0JL0D",
-      "pre_version_id": "f52c7000-539f-4675-9fe8-2addc9354077",
       "remote_version_id": "13b455a8-1318-4f35-8adc-f42f13e49e76",
       "remote_active": false,
-      "remote_node_count": 151,
       "remote_readback": "WU107_CR10701_REMOTE_PASS",
       "published_or_activated": false,
       "production_write_performed": false,
       "artifact_id": 9907166309
+    },
+    "cr10702_update": {
+      "github_actions_run_id": 33796639028,
+      "job_id": 100785831605,
+      "result": "SUCCESS",
+      "operation": "UPDATE_INACTIVE_NONPROD",
+      "candidate_sha256": "5aaa9dea37b449506b033e9ea6d933f217518b1d38f9f82b81a22773a1358e95",
+      "workflow_id": "RtI7hxjNb6Z0JL0D",
+      "pre_version_id": "13b455a8-1318-4f35-8adc-f42f13e49e76",
+      "remote_version_id": "79a38b64-336a-4bfd-8c65-ed5b0ef1f247",
+      "remote_active": false,
+      "remote_node_count": 151,
+      "remote_readback": "WU107_CR10702_REMOTE_PASS",
+      "cr10702_acceptance_truth_reconciliation_present": true,
+      "published_or_activated": false,
+      "production_write_performed": false,
+      "artifact_name": "wu107-cr10702-one-time-update-evidence",
+      "artifact_id": 9909420376,
+      "artifact_zip_sha256": "f59fa44993c995034c5d5592e45d45c0dce9791826e2e780155d40eb87456124"
     }
   },
   "target_staging": {
     "workflow_id": "RtI7hxjNb6Z0JL0D",
     "workflow_name": "[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1",
-    "current_remote_release": "CR-107-01",
-    "current_remote_version_id": "13b455a8-1318-4f35-8adc-f42f13e49e76",
+    "current_remote_release": "CR-107-02",
+    "current_remote_version_id": "79a38b64-336a-4bfd-8c65-ed5b0ef1f247",
     "current_remote_node_count": 151,
     "current_remote_active": false,
-    "operation_planned": "UPDATE_EXISTING_INACTIVE_NONPROD_TO_CR10702",
-    "desired_candidate_sha256": "5aaa9dea37b449506b033e9ea6d933f217518b1d38f9f82b81a22773a1358e95",
+    "deployment_status": "CR10702_REMOTE_PASS_INTERNAL_CERT_COMPLETE",
+    "candidate_sha256": "5aaa9dea37b449506b033e9ea6d933f217518b1d38f9f82b81a22773a1358e95",
     "remote_active_required": false,
     "published_or_activated_allowed": false,
     "production_write_allowed": false
