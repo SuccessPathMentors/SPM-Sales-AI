@@ -3,7 +3,7 @@
   "version": "1.0",
   "work_unit": "WU-106",
   "change_request": "CR-106-01",
-  "status": "OFFLINE_CERTIFIED_STAGING_DEPLOY_PENDING",
+  "status": "STAGING_DEPLOYED_RETEST_PENDING",
   "defect_scope": {
     "journey": "GJ-04",
     "failure_1": "Short registration awaited-field reply such as parent_name=Ahmed was intercepted by WU-104 clarification before WU89/WU95 could bind it.",
@@ -49,7 +49,18 @@
   },
   "target_staging": {
     "workflow_id": "vvHvidUHVxM5wTVT",
-    "active_required": false,
-    "deployment_status": "PENDING"
+    "deployment_status": "PASS_APPLY",
+    "operation": "UPDATE_INACTIVE_NONPROD",
+    "remote_version_id": "b5605311-da47-48e3-8e6a-c2cb123c75e3",
+    "remote_node_count": 133,
+    "remote_active": false,
+    "published_or_activated": false,
+    "remote_readback": "WU106_CR10601_REMOTE_PASS",
+    "github_actions_run_id": 33703545755,
+    "evidence_artifact_name": "wu106-cr10601-one-time-staging-update-evidence",
+    "evidence_artifact_id": 9874379650,
+    "evidence_artifact_zip_sha256": "57194a533d6e8a02ac158e99fae3cb66071f8fcec54fedc6568d6d31ca5a32b6",
+    "production_write_performed": false,
+    "active_required": false
   }
 }
