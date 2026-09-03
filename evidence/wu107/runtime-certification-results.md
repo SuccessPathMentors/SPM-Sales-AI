@@ -1,6 +1,6 @@
 # WU-107 — Owner-Observed Runtime Certification Results
 
-Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-05 RETEST PASSED
+Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-06 PASSED
 Issue: #67
 PR: #68
 STAGING workflow: `RtI7hxjNb6Z0JL0D` (`[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1`)
@@ -30,7 +30,7 @@ Production mutation allowed: false
 - Publish/activate: false
 
 ## Owner-observed live score
-Customer-facing checkpoints passed so far: `5 / 15`
+Customer-facing checkpoints passed so far: `6 / 15`
 
 | Test | Result | Evidence / finding |
 |---|---|---|
@@ -38,9 +38,9 @@ Customer-facing checkpoints passed so far: `5 / 15`
 | RT-107-02 — Same-session repeat / idempotency | PASS-CUSTOMER-FACING / INTERNAL PENDING | Existing queue request reused visibly; internal duplicate-record evidence pending. |
 | RT-107-03 — AR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Arabic queue-truth response, no false acceptance. |
 | RT-107-04 — FR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | French queue-truth response, no false acceptance. |
-| RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01 — CUSTOMER-FACING / INTERNAL PENDING** | Retest session suffix `1c9c8…`: pricing answered first; on `The portal is not working. I need help.` sales stopped and response changed to `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` Legacy `Automatic human handoff is not enabled...` wording did not appear; no false human acceptance claim. |
-| RT-107-06 — Complaint escalation | READY TO RUN | Next owner test. |
-| RT-107-07 — Pricing must not hand off | PENDING | — |
+| RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01 — CUSTOMER-FACING / INTERNAL PENDING** | Retest session suffix `1c9c8…`: pricing answered first; on `The portal is not working. I need help.` sales stopped and response changed to truthful support-queue wording. Legacy no-handoff wording did not appear; no false human acceptance claim. |
+| RT-107-06 — Complaint escalation | **PASS-CUSTOMER-FACING / INTERNAL PENDING** | Session suffix `8a406…`: tutoring package inquiry answered first; on `I am very unhappy with the service. I want to make a complaint.` sales stopped and response became `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` No continued package selling and no false human acceptance claim. |
+| RT-107-07 — Pricing must not hand off | READY TO RUN | Next owner test. |
 | RT-107-08 — Short query must not hand off | PENDING | — |
 | RT-107-09 — Handoff after existing sales context | PENDING | — |
 | RT-107-10 — Queue PII minimization inspection | PENDING | — |
@@ -98,17 +98,33 @@ Customer-facing acceptance criteria:
 - legacy WU-106 no-handoff wording absent: PASS
 - no false human acceptance claim: PASS
 
+## RT-107-06 complaint escalation evidence
+Owner-observed session suffix: `8a406…`
+
+Sequence:
+1. `My daughter is in Grade 9 and I want to know your tutoring packages.`
+2. `I am very unhappy with the service. I want to make a complaint.`
+
+Observed complaint-turn response:
+`Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
+
+Customer-facing acceptance criteria:
+- complaint interrupted active sales: PASS
+- no package continuation after complaint: PASS
+- WU-107 queue-truth wording surfaced: PASS
+- no false human acceptance claim: PASS
+- no invented staff/case/ETA metadata: PASS
+
 Internal Redis/queue-record evidence remains intentionally deferred to the dedicated internal evidence tests later in this certification sequence.
 
-## Required next owner test — RT-107-06 Complaint Escalation
+## Required next owner test — RT-107-07 Pricing must not hand off
 Run in a new Test Chat session.
 
 Expected behavior:
-- complaint overrides/interrupts sales;
-- complaint is routed to WU-107 as `COMPLAINT_ESCALATION`;
-- customer sees truthful queue wording only;
-- no promise that a specific person accepted the complaint unless authoritative acceptance evidence exists;
-- no sales continuation after the complaint turn.
+- a pure pricing inquiry remains in normal sales/pricing flow;
+- WU-107 must not create or claim a support queue request;
+- no `support queue`, `human handoff`, or support-escalation wording should appear;
+- no sales interruption should occur.
 
 ## Lock rule
 WU-107 cannot advance to READY_FOR_REVIEW until remaining runtime/internal evidence gates pass.
