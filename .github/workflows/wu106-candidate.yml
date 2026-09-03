@@ -1,0 +1,111 @@
+name: WU-106 exact-lineage candidate
+
+on:
+  pull_request:
+    paths:
+      - 'contracts/WU106_*'
+      - 'scripts/wu106/**'
+      - 'work-units/WU-106.md'
+      - '.github/workflows/wu106-candidate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  WU104_LOCK_RUN_ID: '33663124381'
+  WU104_ARTIFACT_NAME: wu104-cr10405-evidence
+  WU104_UPSTREAM: locked-wu104/n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+  WU104_EXPECTED_SHA256: 32721cae2b09531d8f4860373c37911ace9e95b6818babdca880fa08ef1b7bc9
+  CR10501: /tmp/SPM_WU105_CR10501.json
+  CR10501_SHA: e40610b13ec61a781acf44842b74955a88a11286e83baa7e121aee349cc9dcf0
+  CR10502: /tmp/SPM_WU105_CR10502.json
+  CR10502_SHA: 7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e
+  CR10503: /tmp/SPM_WU105_CR10503.json
+  CR10503_SHA: aaaa139faa67815f4196fb9779232471c4c8b051a26f0ba0a3be4c56231d4653
+  WU105_FINAL: /tmp/SPM_WU105_FINAL_CR10504.json
+  WU105_FINAL_SHA: 42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1
+  WU106_CANDIDATE: n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download exact locked WU-104 CR-104-05 evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.WU104_ARTIFACT_NAME }}
+          path: locked-wu104
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.WU104_LOCK_RUN_ID }}
+
+      - name: Verify WU-104 artifact and WU-105 formal lock
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/main:work-units/WU-105.lock.md > /tmp/WU-105.lock.md
+          grep -q '^Status: LOCKED$' /tmp/WU-105.lock.md
+          grep -q "$WU105_FINAL_SHA" /tmp/WU-105.lock.md
+          actual="$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')"
+          test "$actual" = "$WU104_EXPECTED_SHA256"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU104_UPSTREAM"]))["nodes"]))')" = "126"
+          echo "WU106_EXACT_WU104_UPSTREAM_PASS=$actual"
+
+      - name: Rebuild exact locked WU-105 CR-105-04 lineage
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/wu105/build_candidate.py --baseline "$WU104_UPSTREAM" --manifest contracts/WU105_GOLDEN_INTENTS_V1.json --output "$CR10501"
+          test "$(sha256sum "$CR10501" | awk '{print $1}')" = "$CR10501_SHA"
+          python scripts/wu105/apply_cr10502.py --input "$CR10501" --output "$CR10502"
+          test "$(sha256sum "$CR10502" | awk '{print $1}')" = "$CR10502_SHA"
+          python scripts/wu105/apply_cr10503.py --input "$CR10502" --output "$CR10503"
+          test "$(sha256sum "$CR10503" | awk '{print $1}')" = "$CR10503_SHA"
+          python scripts/wu105/apply_cr10504.py --input "$CR10503" --output "$WU105_FINAL"
+          actual="$(sha256sum "$WU105_FINAL" | awk '{print $1}')"
+          echo "WU106_REBUILT_WU105_SHA256=$actual"
+          test "$actual" = "$WU105_FINAL_SHA"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_FINAL"]))["nodes"]))')" = "131"
+
+      - name: Build WU-106 observe-only baseline candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu106/build_candidate.py --baseline "$WU105_FINAL" --output "$WU106_CANDIDATE"
+          python scripts/wu106/test_candidate.py --baseline "$WU105_FINAL" --candidate "$WU106_CANDIDATE"
+          actual="$(sha256sum "$WU106_CANDIDATE" | awk '{print $1}')"
+          echo "WU106_CANDIDATE_SHA256=$actual"
+          echo "WU106_NODE_COUNT=$(python -c 'import json,os; print(len(json.load(open(os.environ["WU106_CANDIDATE"]))["nodes"]))')"
+
+      - name: Validate journey contracts and 48-scenario matrix
+        run: |
+          python scripts/wu106/test_journey_manifest.py
+          python scripts/wu106/test_state_contract.py
+          python scripts/wu106/test_runtime_matrix.py
+
+      - name: Upload WU-106 offline candidate evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu106-observe-only-candidate
+          path: |
+            n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
+            contracts/WU106_GOLDEN_JOURNEYS_V1.json
+            contracts/WU106_JOURNEY_STATE_V1.json
+            contracts/WU106_RUNTIME_MATRIX_V1.json
+          if-no-files-found: ignore
+          retention-days: 30
