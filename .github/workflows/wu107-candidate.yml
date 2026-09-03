@@ -124,6 +124,12 @@ jobs:
           python scripts/validate_wu107_handoff_contract.py
           (cd scripts && python test_wu107_handoff_runtime.py)
 
+      - name: Execute exact WU-107 internal Code-node runtime paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          node scripts/wu107/test_internal_runtime_paths.js "$WU107_CANDIDATE"
+
       - name: Validate upstream WU-106 regression contracts
         run: |
           python scripts/wu106/test_journey_manifest.py
@@ -141,5 +147,6 @@ jobs:
             contracts/wu107-handoff-scenarios.json
             change-requests/CR-107-01.md
             evidence/wu107/historical-adapter-audit.md
+            wu107-internal-runtime-path-cert.json
           if-no-files-found: error
           retention-days: 30
