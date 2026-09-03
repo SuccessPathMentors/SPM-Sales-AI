@@ -1,8 +1,8 @@
 {
   "schema": "SPM_WU107_CANDIDATE_IDENTITY_V1",
-  "version": "1.4",
+  "version": "1.5",
   "work_unit": "WU-107",
-  "status": "CR10702_STAGING_DEPLOYED_INTERNAL_CERT_COMPLETE",
+  "status": "CR10702_FINAL_AUDIT_PASS_OWNER_LOCK_PENDING",
   "purpose": "Deterministic human-handoff execution with verifiable queue truth, idempotency, bounded retry, privacy minimization, and explicit separation of queue receipt from human acceptance.",
   "candidate": {
     "release": "CR-107-02",
@@ -43,7 +43,14 @@
     "whatsapp_notification_in_scope": false,
     "historical_validated_handoff_workflow_reconnected": false
   },
-  "truth_states": ["NONE", "REQUESTED", "QUEUED", "ACCEPTED", "FAILED", "CANCELLED"],
+  "truth_states": [
+    "NONE",
+    "REQUESTED",
+    "QUEUED",
+    "ACCEPTED",
+    "FAILED",
+    "CANCELLED"
+  ],
   "offline_certification": {
     "github_actions_run_id": 33796151509,
     "job_id": 100784208145,
@@ -138,5 +145,18 @@
     "final_cr": "CR-106-03",
     "candidate_sha256": "2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f",
     "node_count": 141
+  },
+  "final_read_only_audit": {
+    "github_actions_run_id": 33811422682,
+    "job_id": 100833880066,
+    "result": "SUCCESS",
+    "workflow_id": "RtI7hxjNb6Z0JL0D",
+    "remote_version_id": "79a38b64-336a-4bfd-8c65-ed5b0ef1f247",
+    "remote_node_count": 151,
+    "remote_active": false,
+    "remote_readback": "WU107_CR10702_REMOTE_PASS",
+    "identity_assert": "WU107_FINAL_REMOTE_IDENTITY_ASSERT_PASS",
+    "production_write_performed": false,
+    "published_or_activated": false
   }
 }
