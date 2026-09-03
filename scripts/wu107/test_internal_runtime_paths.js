@@ -81,7 +81,6 @@ const input = {
   }
 };
 
-// Build the exact WU-107 current-turn request using the candidate's real JS.
 const built = run(N_BUILD, input);
 check(built.wu107_handoff_request?.execution_required === true, 'fixture did not create executable handoff request');
 
@@ -151,7 +150,7 @@ check(acceptedOut.wu107_handoff_execution?.human_acceptance_verified === true, '
 check(acceptedOut.wu107_handoff_execution?.queue_receipt_verified === true, 'RT12 accepted record must retain receipt evidence');
 check(acceptedOut.wu107_handoff_execution?.success === true, 'RT12 verified acceptance must succeed');
 
-// P0 negative fixture: an ACCEPTED label without acceptance evidence must fail closed.
+// P0 negative fixture: an ACCEPTED label without human-acceptance evidence must be reconciled to QUEUED when queue receipt is still verified.
 const fakeAcceptedRecord = {
   ...record,
   handoff_state: 'ACCEPTED',
@@ -170,11 +169,40 @@ const fakeAcceptedInput = {
   }
 };
 const fakeAcceptedOut = run(N_EXISTING, fakeAcceptedInput);
-check(fakeAcceptedOut.wu107_handoff_execution?.handoff_state !== 'ACCEPTED', 'RT12 P0: ACCEPTED label survived without acceptance evidence');
+check(fakeAcceptedOut.wu107_handoff_execution?.handoff_state === 'QUEUED', 'RT12 P0: unverified ACCEPTED label must downgrade to QUEUED when receipt is verified');
+check(fakeAcceptedOut.wu107_handoff_execution?.persisted_handoff_state === 'ACCEPTED', 'RT12 P0: original persisted state should remain observable');
+check(fakeAcceptedOut.wu107_handoff_execution?.truth_reconciled === true, 'RT12 P0: truth reconciliation marker missing');
+check(fakeAcceptedOut.wu107_handoff_execution?.queue_receipt_verified === true, 'RT12 P0: verified queue receipt lost during reconciliation');
 check(fakeAcceptedOut.wu107_handoff_execution?.human_acceptance_verified === false, 'RT12 P0: false acceptance evidence');
-check(fakeAcceptedOut.wu107_handoff_execution?.success === false, 'RT12 P0: unverified acceptance must not succeed');
-check(fakeAcceptedOut.action_result?.fail_closed === true, 'RT12 P0: unverified acceptance must fail closed');
+check(fakeAcceptedOut.wu107_handoff_execution?.success === true, 'RT12 P0: verified queue state should remain successful');
+check(fakeAcceptedOut.action_result?.status === 'WU107_HANDOFF_ALREADY_QUEUED', 'RT12 P0: reconciled action status must be queued');
+check(fakeAcceptedOut.action_result?.fail_closed === false, 'RT12 P0: verified queue state should not be marked failed');
+check(/not yet been confirmed/i.test(fakeAcceptedOut.sales_agent_output?.answer_text || ''), 'RT12 P0: reconciled customer wording must deny human acceptance');
 console.log('WU107_RT12_AUTHORITATIVE_ACCEPTANCE_EXECUTABLE_PASS');
+
+// Additional P0 fixture: ACCEPTED label with neither queue receipt nor human acceptance must fail closed.
+const unsupportedAcceptedRecord = {
+  ...record,
+  handoff_state: 'ACCEPTED',
+  downstream_receipt_present: false,
+  downstream_acceptance_present: false,
+  accepted_at: null
+};
+const unsupportedAcceptedInput = {
+  ...decided,
+  wu107_queue_decision: {
+    decision: 'EXISTING_ACCEPTED',
+    write_required: false,
+    existing_state: 'ACCEPTED',
+    existing_record: unsupportedAcceptedRecord,
+    record_candidate: record
+  }
+};
+const unsupportedAcceptedOut = run(N_EXISTING, unsupportedAcceptedInput);
+check(unsupportedAcceptedOut.wu107_handoff_execution?.handoff_state === 'FAILED', 'RT12 P0: unsupported ACCEPTED label must fail closed');
+check(unsupportedAcceptedOut.wu107_handoff_execution?.success === false, 'RT12 P0: unsupported ACCEPTED label cannot succeed');
+check(unsupportedAcceptedOut.wu107_handoff_execution?.human_acceptance_verified === false, 'RT12 P0: unsupported ACCEPTED false acceptance');
+check(unsupportedAcceptedOut.action_result?.fail_closed === true, 'RT12 P0: unsupported ACCEPTED must fail closed');
 
 // RT-107-13: corrupt persisted queue record must fail closed.
 const corruptDecision = run(N_DECIDE, { wu107_handoff_raw: '{not-json' }, { [N_BUILD]: built });
