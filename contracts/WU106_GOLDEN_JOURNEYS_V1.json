@@ -1,0 +1,153 @@
+{
+  "schema": "SPM_WU106_GOLDEN_JOURNEYS_V1",
+  "version": "1.0",
+  "depends_on": {
+    "wu105_lock": true,
+    "wu105_final_cr": "CR-105-04",
+    "wu105_candidate_sha256": "42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1"
+  },
+  "taxonomy": "SPM_V2_62_INTENTS",
+  "journey_count": 12,
+  "global_rules": {
+    "reuse_trusted_context": true,
+    "do_not_reask_known_fields": true,
+    "current_message_overrides_stale_context": true,
+    "explicit_correction_overrides_prior_value": true,
+    "action_pending_is_not_action_success": true,
+    "availability_requires_live_source": true,
+    "booking_success_requires_action_success": true,
+    "registration_success_requires_action_success": true,
+    "refund_success_requires_action_success": true,
+    "handoff_success_requires_action_success": true,
+    "support_complaint_handoff_can_interrupt_sales": true,
+    "child_context_switch_requires_boundary": true,
+    "wu104_rules_authoritative": true,
+    "wu105_rules_authoritative": true,
+    "new_taxonomy_intents_allowed": false,
+    "second_wu106_agent_allowed": false,
+    "production_mutation_allowed": false,
+    "irreversible_action_allowed": false
+  },
+  "state_classes": [
+    "TRUSTED_KNOWN",
+    "CURRENT_MESSAGE",
+    "AWAITED_FIELD",
+    "ACTION_PENDING",
+    "ACTION_SUCCESS",
+    "SUSPENDED_CONTEXT",
+    "STALE_HISTORY"
+  ],
+  "journeys": [
+    {
+      "id": "GJ-01",
+      "name": "Discovery to Pricing to Package Comparison",
+      "turn_intents": ["subject_inquiry", "pricing", "package_comparison"],
+      "must_reuse": ["grade", "subject"],
+      "must_not": ["restart_discovery", "invent_price", "invent_package_benefit", "start_registration_without_request"],
+      "transition_contract": "Each clear current intent replaces the active answer objective while compatible trusted grade/subject context remains reusable.",
+      "live_priority": "HIGH"
+    },
+    {
+      "id": "GJ-02",
+      "name": "Discovery to Pricing to Price Objection to Trial",
+      "turn_intents": ["subject_inquiry", "pricing", "price_objection", "free_trial"],
+      "must_reuse": ["grade", "subject", "quoted_price_context"],
+      "must_not": ["invent_discount", "pressure_customer", "treat_objection_as_registration", "claim_trial_booked"],
+      "transition_contract": "Price objection may interrupt pricing; explicit trial request then becomes the active conversion objective without losing compatible student context.",
+      "live_priority": "HIGH"
+    },
+    {
+      "id": "GJ-03",
+      "name": "Trial Details to Explicit Trial Start to Registration Intake",
+      "turn_intents": ["trial_details", "free_trial", "registration"],
+      "must_reuse": ["grade", "subject", "student_context"],
+      "must_not": ["collect_registration_data_during_trial_details_only", "confuse_trial_details_with_trial_action", "claim_trial_booked", "claim_registration_complete"],
+      "transition_contract": "Information-only trial inquiry remains non-action; explicit trial-start wording transitions to intake; registration collects only the smallest missing validated field.",
+      "live_priority": "HIGH"
+    },
+    {
+      "id": "GJ-04",
+      "name": "Registration to Availability to Schedule Request",
+      "turn_intents": ["registration", "availability", "schedule_request"],
+      "must_reuse": ["grade", "subject", "known_registration_fields", "day", "time", "timezone"],
+      "must_not": ["reask_known_registration_fields", "claim_live_availability_without_check", "claim_booking_success"],
+      "transition_contract": "Scheduling questions may interrupt registration intake while preserving trusted context; availability inquiry and booking request remain distinct states.",
+      "live_priority": "HIGH"
+    },
+    {
+      "id": "GJ-05",
+      "name": "Availability to Requested Slot to Safe Alternative",
+      "turn_intents": ["availability", "schedule_request", "availability"],
+      "must_reuse": ["grade", "subject", "day", "time", "timezone"],
+      "must_not": ["invent_slot", "claim_booking_success", "silently_change_requested_time"],
+      "transition_contract": "Requested slot remains preference/pending until authoritative live scheduling confirms it; alternatives remain proposals, not bookings.",
+      "live_priority": "HIGH"
+    },
+    {
+      "id": "GJ-06",
+      "name": "Known Context to Single-Field Correction",
+      "turn_intents": ["subject_inquiry", "correction_request"],
+      "must_reuse": ["compatible_uncorrected_fields"],
+      "must_replace": ["explicitly_corrected_field"],
+      "must_not": ["retain_conflicting_old_value", "discard_compatible_known_context", "reask_corrected_field"],
+      "transition_contract": "Current explicit correction has higher trust than the prior value for that field only; compatible trusted fields remain unchanged.",
+      "live_priority": "HIGH"
+    },
+    {
+      "id": "GJ-07",
+      "name": "Child or Student Context Switch",
+      "turn_intents": ["subject_inquiry", "subject_inquiry"],
+      "must_create_boundary": ["student_identity_or_relation_switch"],
+      "must_reuse": ["parent_level_context_when_safe"],
+      "must_not": ["carry_old_child_grade", "carry_old_child_subject", "carry_old_child_goal", "silently_merge_two_children"],
+      "transition_contract": "A clear switch to another child/student creates a new student-scoped context; only safe parent-scoped context may carry forward.",
+      "live_priority": "CRITICAL"
+    },
+    {
+      "id": "GJ-08",
+      "name": "Sales Journey to Human Handoff",
+      "turn_intents": ["pricing", "human_handoff"],
+      "must_reuse": ["known_handoff_context"],
+      "must_not": ["continue_sales_pitch", "claim_handoff_received_without_success", "invent_case_id"],
+      "transition_contract": "Explicit human request suspends the active sales objective and becomes the active support ownership path.",
+      "live_priority": "HIGH"
+    },
+    {
+      "id": "GJ-09",
+      "name": "Sales Journey to Technical Support or Complaint Interruption",
+      "turn_intents": ["pricing", "technical_support", "complaint"],
+      "must_suspend": ["sales_progression"],
+      "must_not": ["continue_conversion_pressure", "lose_relevant_prior_context", "auto_resume_sales_without_customer_signal"],
+      "transition_contract": "Support/complaint overrides sales; prior sales context may be suspended for safe later reuse but cannot drive the current answer.",
+      "live_priority": "CRITICAL"
+    },
+    {
+      "id": "GJ-10",
+      "name": "Policy Question Inside Active Sales Journey",
+      "turn_intents": ["pricing", "refund_policy", "pricing"],
+      "must_reuse": ["prior_sales_context_when_customer_returns_to_it"],
+      "must_not": ["treat_policy_question_as_refund_action", "promise_refund", "lose_prior_context", "auto_resume_without_customer_signal"],
+      "transition_contract": "Policy inquiry temporarily replaces the answer objective without mutating the underlying sales action state; prior context resumes only on a new customer signal.",
+      "live_priority": "HIGH"
+    },
+    {
+      "id": "GJ-11",
+      "name": "Long Conversation to Stale-Context Override",
+      "turn_intents": ["subject_inquiry", "pricing", "price_objection", "trial_details", "subject_inquiry"],
+      "must_reuse": ["only_currently_compatible_trusted_fields"],
+      "must_not": ["force_new_clear_intent_back_into_old_pricing", "force_new_subject_into_old_trial_flow", "reask_newly_supplied_fields"],
+      "transition_contract": "A new clear intent after a long journey becomes authoritative for the current turn even when historical sales state is richer.",
+      "live_priority": "CRITICAL"
+    },
+    {
+      "id": "GJ-12",
+      "name": "Multilingual Continuity and Deliberate Language Switch",
+      "turn_intents": ["subject_inquiry", "pricing", "package_comparison"],
+      "required_language_paths": ["EN_TO_AR", "AR_TO_EN", "FR_CONTINUITY", "SAME_LANGUAGE_MULTI_TURN"],
+      "must_reuse": ["semantic_trusted_context"],
+      "must_not": ["restart_intake_due_to_language_switch", "translate_into_wrong_language", "drop_known_grade_or_subject"],
+      "transition_contract": "Language choice affects response language, not semantic-state ownership; explicit current-language signal controls the next response language.",
+      "live_priority": "HIGH"
+    }
+  ]
+}
