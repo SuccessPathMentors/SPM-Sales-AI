@@ -1,6 +1,6 @@
 # WU-107 — Final Acceptance Review
 
-Status: FINAL_REVIEW_COMPLETE — FINAL CI RECHECK PENDING
+Status: READY_FOR_REVIEW — OWNER LOCK PENDING
 Issue: #67
 PR: #68
 Upstream: WU-106 LOCKED
@@ -172,10 +172,11 @@ The configured n8n API key returns HTTP 403 for execution-list/read access. No w
 - Production mutation: none.
 - WU-108 boundary: preserved.
 - Historical adapter direct reuse: blocked.
+- Final CI suite on the prior review commit: 4/4 SUCCESS.
 
 ## Decision
 Technical/material review result: **PASS**.
 
-WU-107 may move to `READY_FOR_REVIEW — OWNER LOCK PENDING` only after the final CI suite passes on the commit containing this review.
+WU-107 is **READY_FOR_REVIEW — OWNER LOCK PENDING**.
 
-Final lock still requires explicit Owner approval.
+Final lock requires explicit Owner approval.
