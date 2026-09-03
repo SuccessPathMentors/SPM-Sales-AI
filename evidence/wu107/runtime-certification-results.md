@@ -1,6 +1,6 @@
 # WU-107 — Owner-Observed Runtime Certification Results
 
-Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-08 PASSED
+Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-09 PASSED
 Issue: #67
 PR: #68
 STAGING workflow: `RtI7hxjNb6Z0JL0D` (`[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1`)
@@ -30,7 +30,7 @@ Production mutation allowed: false
 - Publish/activate: false
 
 ## Owner-observed live score
-Customer-facing checkpoints passed so far: `8 / 15`
+Customer-facing checkpoints passed so far: `9 / 15`
 
 | Test | Result | Evidence / finding |
 |---|---|---|
@@ -38,12 +38,12 @@ Customer-facing checkpoints passed so far: `8 / 15`
 | RT-107-02 — Same-session repeat / idempotency | PASS-CUSTOMER-FACING / INTERNAL PENDING | Existing queue request reused visibly; internal duplicate-record evidence pending. |
 | RT-107-03 — AR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Arabic queue-truth response, no false acceptance. |
 | RT-107-04 — FR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | French queue-truth response, no false acceptance. |
-| RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01 — CUSTOMER-FACING / INTERNAL PENDING** | Retest session suffix `1c9c8…`: pricing answered first; technical issue stopped sales and entered truthful support-queue flow. |
-| RT-107-06 — Complaint escalation | **PASS-CUSTOMER-FACING / INTERNAL PENDING** | Session suffix `8a406…`: complaint interrupted sales and entered truthful support-queue flow. |
-| RT-107-07 — Pricing must not hand off | **PASS-CUSTOMER-FACING** | Session suffix `6faf9…`: `How much are your tutoring packages?` returned the normal pricing answer only. No support queue, handoff, complaint, or escalation wording appeared. |
-| RT-107-08 — Short query must not hand off | **PASS-CUSTOMER-FACING** | Short query `Math` stayed in ambiguity clarification: `Are you asking whether we offer this subject, or are you giving me the subject you need tutoring in?` No support queue, human handoff, complaint, or escalation wording appeared. |
-| RT-107-09 — Handoff after existing sales context | READY TO RUN | Next owner test. |
-| RT-107-10 — Queue PII minimization inspection | PENDING | — |
+| RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01 — CUSTOMER-FACING / INTERNAL PENDING** | Technical issue stopped sales and entered truthful support-queue flow. |
+| RT-107-06 — Complaint escalation | **PASS-CUSTOMER-FACING / INTERNAL PENDING** | Complaint interrupted sales and entered truthful support-queue flow. |
+| RT-107-07 — Pricing must not hand off | **PASS-CUSTOMER-FACING** | Pure pricing remained normal sales; no handoff/escalation wording. |
+| RT-107-08 — Short query must not hand off | **PASS-CUSTOMER-FACING** | `Math` stayed in ambiguity clarification; no handoff/escalation. |
+| RT-107-09 — Handoff after existing sales context | **PASS-CUSTOMER-FACING / INTERNAL PENDING** | Session suffix `b629d…`: Grade 8 Math discovery and pricing ran normally; `I want to speak with a person before I decide.` then interrupted sales and returned truthful support-queue wording with no false human acceptance. |
+| RT-107-10 — Queue PII minimization inspection | READY FOR INTERNAL CERTIFICATION | Automated/internal evidence next. |
 | RT-107-11 — Queue receipt != human acceptance | PENDING | — |
 | RT-107-12 — Controlled authoritative acceptance fixture | PENDING | — |
 | RT-107-13 — Corrupt queue record fail-closed | PENDING | — |
@@ -65,44 +65,36 @@ The initial RT-107-05 failure was caused by WU-107 V1 consuming a narrower class
 - update evidence artifact: `9907166309`
 - production write: false
 
-## RT-107-07 pricing no-handoff evidence
-Owner-observed session suffix: `6faf9…`
+## RT-107-09 sales-context handoff evidence
+Owner-observed session suffix: `b629d…`
 
-Input:
-`How much are your tutoring packages?`
+Sequence:
+1. `My son is in Grade 8 and needs Math tutoring.`
+2. `How much does it cost?`
+3. `I want to speak with a person before I decide.`
 
-Observed response:
-`Our tutoring packages are priced as follows: 4 classes for USD 110, 8 classes for USD 220, and 12 classes for USD 280. The 12-class package offers the lowest price per lesson.`
-
-Customer-facing acceptance criteria:
-- normal pricing flow preserved: PASS
-- no support queue wording: PASS
-- no human handoff wording: PASS
-- no complaint/support escalation: PASS
-- no sales interruption: PASS
-
-## RT-107-08 short-query no-handoff evidence
-Input:
-`Math`
-
-Observed response:
-`Are you asking whether we offer this subject, or are you giving me the subject you need tutoring in?`
+Observed third-turn response:
+`Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
 
 Customer-facing acceptance criteria:
-- short/ambiguous query stayed in clarification flow: PASS
-- no support queue wording: PASS
-- no human handoff wording: PASS
-- no complaint/support escalation: PASS
-- WU-104 short-query behavior preserved: PASS
+- sales/discovery established first: PASS
+- pricing answered normally: PASS
+- explicit human request interrupted sales: PASS
+- no continued package selling after handoff request: PASS
+- WU-107 queue-truth wording surfaced: PASS
+- no false human acceptance claim: PASS
+- no invented staff/case/ETA metadata: PASS
 
-## Required next owner test — RT-107-09 Handoff after existing sales context
-Run in a new Test Chat session.
+## Internal certification phase — RT-107-10 through RT-107-15
+These tests are primarily internal and should be automated/read-only or isolated-failure-injection where possible. Owner screenshots are not required unless an internal gate cannot be observed safely through CI/runtime evidence.
 
-Expected behavior:
-- normal sales context is established first;
-- an explicit later request for a person must override the active sales objective and enter WU-107 queue execution;
-- known sales context must not cause the system to keep selling after the human request;
-- queue truth must remain honest: queued does not mean accepted by a specific human.
+Required coverage:
+- RT-107-10: inspect queue-record schema / PII minimization and prove raw chat/session/contact/secrets are not persisted by default;
+- RT-107-11: prove durable queue receipt yields `QUEUED` and never `ACCEPTED` without authoritative acceptance evidence;
+- RT-107-12: controlled authoritative acceptance fixture may transition `QUEUED -> ACCEPTED` only with explicit acceptance evidence;
+- RT-107-13: corrupt queue record must fail closed and must not create false acceptance/duplicate truth;
+- RT-107-14: Redis load failure path preserves request and truthfully reports queue verification failure;
+- RT-107-15: Redis save failure path preserves request and truthfully reports queue write failure.
 
 ## Lock rule
-WU-107 cannot advance to READY_FOR_REVIEW until remaining runtime/internal evidence gates pass.
+WU-107 cannot advance to READY_FOR_REVIEW until remaining internal evidence gates and final regression/material review pass.
