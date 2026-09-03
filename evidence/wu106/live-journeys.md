@@ -117,6 +117,30 @@ Observed PASS evidence:
 
 Certification scope: customer-visible single-field correction behavior PASS. The screenshot demonstrates the required state behavior at the response layer; exact internal state lineage remains covered by WU-106 contracts and deterministic CI.
 
+## GJ-07 — Child or Student Context Switch
+Result: PASS ✅
+
+Owner-observed sequence:
+1. `My son Omar is in Grade 8 and needs Math tutoring.`
+2. bot responded using Omar + Grade 8 + Math.
+3. `I also need tutoring for my daughter Sara. She is in Grade 10 and needs Physics.`
+4. bot switched to Sara as the active student context and responded using Grade 10 + Physics without carrying Omar's Grade 8/Math context.
+5. `How much does it cost for her?`
+6. bot moved directly to pricing without asking who `her` refers to and without re-asking Sara's Grade or Subject.
+
+Observed PASS evidence:
+- clear child switch created a new student-scoped context;
+- Omar's Grade 8 and Math context was not carried into Sara's response;
+- Sara's Grade 10 and Physics context was recognized and used;
+- the two children were not silently merged;
+- the follow-up pronoun `her` remained behaviorally consistent with Sara because pricing continued directly and no contradictory Omar context appeared;
+- no Grade/Subject re-ask was triggered for Sara.
+
+Evidence note — non-blocking:
+- the pricing answer itself was generic and did not explicitly restate `Sara` or `Physics`, so pronoun resolution is demonstrated behaviorally by continuity/no-reask rather than by explicit name restatement. No conflicting child-specific context was observed.
+
+Certification scope: customer-visible child-context boundary behavior PASS. Internal student identity/state boundaries remain separately governed by the WU-106 state contract and deterministic CI.
+
 ## Progress
 - GJ-01: PASS
 - GJ-02: PASS
@@ -124,6 +148,7 @@ Certification scope: customer-visible single-field correction behavior PASS. The
 - GJ-04: PASS after CR-106-02
 - GJ-05: PASS after CR-106-03
 - GJ-06: PASS
-- GJ-07 → GJ-12: PENDING
+- GJ-07: PASS
+- GJ-08 → GJ-12: PENDING
 
-Current certified owner-observed live journey score: `6 / 12 PASS`.
+Current certified owner-observed live journey score: `7 / 12 PASS`.
