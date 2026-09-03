@@ -141,6 +141,25 @@ Evidence note — non-blocking:
 
 Certification scope: customer-visible child-context boundary behavior PASS. Internal student identity/state boundaries remain separately governed by the WU-106 state contract and deterministic CI.
 
+## GJ-08 — Sales Journey → Human Handoff
+Result: PASS ✅
+
+Owner-observed sequence:
+1. `My son is in Grade 8 and needs Math tutoring. How much does it cost?`
+2. bot returned the approved Grade 8 Math package pricing.
+3. `I want to speak with a person.`
+4. bot suspended the sales objective, preserved the support request and known conversation context, and stated that automatic human handoff is not enabled in this release candidate.
+
+Observed PASS evidence:
+- explicit human request became the active objective immediately;
+- the bot did not continue the sales pitch or package comparison;
+- Grade/Subject were not re-asked;
+- no case ID was invented;
+- no statement claimed that a human agent had received or accepted the conversation;
+- action honesty was preserved by explicitly stating the current release limitation.
+
+Certification scope: customer-visible handoff-interruption behavior PASS. Actual downstream human-assignment success is intentionally not claimed because automatic handoff is not enabled in the current release candidate.
+
 ## Progress
 - GJ-01: PASS
 - GJ-02: PASS
@@ -149,6 +168,7 @@ Certification scope: customer-visible child-context boundary behavior PASS. Inte
 - GJ-05: PASS after CR-106-03
 - GJ-06: PASS
 - GJ-07: PASS
-- GJ-08 → GJ-12: PENDING
+- GJ-08: PASS
+- GJ-09 → GJ-12: PENDING
 
-Current certified owner-observed live journey score: `7 / 12 PASS`.
+Current certified owner-observed live journey score: `8 / 12 PASS`.
