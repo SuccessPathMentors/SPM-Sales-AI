@@ -1,0 +1,55 @@
+{
+  "schema": "SPM_WU106_CR10601_IDENTITY_V1",
+  "version": "1.0",
+  "work_unit": "WU-106",
+  "change_request": "CR-106-01",
+  "status": "OFFLINE_CERTIFIED_STAGING_DEPLOY_PENDING",
+  "defect_scope": {
+    "journey": "GJ-04",
+    "failure_1": "Short registration awaited-field reply such as parent_name=Ahmed was intercepted by WU-104 clarification before WU89/WU95 could bind it.",
+    "failure_2": "Explicit availability question inside active registration could remain trapped in stale clarification instead of current-message availability intent."
+  },
+  "baseline": {
+    "candidate_sha256": "134b2d861d6c5060ca52d8fd838b2cdd7d5d88ffa74855e3de1665e302afda67",
+    "node_count": 132,
+    "mode": "OBSERVE_ONLY_BASELINE"
+  },
+  "candidate": {
+    "name": "[STAGING] SPM_WU106_END_TO_END_JOURNEYS_V1",
+    "candidate_sha256": "5db680c1e2b51d35408f78077ef4bb098da542bdf5e071125532948ad6783e2e",
+    "node_count": 133,
+    "added_node": "Apply WU106 Journey Transition Recovery [CR-106-01]",
+    "topology": "Build WU104 Short Query Decision -> CR-106-01 -> Apply WU104 Short Trial Inquiry Guard",
+    "external_node_types_added": 0,
+    "action_permission_mutated": false,
+    "irreversible_action_allowed": false,
+    "production_mutation_allowed": false
+  },
+  "executable_contract": {
+    "parent_name_context_binding": true,
+    "unsafe_free_text_fail_closed": true,
+    "explicit_availability_current_message_override": true,
+    "handoff_precedence_preserved": true,
+    "schedule_request_distinction_preserved": true,
+    "locked_short_trial_guard_preserved_downstream": true,
+    "result": "PASS"
+  },
+  "offline_certification": {
+    "github_actions_run_id": 33703265792,
+    "result": "SUCCESS",
+    "artifact_name": "wu106-cr10601-candidate",
+    "artifact_id": 9874276170,
+    "artifact_zip_sha256": "69be36cdf62732aa8c186f738ecf4648654bcf131ddb1b013236b782e0ba1271"
+  },
+  "locked_upstream": {
+    "work_unit": "WU-105",
+    "final_cr": "CR-105-04",
+    "candidate_sha256": "42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1",
+    "node_count": 131
+  },
+  "target_staging": {
+    "workflow_id": "vvHvidUHVxM5wTVT",
+    "active_required": false,
+    "deployment_status": "PENDING"
+  }
+}
