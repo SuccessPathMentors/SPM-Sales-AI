@@ -1,6 +1,6 @@
 # WU-107 — Owner-Observed Runtime Certification Results
 
-Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-06 PASSED
+Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-07 PASSED
 Issue: #67
 PR: #68
 STAGING workflow: `RtI7hxjNb6Z0JL0D` (`[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1`)
@@ -30,7 +30,7 @@ Production mutation allowed: false
 - Publish/activate: false
 
 ## Owner-observed live score
-Customer-facing checkpoints passed so far: `6 / 15`
+Customer-facing checkpoints passed so far: `7 / 15`
 
 | Test | Result | Evidence / finding |
 |---|---|---|
@@ -38,10 +38,10 @@ Customer-facing checkpoints passed so far: `6 / 15`
 | RT-107-02 — Same-session repeat / idempotency | PASS-CUSTOMER-FACING / INTERNAL PENDING | Existing queue request reused visibly; internal duplicate-record evidence pending. |
 | RT-107-03 — AR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Arabic queue-truth response, no false acceptance. |
 | RT-107-04 — FR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | French queue-truth response, no false acceptance. |
-| RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01 — CUSTOMER-FACING / INTERNAL PENDING** | Retest session suffix `1c9c8…`: pricing answered first; on `The portal is not working. I need help.` sales stopped and response changed to truthful support-queue wording. Legacy no-handoff wording did not appear; no false human acceptance claim. |
-| RT-107-06 — Complaint escalation | **PASS-CUSTOMER-FACING / INTERNAL PENDING** | Session suffix `8a406…`: tutoring package inquiry answered first; on `I am very unhappy with the service. I want to make a complaint.` sales stopped and response became `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` No continued package selling and no false human acceptance claim. |
-| RT-107-07 — Pricing must not hand off | READY TO RUN | Next owner test. |
-| RT-107-08 — Short query must not hand off | PENDING | — |
+| RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01 — CUSTOMER-FACING / INTERNAL PENDING** | Retest session suffix `1c9c8…`: pricing answered first; technical issue stopped sales and entered truthful support-queue flow. |
+| RT-107-06 — Complaint escalation | **PASS-CUSTOMER-FACING / INTERNAL PENDING** | Session suffix `8a406…`: complaint interrupted sales and entered truthful support-queue flow. |
+| RT-107-07 — Pricing must not hand off | **PASS-CUSTOMER-FACING** | Session suffix `6faf9…`: `How much are your tutoring packages?` returned the normal pricing answer only. No support queue, handoff, complaint, or escalation wording appeared. |
+| RT-107-08 — Short query must not hand off | READY TO RUN | Next owner test. |
 | RT-107-09 — Handoff after existing sales context | PENDING | — |
 | RT-107-10 — Queue PII minimization inspection | PENDING | — |
 | RT-107-11 — Queue receipt != human acceptance | PENDING | — |
@@ -50,25 +50,8 @@ Customer-facing checkpoints passed so far: `6 / 15`
 | RT-107-14 — Redis load failure injection | PENDING | — |
 | RT-107-15 — Redis save failure injection | PENDING | — |
 
-## RT-107-05 initial failure and root cause
-Initial sequence:
-1. `My son is in Grade 8 and needs Math tutoring. How much does it cost?`
-2. `The portal is not working. I need help.`
-
-Initial V1 response on the support turn:
-`I have preserved your support request and the known conversation context. Automatic human handoff is not enabled in this release candidate.`
-
-Root cause proved from exact-lineage code/topology:
-- the technical-support turn did reach the WU-107 insertion point;
-- WU96 identifies `technical_issue` as current-turn support and sets `support_requires_handoff=true`;
-- WU-107 V1 used a narrower classifier allowlist and did not consume the authoritative WU96/WU106 current-turn support metadata.
-
-CR-107-01 correction:
-- consumes current-turn WU96 support decision + WU106 support override metadata;
-- maps `technical_issue` / `technical_support` to `TECHNICAL_SUPPORT`;
-- maps complaint to `COMPLAINT_ESCALATION`;
-- does not allow sticky historical support state alone to initiate a new handoff;
-- changes only one WU-107 node; topology and all 141 locked WU-106 nodes remain unchanged.
+## CR-107-01 root cause and correction
+The initial RT-107-05 failure was caused by WU-107 V1 consuming a narrower classifier allowlist than the authoritative WU96/WU106 current-turn support signals. CR-107-01 consumes the current-turn support decision/override, maps technical support and complaints into the WU-107 execution contract, and explicitly prevents sticky historical support state alone from initiating a new handoff. Only one WU-107 node changed; topology and all 141 locked WU-106 nodes remain unchanged.
 
 ## CR-107-01 deployment evidence
 - GitHub Actions update run: `33790623526`
@@ -82,49 +65,29 @@ CR-107-01 correction:
 - update evidence artifact: `9907166309`
 - production write: false
 
-## RT-107-05 retest evidence after CR-107-01
-Owner-observed session suffix: `1c9c8…`
+## RT-107-07 pricing no-handoff evidence
+Owner-observed session suffix: `6faf9…`
 
-Sequence:
-1. `My son is in Grade 8 and needs Math tutoring. How much does it cost?`
-2. `The portal is not working. I need help.`
+Input:
+`How much are your tutoring packages?`
 
-Observed support-turn response:
-`Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
-
-Customer-facing acceptance criteria:
-- sales interrupted by technical support: PASS
-- WU-107 queue-truth wording surfaced: PASS
-- legacy WU-106 no-handoff wording absent: PASS
-- no false human acceptance claim: PASS
-
-## RT-107-06 complaint escalation evidence
-Owner-observed session suffix: `8a406…`
-
-Sequence:
-1. `My daughter is in Grade 9 and I want to know your tutoring packages.`
-2. `I am very unhappy with the service. I want to make a complaint.`
-
-Observed complaint-turn response:
-`Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
+Observed response:
+`Our tutoring packages are priced as follows: 4 classes for USD 110, 8 classes for USD 220, and 12 classes for USD 280. The 12-class package offers the lowest price per lesson.`
 
 Customer-facing acceptance criteria:
-- complaint interrupted active sales: PASS
-- no package continuation after complaint: PASS
-- WU-107 queue-truth wording surfaced: PASS
-- no false human acceptance claim: PASS
-- no invented staff/case/ETA metadata: PASS
+- normal pricing flow preserved: PASS
+- no support queue wording: PASS
+- no human handoff wording: PASS
+- no complaint/support escalation: PASS
+- no sales interruption: PASS
 
-Internal Redis/queue-record evidence remains intentionally deferred to the dedicated internal evidence tests later in this certification sequence.
-
-## Required next owner test — RT-107-07 Pricing must not hand off
+## Required next owner test — RT-107-08 Short query must not hand off
 Run in a new Test Chat session.
 
 Expected behavior:
-- a pure pricing inquiry remains in normal sales/pricing flow;
+- a short ambiguous sales query must stay in normal clarification/sales handling;
 - WU-107 must not create or claim a support queue request;
-- no `support queue`, `human handoff`, or support-escalation wording should appear;
-- no sales interruption should occur.
+- no support/handoff wording should appear solely because the message is short or ambiguous.
 
 ## Lock rule
 WU-107 cannot advance to READY_FOR_REVIEW until remaining runtime/internal evidence gates pass.
