@@ -10,6 +10,7 @@ on:
       - "scripts/wu107_handoff_runtime.py"
       - "scripts/test_wu107_handoff_runtime.py"
       - "evidence/wu107/**"
+      - "change-requests/CR-107-01.md"
       - "work-units/WU-107.md"
       - ".github/workflows/wu107-staging.yml"
   workflow_dispatch:
@@ -43,14 +44,16 @@ env:
   CR10602_SHA: 50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014
   WU106_FINAL: /tmp/SPM_WU106_FINAL_CR10603.json
   WU106_FINAL_SHA: 2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f
+  WU107_V1: /tmp/SPM_WU107_V1.json
+  WU107_V1_SHA: fc4263b6bf029195a58b819ce4b06d6f499090d39017ff6ca906f173b7443f59
   CANDIDATE: n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
-  FINAL_SHA: fc4263b6bf029195a58b819ce4b06d6f499090d39017ff6ca906f173b7443f59
+  FINAL_SHA: a258d9c294fe56c43ea120b14739119f294f7254b03cbecd9f21bf7831ac8809
   WU107_STAGING_ID: RtI7hxjNb6Z0JL0D
-  WU107_STAGING_VERSION: f52c7000-539f-4675-9fe8-2addc9354077
+  WU107_PRE_CR_VERSION: f52c7000-539f-4675-9fe8-2addc9354077
 
 jobs:
   validate:
-    name: WU107 exact candidate and post-create zero-write validation
+    name: WU107 CR-107-01 exact candidate and zero-write validation
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -68,7 +71,7 @@ jobs:
           repository: ${{ github.repository }}
           run-id: ${{ env.WU104_LOCK_RUN_ID }}
 
-      - name: Rebuild exact locked lineage through WU-107
+      - name: Rebuild exact locked lineage through WU-107 CR-107-01
         shell: bash
         run: |
           set -euo pipefail
@@ -100,8 +103,11 @@ jobs:
           test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU106_FINAL"]))["nodes"]))')" = "141"
 
           mkdir -p n8n/generated
-          python scripts/wu107/build_candidate.py --baseline "$WU106_FINAL" --output "$CANDIDATE"
-          python scripts/wu107/test_candidate.py --baseline "$WU106_FINAL" --candidate "$CANDIDATE"
+          python scripts/wu107/build_candidate.py --baseline "$WU106_FINAL" --output "$WU107_V1"
+          test "$(sha256sum "$WU107_V1" | awk '{print $1}')" = "$WU107_V1_SHA"
+          python scripts/wu107/test_candidate.py --baseline "$WU106_FINAL" --candidate "$WU107_V1"
+          python scripts/wu107/apply_cr10701.py --input "$WU107_V1" --output "$CANDIDATE"
+          python scripts/wu107/test_cr10701.py --input "$WU107_V1" --candidate "$CANDIDATE"
           test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$FINAL_SHA"
           test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "151"
           python scripts/validate_wu107_handoff_contract.py
@@ -110,62 +116,60 @@ jobs:
           python scripts/wu106/test_state_contract.py
           python scripts/wu106/test_runtime_matrix.py
 
-      - name: Assert recorded STAGING identity is exact and inactive
+      - name: Assert CR-107-01 identity is update-pending and safe
         run: |
           python - <<'PY'
           import json, os
           d=json.load(open('contracts/WU107_CANDIDATE_IDENTITY_V1.json'))
-          assert d['status']=='STAGING_CREATED_INACTIVE_RUNTIME_PENDING'
+          assert d['status']=='CR10701_OFFLINE_CERTIFIED_STAGING_UPDATE_PENDING'
+          assert d['candidate']['release']=='CR-107-01'
           assert d['candidate']['candidate_sha256']==os.environ['FINAL_SHA']
           assert d['candidate']['node_count']==151
+          assert d['candidate']['wu106_locked_nodes_mutated'] is False
           assert d['candidate']['production_mutation_allowed'] is False
+          assert d['cr10701']['support_signal_regression_result']=='CR10701_SUPPORT_SIGNAL_RECOVERY_PASS'
+          assert d['cr10701']['technical_issue_recovery']=='PASS'
           t=d['target_staging']
           assert t['workflow_id']==os.environ['WU107_STAGING_ID']
-          assert t['remote_version_id']==os.environ['WU107_STAGING_VERSION']
-          assert t['creation_status']=='CREATED_INACTIVE_REMOTE_PASS'
-          assert t['remote_node_count']==151
-          assert t['remote_active'] is False
-          assert t['published_or_activated_allowed'] is False
+          assert t['current_remote_version_id']==os.environ['WU107_PRE_CR_VERSION']
+          assert t['current_remote_active'] is False
+          assert t['operation_planned']=='UPDATE_EXISTING_INACTIVE_NONPROD_TO_CR10701'
+          assert t['desired_candidate_sha256']==os.environ['FINAL_SHA']
           assert t['production_write_allowed'] is False
-          s=d['staging_creation']['successful_attempt']
-          assert s['result']=='SUCCESS'
-          assert s['operation']=='CREATE_INACTIVE_NONPROD'
-          assert s['remote_readback']=='WU107_REMOTE_PASS'
-          assert s['published_or_activated'] is False
-          assert s['production_write_performed'] is False
           assert d['execution_provider']['queue_receipt_is_human_acceptance'] is False
-          print('WU107_POST_CREATE_IDENTITY_PASS')
+          print('WU107_CR10701_UPDATE_PENDING_IDENTITY_PASS')
           PY
 
-      - name: Zero-write artifact dry-run still passes
+      - name: Zero-write CR-107-01 dry-run
         run: |
-          python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "$FINAL_SHA" --mode dry-run --result-file wu107-post-create-dry-run.json
+          python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "$FINAL_SHA" --mode dry-run --result-file wu107-cr10701-dry-run.json
           python - <<'PY'
-          import json
-          d=json.load(open('wu107-post-create-dry-run.json'))
+          import json, os
+          d=json.load(open('wu107-cr10701-dry-run.json'))
           assert d['status']=='PASS_DRY_RUN'
           assert d['operation']=='NONE'
           assert d['published_or_activated'] is False
           assert d['node_count']==151
-          assert d['artifact_sha256']=='fc4263b6bf029195a58b819ce4b06d6f499090d39017ff6ca906f173b7443f59'
+          assert d['artifact_sha256']==os.environ['FINAL_SHA']
           assert d['target_workflow_id'] is None
-          print('WU107_POST_CREATE_ZERO_WRITE_DRY_RUN_PASS')
+          print('WU107_CR10701_ZERO_WRITE_DRY_RUN_PASS')
           PY
 
-      - name: Upload post-create validation evidence
+      - name: Upload CR-107-01 pre-update validation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wu107-post-create-validation
+          name: wu107-cr10701-pre-update-validation
           path: |
             n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
             contracts/WU107_CANDIDATE_IDENTITY_V1.json
-            wu107-post-create-dry-run.json
+            change-requests/CR-107-01.md
+            wu107-cr10701-dry-run.json
           if-no-files-found: ignore
           retention-days: 30
 
   remote-readback:
-    name: WU107 read-only remote STAGING verification
+    name: WU107 CR-107-01 read-only remote STAGING verification
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -178,5 +182,5 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with: {python-version: '3.12'}
-      - name: Read-only exact remote verifier
+      - name: Read-only CR-107-01 remote verifier
         run: python scripts/wu107/verify_remote_staging.py
