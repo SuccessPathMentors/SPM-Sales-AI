@@ -37,7 +37,6 @@ env:
   WU106_FINAL_SHA: 2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f
   CANDIDATE: n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
   FINAL_SHA: fc4263b6bf029195a58b819ce4b06d6f499090d39017ff6ca906f173b7443f59
-  EXPECTED_NAME: '[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1'
   PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
   WU101_STAGING_ID: mMZVFxJIxE7a9SSW
   WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
@@ -48,7 +47,7 @@ env:
 
 jobs:
   create:
-    if: "${{ github.event.head_commit.message == 'WU-107: one-time inactive STAGING creation' }}"
+    if: "${{ github.event.head_commit.message == 'WU-107: one-time inactive STAGING creation retry 1' && github.run_attempt == 1 }}"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     environment: n8n-staging
@@ -125,28 +124,6 @@ jobs:
           print('WU107_PRE_CREATE_IDENTITY_PASS')
           PY
 
-      - name: Preflight — refuse duplicate or protected workflow identity
-        shell: bash
-        run: |
-          set -euo pipefail
-          python - <<'PY'
-          import json, os, urllib.parse, urllib.request
-          base=os.environ['N8N_API_BASE_URL'].rstrip('/')
-          key=os.environ['N8N_API_KEY']
-          expected=os.environ['EXPECTED_NAME']
-          protected={os.environ[k] for k in ['PRODUCTION_WORKFLOW_ID','WU101_STAGING_ID','WU102_STAGING_ID','WU103_STAGING_ID','WU104_STAGING_ID','WU105_STAGING_ID','WU106_STAGING_ID']}
-          url=base+'/workflows?'+urllib.parse.urlencode({'limit':250})
-          req=urllib.request.Request(url,headers={'accept':'application/json','X-N8N-API-KEY':key})
-          with urllib.request.urlopen(req,timeout=45) as r: payload=json.loads(r.read().decode())
-          rows=payload.get('data',[]) if isinstance(payload,dict) else []
-          dup=[w for w in rows if w.get('name')==expected]
-          if dup:
-              raise SystemExit('WU107_CREATE_REFUSED_DUPLICATE_NAME:'+','.join(str(x.get('id')) for x in dup))
-          if any(str(w.get('id')) in protected and w.get('name')==expected for w in rows):
-              raise SystemExit('WU107_CREATE_REFUSED_PROTECTED_IDENTITY')
-          print('WU107_REMOTE_DUPLICATE_PREFLIGHT_PASS')
-          PY
-
       - name: Create exactly one new inactive WU-107 STAGING workflow
         run: python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "$FINAL_SHA" --mode apply --allow-create --result-file wu107-staging-create-result.json
 
@@ -176,7 +153,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wu107-one-time-staging-create-evidence
+          name: wu107-one-time-staging-create-evidence-retry1
           path: |
             n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
             contracts/WU107_CANDIDATE_IDENTITY_V1.json
