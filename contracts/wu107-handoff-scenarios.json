@@ -1,0 +1,30 @@
+{
+  "matrix": "WU-107 deterministic handoff scenarios",
+  "version": "1.0.0",
+  "scenarios": [
+    {"id":"H001","name":"explicit human request","start":"NONE","signal":"EXPLICIT_HUMAN_REQUEST","expected_state":"REQUESTED","must_not_claim_acceptance":true},
+    {"id":"H002","name":"technical support escalation","start":"NONE","signal":"TECHNICAL_SUPPORT","expected_state":"REQUESTED","must_suspend_sales":true},
+    {"id":"H003","name":"complaint escalation","start":"NONE","signal":"COMPLAINT_ESCALATION","expected_state":"REQUESTED","must_suspend_sales":true},
+    {"id":"H004","name":"verified queue receipt","start":"REQUESTED","provider_result":"accepted_for_queue","receipt":true,"acceptance":false,"expected_state":"QUEUED","must_not_claim_acceptance":true},
+    {"id":"H005","name":"queue receipt without human acceptance","start":"QUEUED","receipt":true,"acceptance":false,"expected_state":"QUEUED","must_not_claim_acceptance":true},
+    {"id":"H006","name":"verified human acceptance","start":"QUEUED","receipt":true,"acceptance":true,"expected_state":"ACCEPTED","may_claim_acceptance":true},
+    {"id":"H007","name":"transient timeout first attempt","start":"REQUESTED","provider_result":"failed","failure_class":"TIMEOUT","attempt":1,"expected_state":"REQUESTED","retry":true},
+    {"id":"H008","name":"transient rate limit second attempt","start":"REQUESTED","provider_result":"failed","failure_class":"RATE_LIMIT","attempt":2,"expected_state":"REQUESTED","retry":true},
+    {"id":"H009","name":"retry exhaustion","start":"REQUESTED","provider_result":"failed","failure_class":"TRANSIENT_5XX","attempt":3,"expected_state":"FAILED","retry":false},
+    {"id":"H010","name":"permanent authorization failure","start":"REQUESTED","provider_result":"failed","failure_class":"AUTHORIZATION","attempt":1,"expected_state":"FAILED","retry":false},
+    {"id":"H011","name":"validation failure","start":"REQUESTED","provider_result":"failed","failure_class":"VALIDATION","attempt":1,"expected_state":"FAILED","retry":false},
+    {"id":"H012","name":"duplicate logical handoff retry","start":"REQUESTED","duplicate_idempotency_key":true,"expected_duplicate_case_count":0,"idempotent":true},
+    {"id":"H013","name":"duplicate queued delivery","start":"QUEUED","duplicate_idempotency_key":true,"expected_duplicate_case_count":0,"idempotent":true},
+    {"id":"H014","name":"classifier alone cannot queue","start":"REQUESTED","classifier_says_success":true,"receipt":false,"expected_state":"REQUESTED","must_not_claim_acceptance":true},
+    {"id":"H015","name":"generated text alone cannot accept","start":"QUEUED","generated_text_says_human_received":true,"acceptance":false,"expected_state":"QUEUED","must_block_false_acceptance":true},
+    {"id":"H016","name":"sales stays suspended after request","start":"REQUESTED","customer_explicitly_resumes_sales":false,"must_suspend_sales":true},
+    {"id":"H017","name":"customer explicitly resumes sales","start":"QUEUED","customer_explicitly_resumes_sales":true,"sales_may_resume":true,"handoff_state_must_remain":"QUEUED"},
+    {"id":"H018","name":"handoff failure preserves registration truth","start":"REQUESTED","provider_result":"failed","failure_class":"VALIDATION","must_not_mutate_registration_truth":true},
+    {"id":"H019","name":"English request parity","language":"EN","signal":"EXPLICIT_HUMAN_REQUEST","expected_state":"REQUESTED"},
+    {"id":"H020","name":"Arabic request parity","language":"AR","signal":"EXPLICIT_HUMAN_REQUEST","expected_state":"REQUESTED"},
+    {"id":"H021","name":"French request parity","language":"FR","signal":"EXPLICIT_HUMAN_REQUEST","expected_state":"REQUESTED"},
+    {"id":"H022","name":"secret negative field test","payload_contains_forbidden_field":"token","must_reject_or_redact":true},
+    {"id":"H023","name":"raw conversation negative field test","payload_contains_forbidden_field":"raw_conversation","must_reject_or_redact":true},
+    {"id":"H024","name":"fake staff metadata prohibited","start":"QUEUED","acceptance":false,"invented_staff_name":true,"must_block_false_acceptance":true}
+  ]
+}

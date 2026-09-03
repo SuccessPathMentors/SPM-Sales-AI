@@ -1,0 +1,213 @@
+name: WU-107 human handoff staging
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - "contracts/WU107_*"
+      - "contracts/wu107-*"
+      - "scripts/wu107/**"
+      - "scripts/wu107_handoff_runtime.py"
+      - "scripts/test_wu107_handoff_runtime.py"
+      - "evidence/wu107/**"
+      - "change-requests/CR-107-01.md"
+      - "change-requests/CR-107-02.md"
+      - "work-units/WU-107.md"
+      - ".github/workflows/wu107-staging.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: wu107-staging-post-cr10702-${{ github.event_name }}
+  cancel-in-progress: false
+
+env:
+  WU104_LOCK_RUN_ID: '33663124381'
+  WU104_ARTIFACT_NAME: wu104-cr10405-evidence
+  WU104_UPSTREAM: locked-wu104/n8n/generated/SPM_WU104_STAGING_SHORT_QUERY_CANDIDATE.json
+  WU104_EXPECTED_SHA256: 32721cae2b09531d8f4860373c37911ace9e95b6818babdca880fa08ef1b7bc9
+  CR10501: /tmp/SPM_WU105_CR10501.json
+  CR10501_SHA: e40610b13ec61a781acf44842b74955a88a11286e83baa7e121aee349cc9dcf0
+  CR10502: /tmp/SPM_WU105_CR10502.json
+  CR10502_SHA: 7fc201137671b1cd47f9fc6b4ec60a9b563b2bae7c0776952ec68e0988bfed1e
+  CR10503: /tmp/SPM_WU105_CR10503.json
+  CR10503_SHA: aaaa139faa67815f4196fb9779232471c4c8b051a26f0ba0a3be4c56231d4653
+  WU105_FINAL: /tmp/SPM_WU105_FINAL_CR10504.json
+  WU105_FINAL_SHA: 42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1
+  WU106_BASELINE: /tmp/SPM_WU106_BASELINE.json
+  WU106_BASELINE_SHA: 134b2d861d6c5060ca52d8fd838b2cdd7d5d88ffa74855e3de1665e302afda67
+  CR10601: /tmp/SPM_WU106_CR10601.json
+  CR10601_SHA: 5db680c1e2b51d35408f78077ef4bb098da542bdf5e071125532948ad6783e2e
+  CR10602: /tmp/SPM_WU106_CR10602.json
+  CR10602_SHA: 50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014
+  WU106_FINAL: /tmp/SPM_WU106_FINAL_CR10603.json
+  WU106_FINAL_SHA: 2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f
+  WU107_V1: /tmp/SPM_WU107_V1.json
+  WU107_V1_SHA: fc4263b6bf029195a58b819ce4b06d6f499090d39017ff6ca906f173b7443f59
+  CR10701: /tmp/SPM_WU107_CR10701.json
+  CR10701_SHA: a258d9c294fe56c43ea120b14739119f294f7254b03cbecd9f21bf7831ac8809
+  CANDIDATE: n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
+  FINAL_SHA: 5aaa9dea37b449506b033e9ea6d933f217518b1d38f9f82b81a22773a1358e95
+  WU107_STAGING_ID: RtI7hxjNb6Z0JL0D
+  WU107_REMOTE_VERSION: 79a38b64-336a-4bfd-8c65-ed5b0ef1f247
+
+jobs:
+  validate:
+    name: WU107 CR-107-02 exact candidate and post-deployment validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+
+      - name: Download exact locked WU-104 evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.WU104_ARTIFACT_NAME }}
+          path: locked-wu104
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          run-id: ${{ env.WU104_LOCK_RUN_ID }}
+
+      - name: Rebuild exact locked lineage through WU-107 CR-107-02
+        shell: bash
+        run: |
+          set -euo pipefail
+          git show origin/main:work-units/WU-105.lock.md > /tmp/WU-105.lock.md
+          git show origin/main:work-units/WU-106.lock.md > /tmp/WU-106.lock.md
+          grep -q '^Status: LOCKED$' /tmp/WU-105.lock.md
+          grep -q '^Status: LOCKED$' /tmp/WU-106.lock.md
+          grep -q "$WU105_FINAL_SHA" /tmp/WU-105.lock.md
+          grep -q "$WU106_FINAL_SHA" /tmp/WU-106.lock.md
+          test "$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')" = "$WU104_EXPECTED_SHA256"
+
+          python scripts/wu105/build_candidate.py --baseline "$WU104_UPSTREAM" --manifest contracts/WU105_GOLDEN_INTENTS_V1.json --output "$CR10501"
+          test "$(sha256sum "$CR10501" | awk '{print $1}')" = "$CR10501_SHA"
+          python scripts/wu105/apply_cr10502.py --input "$CR10501" --output "$CR10502"
+          test "$(sha256sum "$CR10502" | awk '{print $1}')" = "$CR10502_SHA"
+          python scripts/wu105/apply_cr10503.py --input "$CR10502" --output "$CR10503"
+          test "$(sha256sum "$CR10503" | awk '{print $1}')" = "$CR10503_SHA"
+          python scripts/wu105/apply_cr10504.py --input "$CR10503" --output "$WU105_FINAL"
+          test "$(sha256sum "$WU105_FINAL" | awk '{print $1}')" = "$WU105_FINAL_SHA"
+
+          python scripts/wu106/build_candidate.py --baseline "$WU105_FINAL" --output "$WU106_BASELINE"
+          test "$(sha256sum "$WU106_BASELINE" | awk '{print $1}')" = "$WU106_BASELINE_SHA"
+          python scripts/wu106/apply_cr10601.py --input "$WU106_BASELINE" --output "$CR10601"
+          test "$(sha256sum "$CR10601" | awk '{print $1}')" = "$CR10601_SHA"
+          python scripts/wu106/apply_cr10602.py --input "$CR10601" --output "$CR10602"
+          test "$(sha256sum "$CR10602" | awk '{print $1}')" = "$CR10602_SHA"
+          python scripts/wu106/apply_cr10603.py --input "$CR10602" --output "$WU106_FINAL"
+          test "$(sha256sum "$WU106_FINAL" | awk '{print $1}')" = "$WU106_FINAL_SHA"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU106_FINAL"]))["nodes"]))')" = "141"
+
+          mkdir -p n8n/generated
+          python scripts/wu107/build_candidate.py --baseline "$WU106_FINAL" --output "$WU107_V1"
+          test "$(sha256sum "$WU107_V1" | awk '{print $1}')" = "$WU107_V1_SHA"
+          python scripts/wu107/test_candidate.py --baseline "$WU106_FINAL" --candidate "$WU107_V1"
+          python scripts/wu107/apply_cr10701.py --input "$WU107_V1" --output "$CR10701"
+          test "$(sha256sum "$CR10701" | awk '{print $1}')" = "$CR10701_SHA"
+          python scripts/wu107/test_cr10701.py --input "$WU107_V1" --candidate "$CR10701"
+          python scripts/wu107/apply_cr10702.py --input "$CR10701" --output "$CANDIDATE"
+          python scripts/wu107/test_cr10702.py --input "$CR10701" --candidate "$CANDIDATE"
+          test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$FINAL_SHA"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "151"
+          python scripts/validate_wu107_handoff_contract.py
+          (cd scripts && python test_wu107_handoff_runtime.py)
+          node scripts/wu107/test_internal_runtime_paths.js "$CANDIDATE"
+          python scripts/wu106/test_journey_manifest.py
+          python scripts/wu106/test_state_contract.py
+          python scripts/wu106/test_runtime_matrix.py
+
+      - name: Assert CR-107-02 deployed identity and safety
+        run: |
+          python - <<'PY'
+          import json, os
+          d=json.load(open('contracts/WU107_CANDIDATE_IDENTITY_V1.json'))
+          assert d['status']=='CR10702_FINAL_AUDIT_PASS_OWNER_LOCK_PENDING'
+          assert d['candidate']['release']=='CR-107-02'
+          assert d['candidate']['candidate_sha256']==os.environ['FINAL_SHA']
+          assert d['candidate']['node_count']==151
+          assert d['candidate']['wu106_locked_nodes_mutated'] is False
+          assert d['candidate']['production_mutation_allowed'] is False
+          assert d['cr10702']['static_result']=='CR10702_ACCEPTANCE_EVIDENCE_RECONCILIATION_STATIC_PASS'
+          assert d['cr10702']['internal_runtime_result']=='WU107_INTERNAL_RUNTIME_PATH_CERT_PASS'
+          for k in ['rt10702_idempotency','rt10710_pii_minimization','rt10711_queue_receipt_not_acceptance','rt10713_corrupt_record_fail_closed','rt10714_redis_load_failure_path','rt10715_redis_save_failure_path']:
+              assert d['offline_certification'][k]=='PASS'
+          assert d['offline_certification']['rt10712_authoritative_acceptance']=='PASS_AFTER_CR10702'
+          h=d['staging_history']['cr10702_update']
+          assert h['result']=='SUCCESS'
+          assert h['operation']=='UPDATE_INACTIVE_NONPROD'
+          assert h['workflow_id']==os.environ['WU107_STAGING_ID']
+          assert h['remote_version_id']==os.environ['WU107_REMOTE_VERSION']
+          assert h['remote_active'] is False
+          assert h['remote_readback']=='WU107_CR10702_REMOTE_PASS'
+          assert h['published_or_activated'] is False
+          assert h['production_write_performed'] is False
+          t=d['target_staging']
+          assert t['workflow_id']==os.environ['WU107_STAGING_ID']
+          assert t['current_remote_release']=='CR-107-02'
+          assert t['current_remote_version_id']==os.environ['WU107_REMOTE_VERSION']
+          assert t['current_remote_active'] is False
+          assert t['deployment_status']=='CR10702_REMOTE_PASS_INTERNAL_CERT_COMPLETE'
+          assert t['candidate_sha256']==os.environ['FINAL_SHA']
+          assert t['production_write_allowed'] is False
+          a=d['final_read_only_audit']
+          assert a['result']=='SUCCESS'
+          assert a['remote_readback']=='WU107_CR10702_REMOTE_PASS'
+          assert a['identity_assert']=='WU107_FINAL_REMOTE_IDENTITY_ASSERT_PASS'
+          assert a['remote_active'] is False
+          assert a['production_write_performed'] is False
+          print('WU107_CR10702_DEPLOYED_IDENTITY_PASS')
+          PY
+
+      - name: Zero-write CR-107-02 post-deployment dry-run
+        run: |
+          python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "$FINAL_SHA" --mode dry-run --result-file wu107-cr10702-dry-run.json
+          python - <<'PY'
+          import json, os
+          d=json.load(open('wu107-cr10702-dry-run.json'))
+          assert d['status']=='PASS_DRY_RUN'
+          assert d['operation']=='NONE'
+          assert d['published_or_activated'] is False
+          assert d['node_count']==151
+          assert d['artifact_sha256']==os.environ['FINAL_SHA']
+          assert d['target_workflow_id'] is None
+          print('WU107_CR10702_ZERO_WRITE_POST_DEPLOY_PASS')
+          PY
+
+      - name: Upload CR-107-02 post-deployment validation evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: wu107-cr10702-post-deployment-validation
+          path: |
+            n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
+            contracts/WU107_CANDIDATE_IDENTITY_V1.json
+            change-requests/CR-107-01.md
+            change-requests/CR-107-02.md
+            wu107-internal-runtime-path-cert.json
+            wu107-cr10702-dry-run.json
+          if-no-files-found: ignore
+          retention-days: 30
+
+  remote-readback:
+    name: WU107 CR-107-02 read-only remote STAGING verification
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      N8N_TARGET_WORKFLOW_ID: RtI7hxjNb6Z0JL0D
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: '3.12'}
+      - name: Read-only CR-107-02 remote verifier
+        run: python scripts/wu107/verify_remote_staging.py
