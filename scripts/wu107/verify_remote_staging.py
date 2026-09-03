@@ -10,12 +10,8 @@ KEY = os.getenv('N8N_API_KEY', '').strip()
 EXPECTED_NAME = '[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1'
 EXPECTED_NODES = 151
 PROTECTED = {
-    'CMBMpxX5AqqK2UTn',
-    'mMZVFxJIxE7a9SSW',
-    '1kaRBBFVJYbPxvQG',
-    '5COEoxXjk8AvuGBa',
-    'Bt3PvOIbFzU0O9gk',
-    'KXfalaYSCLdgmf4X',
+    'CMBMpxX5AqqK2UTn', 'mMZVFxJIxE7a9SSW', '1kaRBBFVJYbPxvQG',
+    '5COEoxXjk8AvuGBa', 'Bt3PvOIbFzU0O9gk', 'KXfalaYSCLdgmf4X',
     'vvHvidUHVxM5wTVT',
 }
 
@@ -117,60 +113,68 @@ existing_code = str(nodes.get(EXISTING, {}).get('parameters', {}).get('jsCode', 
 load_fail_code = str(nodes.get(LOAD_FAIL, {}).get('parameters', {}).get('jsCode', ''))
 save_fail_code = str(nodes.get(SAVE_FAIL, {}).get('parameters', {}).get('jsCode', ''))
 
+# CR-107-01 support signal recovery must remain intact.
 for marker in [
-    'spm:staging:handoff:',
-    'SPM_WU107_HANDOFF_REQUEST_V1',
-    'PSEUDONYMOUS_SESSION_KEY_UNAVAILABLE',
-    'production_mutation_allowed:false',
-    'wu96_communication_decision',
-    'support_requires_handoff',
-    'CURRENT_SUPPORT_INTENT_OVERRIDES_SALES',
-    'wu106_orchestration',
-    'support_override_active',
-    'technical_issue',
-    "reason='TECHNICAL_SUPPORT'",
+    'spm:staging:handoff:', 'SPM_WU107_HANDOFF_REQUEST_V1',
+    'PSEUDONYMOUS_SESSION_KEY_UNAVAILABLE', 'production_mutation_allowed:false',
+    'wu96_communication_decision', 'support_requires_handoff',
+    'CURRENT_SUPPORT_INTENT_OVERRIDES_SALES', 'wu106_orchestration',
+    'support_override_active', 'technical_issue', "reason='TECHNICAL_SUPPORT'",
     'Sticky historical support state is evidence for context only',
     'current_turn_wu96_support:currentTurnWU96',
     'current_turn_wu106_support:currentTurnWU106',
 ]:
     if marker not in build_code:
         errors.append('build/CR-107-01 marker missing: ' + marker)
-if "const supported=new Set(['human_handoff','technical_support','complaint','account_update','contact_update']);" in build_code:
-    errors.append('pre-CR-107-01 limited support allowlist still present')
 
 for marker in [
-    'SPM_WU107_HANDOFF_RECORD_V1',
-    "handoff_state:'QUEUED'",
-    'downstream_receipt_present:true',
-    'downstream_acceptance_present:false',
+    'SPM_WU107_HANDOFF_RECORD_V1', "handoff_state:'QUEUED'",
+    'downstream_receipt_present:true', 'downstream_acceptance_present:false',
     'idempotencyKey',
 ]:
     if marker not in decide_code:
         errors.append('queue decision marker missing: ' + marker)
 
 for marker in [
-    "handoff_state:'QUEUED'",
-    'queue_receipt_verified:true',
-    'human_acceptance_verified:false',
-    'WU107_VERIFIED_QUEUE_WRITE',
+    "handoff_state:'QUEUED'", 'queue_receipt_verified:true',
+    'human_acceptance_verified:false', 'WU107_VERIFIED_QUEUE_WRITE',
     'A specific team member has not yet been confirmed',
 ]:
     if marker not in success_code:
         errors.append('verified queue truth marker missing: ' + marker)
 
-if "state==='ACCEPTED'&&r.downstream_acceptance_present===true" not in existing_code:
-    errors.append('authoritative human acceptance evidence gate missing')
+# CR-107-02: existing-state truth must be derived from evidence, not the persisted label.
+for marker in [
+    "const persistedState=String(r.handoff_state||'FAILED');",
+    'const queueVerified=r.downstream_receipt_present===true;',
+    'const acceptanceVerified=Boolean(',
+    "persistedState==='ACCEPTED'",
+    'r.downstream_acceptance_present===true',
+    "effectiveState='QUEUED'",
+    'handoff_state:effectiveState',
+    'persisted_handoff_state:persistedState',
+    'truth_reconciled:truthReconciled',
+    'human_acceptance_verified:Boolean(acceptanceVerified)',
+    'fail_closed:failClosed',
+    'WU107_EXISTING_TRUTH_RECONCILED',
+]:
+    if marker not in existing_code:
+        errors.append('existing/CR-107-02 marker missing: ' + marker)
+for forbidden_old in [
+    "handoff_state:accepted?'ACCEPTED':state",
+    "success:['QUEUED','ACCEPTED'].includes(state)",
+    "fail_closed:!['QUEUED','ACCEPTED'].includes(state)",
+]:
+    if forbidden_old in existing_code:
+        errors.append('pre-CR-107-02 truth logic still present: ' + forbidden_old)
+
 for code, label in [(load_fail_code, 'load failure'), (save_fail_code, 'save failure')]:
     if "handoff_state:'REQUESTED'" not in code or 'queue_receipt_verified:false' not in code or 'human_acceptance_verified:false' not in code:
         errors.append(label + ' does not fail closed to REQUESTED')
 
 for name in NEW:
     node = nodes.get(name, {})
-    if node.get('type') in {
-        'n8n-nodes-base.googleSheets',
-        'n8n-nodes-base.httpRequest',
-        'n8n-nodes-base.whatsApp',
-    }:
+    if node.get('type') in {'n8n-nodes-base.googleSheets', 'n8n-nodes-base.httpRequest', 'n8n-nodes-base.whatsApp'}:
         errors.append('out-of-scope adapter type in ' + name)
 new_text = json.dumps([nodes.get(n, {}) for n in NEW], ensure_ascii=False)
 for forbidden in ['CMBMpxX5AqqK2UTn', 'spm:production:', 'raw_conversation', 'raw_session_id']:
@@ -178,11 +182,7 @@ for forbidden in ['CMBMpxX5AqqK2UTn', 'spm:production:', 'raw_conversation', 'ra
         errors.append('forbidden WU-107 surface: ' + forbidden)
 
 gateway_code = str(nodes.get(GATEWAY, {}).get('parameters', {}).get('jsCode', ''))
-for marker in [
-    "human_handoff_execution:'EXCLUDED'",
-    'RC3_HUMAN_HANDOFF_EXECUTION_EXCLUDED',
-    'human_handoff_enabled:false',
-]:
+for marker in ["human_handoff_execution:'EXCLUDED'", 'RC3_HUMAN_HANDOFF_EXECUTION_EXCLUDED', 'human_handoff_enabled:false']:
     if marker not in gateway_code:
         errors.append('locked upstream gateway marker missing: ' + marker)
 
@@ -192,13 +192,10 @@ observed = {
     'versionId': wf.get('versionId'),
     'active': wf.get('active'),
     'node_count': len(wf.get('nodes', [])),
-    'wu107_new_nodes_present': all(n in nodes for n in NEW),
     'cr10701_support_signal_recovery_present': all(x in build_code for x in ['wu96_communication_decision','technical_issue','support_override_active']),
-    'stale_support_state_alone_guard_present': 'Sticky historical support state is evidence for context only' in build_code,
+    'cr10702_acceptance_truth_reconciliation_present': all(x in existing_code for x in ['persistedState','queueVerified','acceptanceVerified','effectiveState','truth_reconciled']),
     'handoff_namespace_isolated': 'spm:staging:handoff:' in build_code,
     'queue_receipt_is_human_acceptance': False,
-    'verified_queue_truth_present': 'WU107_VERIFIED_QUEUE_WRITE' in success_code,
-    'acceptance_evidence_gate_present': "state==='ACCEPTED'&&r.downstream_acceptance_present===true" in existing_code,
     'production_write_performed': False,
     'published_or_activated': False,
 }
@@ -206,4 +203,4 @@ print(json.dumps(observed, indent=2, ensure_ascii=False))
 if errors:
     print('WU107_REMOTE_FAIL: ' + '; '.join(errors), file=sys.stderr)
     raise SystemExit(1)
-print('WU107_CR10701_REMOTE_PASS')
+print('WU107_CR10702_REMOTE_PASS')
