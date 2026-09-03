@@ -77,7 +77,6 @@ for name in NEW + [GATEWAY, TELEMETRY, CANON_REDIS]:
     if name not in nodes:
         errors.append('missing node: ' + name)
 
-# WU-107 insertion topology and telemetry rejoin.
 must(GATEWAY, BUILD)
 must(BUILD, IF_EXEC)
 must(IF_EXEC, LOAD, 0)
@@ -92,7 +91,6 @@ must(SAVE, SAVE_FAIL, 1)
 for name in [SUCCESS, EXISTING, LOAD_FAIL, SAVE_FAIL]:
     must(name, TELEMETRY)
 
-# Redis must remain isolated and inherit the certified STAGING credential.
 canon_creds = nodes.get(CANON_REDIS, {}).get('credentials', {}).get('redis')
 for name in [LOAD, SAVE]:
     node = nodes.get(name, {})
@@ -105,9 +103,10 @@ for name in [LOAD, SAVE]:
     if node.get('onError') != 'continueErrorOutput':
         errors.append(name + ' error-path drift')
 
-load_key = str(nodes.get(LOAD, {}).get('parameters', {}).get('key', ''))
-save_key = str(nodes.get(SAVE, {}).get('parameters', {}).get('key', ''))
-for value, label in [(load_key, 'load'), (save_key, 'save')]:
+for value, label in [
+    (str(nodes.get(LOAD, {}).get('parameters', {}).get('key', '')), 'load'),
+    (str(nodes.get(SAVE, {}).get('parameters', {}).get('key', '')), 'save'),
+]:
     if 'wu107_queue_key' not in value:
         errors.append(f'{label} queue key expression drift')
 
@@ -123,9 +122,21 @@ for marker in [
     'SPM_WU107_HANDOFF_REQUEST_V1',
     'PSEUDONYMOUS_SESSION_KEY_UNAVAILABLE',
     'production_mutation_allowed:false',
+    'wu96_communication_decision',
+    'support_requires_handoff',
+    'CURRENT_SUPPORT_INTENT_OVERRIDES_SALES',
+    'wu106_orchestration',
+    'support_override_active',
+    'technical_issue',
+    "reason='TECHNICAL_SUPPORT'",
+    'Sticky historical support state is evidence for context only',
+    'current_turn_wu96_support:currentTurnWU96',
+    'current_turn_wu106_support:currentTurnWU106',
 ]:
     if marker not in build_code:
-        errors.append('build marker missing: ' + marker)
+        errors.append('build/CR-107-01 marker missing: ' + marker)
+if "const supported=new Set(['human_handoff','technical_support','complaint','account_update','contact_update']);" in build_code:
+    errors.append('pre-CR-107-01 limited support allowlist still present')
 
 for marker in [
     'SPM_WU107_HANDOFF_RECORD_V1',
@@ -153,7 +164,6 @@ for code, label in [(load_fail_code, 'load failure'), (save_fail_code, 'save fai
     if "handoff_state:'REQUESTED'" not in code or 'queue_receipt_verified:false' not in code or 'human_acceptance_verified:false' not in code:
         errors.append(label + ' does not fail closed to REQUESTED')
 
-# WU-108 surfaces remain absent from the WU-107 nodes.
 for name in NEW:
     node = nodes.get(name, {})
     if node.get('type') in {
@@ -167,7 +177,6 @@ for forbidden in ['CMBMpxX5AqqK2UTn', 'spm:production:', 'raw_conversation', 'ra
     if forbidden in new_text:
         errors.append('forbidden WU-107 surface: ' + forbidden)
 
-# Locked upstream gateway itself still states handoff execution was excluded there.
 gateway_code = str(nodes.get(GATEWAY, {}).get('parameters', {}).get('jsCode', ''))
 for marker in [
     "human_handoff_execution:'EXCLUDED'",
@@ -184,6 +193,8 @@ observed = {
     'active': wf.get('active'),
     'node_count': len(wf.get('nodes', [])),
     'wu107_new_nodes_present': all(n in nodes for n in NEW),
+    'cr10701_support_signal_recovery_present': all(x in build_code for x in ['wu96_communication_decision','technical_issue','support_override_active']),
+    'stale_support_state_alone_guard_present': 'Sticky historical support state is evidence for context only' in build_code,
     'handoff_namespace_isolated': 'spm:staging:handoff:' in build_code,
     'queue_receipt_is_human_acceptance': False,
     'verified_queue_truth_present': 'WU107_VERIFIED_QUEUE_WRITE' in success_code,
@@ -195,4 +206,4 @@ print(json.dumps(observed, indent=2, ensure_ascii=False))
 if errors:
     print('WU107_REMOTE_FAIL: ' + '; '.join(errors), file=sys.stderr)
     raise SystemExit(1)
-print('WU107_REMOTE_PASS')
+print('WU107_CR10701_REMOTE_PASS')
