@@ -111,6 +111,9 @@ jobs:
           echo "WU107_CANDIDATE_SHA256=$(sha256sum "$WU107_CANDIDATE" | awk '{print $1}')"
           echo "WU107_CANDIDATE_NODE_COUNT=$(python -c 'import json,os; print(len(json.load(open(os.environ["WU107_CANDIDATE"]))["nodes"]))')"
 
+      - name: Diagnose support routing topology for CR-107-01
+        run: python scripts/wu107/diagnose_support_topology.py --candidate "$WU107_CANDIDATE"
+
       - name: Validate WU-107 contract and executable provider-neutral semantics
         shell: bash
         run: |
