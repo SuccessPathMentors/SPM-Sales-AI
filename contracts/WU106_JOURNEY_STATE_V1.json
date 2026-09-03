@@ -1,0 +1,170 @@
+{
+  "schema": "SPM_WU106_JOURNEY_STATE_V1",
+  "version": "1.0",
+  "purpose": "Derived orchestration metadata over the locked sales/conversation state; does not replace authoritative existing state and does not duplicate raw PII.",
+  "existing_state_bindings": {
+    "current_intent": "classification.spm_intent",
+    "primary_awaited_field": "sales_state.conversion.awaiting_field",
+    "secondary_awaited_entity": "sales_state.journey.awaiting_entity",
+    "awaited_resolution_rule": "Use sales_state.conversion.awaiting_field first, then sales_state.journey.awaiting_entity, matching locked WU-104 behavior.",
+    "wu104_correction_precedence": true,
+    "wu104_yes_no_guard_authoritative": true,
+    "wu105_golden_contract_authoritative": true
+  },
+  "derived_metadata": {
+    "schema": "SPM_WU106_ORCHESTRATION_META_V1",
+    "fields": {
+      "active_objective_intent": {
+        "type": ["string", "null"],
+        "stores_raw_customer_text": false,
+        "description": "Current semantic business objective after precedence rules."
+      },
+      "last_clear_intent": {
+        "type": ["string", "null"],
+        "stores_raw_customer_text": false
+      },
+      "student_context_epoch": {
+        "type": "integer",
+        "minimum": 0,
+        "description": "Opaque counter incremented on a confirmed child/student context boundary; not an identity or PII value."
+      },
+      "suspended_objective_intent": {
+        "type": ["string", "null"],
+        "stores_raw_customer_text": false,
+        "description": "Prior objective suspended by support/policy/handoff interruption. It must not auto-resume without a new customer signal."
+      },
+      "transition_reason": {
+        "enum": [
+          "INITIAL",
+          "CURRENT_CLEAR_INTENT",
+          "EXPLICIT_CORRECTION",
+          "AWAITED_FIELD_BINDING",
+          "STUDENT_CONTEXT_SWITCH",
+          "SUPPORT_OVERRIDE",
+          "COMPLAINT_OVERRIDE",
+          "HUMAN_HANDOFF_OVERRIDE",
+          "POLICY_INTERRUPT",
+          "CUSTOMER_RESUME_SIGNAL",
+          "LANGUAGE_SWITCH_ONLY",
+          "SAFE_FALLBACK"
+        ]
+      },
+      "action_state": {
+        "enum": [
+          "NONE",
+          "PREFERENCE_COLLECTED",
+          "LIVE_CHECK_REQUIRED",
+          "LIVE_CHECKED_UNCONFIRMED",
+          "ACTION_PENDING",
+          "ACTION_SUCCESS",
+          "ACTION_FAILED"
+        ],
+        "description": "ACTION_SUCCESS may only be set from an authoritative downstream tool/gateway success signal."
+      },
+      "current_language": {
+        "enum": ["en", "ar", "fr"]
+      },
+      "known_field_names": {
+        "type": "array",
+        "items": {"type": "string"},
+        "description": "Optional privacy-safe names of known fields only; no raw values in WU-106 telemetry/evidence."
+      }
+    }
+  },
+  "precedence_order": [
+    "LOCKED_SAFETY_SUPPORT_OPT_OUT_OVERRIDES",
+    "EXPLICIT_CURRENT_STUDENT_CONTEXT_SWITCH",
+    "EXPLICIT_CURRENT_CORRECTION",
+    "CURRENT_CLEAR_SEMANTIC_INTENT",
+    "LOCKED_WU104_AWAITED_FIELD_BINDING",
+    "ACTIVE_OBJECTIVE_CONTEXT",
+    "STALE_HISTORY"
+  ],
+  "context_scopes": {
+    "parent_shared": ["preferred_language", "country", "city", "timezone_when_validated", "parent_contact_when_already_authorized"],
+    "student_scoped": ["student_name", "grade", "subject", "learning_goal", "student_specific_teacher_preference", "student_specific_schedule_preference"],
+    "session_scoped": ["active_objective_intent", "suspended_objective_intent", "action_state", "current_language"],
+    "student_switch_rule": "On a clear child/student switch, increment student_context_epoch and invalidate incompatible student-scoped assumptions. Parent-shared fields may carry only when safe and already validated."
+  },
+  "transition_rules": [
+    {
+      "id": "TR-01",
+      "when": "clear current semantic intent differs from active objective and no stronger locked override applies",
+      "then": "set active_objective_intent to current intent; preserve only compatible trusted context",
+      "reason": "CURRENT_CLEAR_INTENT"
+    },
+    {
+      "id": "TR-02",
+      "when": "explicit correction targets a known field",
+      "then": "replace only the corrected field in authoritative existing state; preserve compatible fields; do not re-ask the corrected field",
+      "reason": "EXPLICIT_CORRECTION"
+    },
+    {
+      "id": "TR-03",
+      "when": "message binds deterministically to the locked WU-104 awaited field/entity",
+      "then": "preserve active objective and mark awaited binding; do not reinterpret as unrelated new action",
+      "reason": "AWAITED_FIELD_BINDING"
+    },
+    {
+      "id": "TR-04",
+      "when": "clear second child/student context is introduced",
+      "then": "increment student_context_epoch; clear incompatible student-scoped assumptions; preserve safe parent-shared context only",
+      "reason": "STUDENT_CONTEXT_SWITCH"
+    },
+    {
+      "id": "TR-05",
+      "when": "support, complaint, or explicit human handoff override applies",
+      "then": "move active objective to suspended_objective_intent when useful; make override the active objective; stop sales progression",
+      "reason": "SUPPORT_OVERRIDE_OR_EQUIVALENT"
+    },
+    {
+      "id": "TR-06",
+      "when": "general policy question interrupts an active sales journey",
+      "then": "answer policy as current objective without mutating pending business action; keep prior objective suspended; do not auto-resume",
+      "reason": "POLICY_INTERRUPT"
+    },
+    {
+      "id": "TR-07",
+      "when": "customer explicitly returns to a suspended prior objective",
+      "then": "restore that objective only if still compatible with current trusted state and no safety override applies",
+      "reason": "CUSTOMER_RESUME_SIGNAL"
+    },
+    {
+      "id": "TR-08",
+      "when": "customer changes response language but business intent is semantically continuous",
+      "then": "change current_language only; preserve semantic trusted context and objective",
+      "reason": "LANGUAGE_SWITCH_ONLY"
+    },
+    {
+      "id": "TR-09",
+      "when": "availability or schedule preference is supplied without authoritative live result",
+      "then": "action_state must remain PREFERENCE_COLLECTED or LIVE_CHECK_REQUIRED; never ACTION_SUCCESS",
+      "reason": "CURRENT_CLEAR_INTENT"
+    },
+    {
+      "id": "TR-10",
+      "when": "booking, registration, refund, or handoff execution is requested",
+      "then": "action_state may become ACTION_PENDING only after the existing deterministic action gateway accepts the request; ACTION_SUCCESS requires authoritative tool success",
+      "reason": "CURRENT_CLEAR_INTENT"
+    }
+  ],
+  "resume_rules": {
+    "automatic_resume_allowed": false,
+    "customer_signal_required": true,
+    "consent_inferred_from_prior_turn": false,
+    "resume_must_revalidate_compatibility": true
+  },
+  "privacy_rules": {
+    "duplicate_raw_message": false,
+    "duplicate_raw_session": false,
+    "store_secret_values": false,
+    "store_payment_credentials": false,
+    "store_student_identity_in_wu106_meta": false,
+    "telemetry_may_store_field_names_not_values": true
+  },
+  "production_rules": {
+    "production_mutation_allowed": false,
+    "production_activation_allowed": false,
+    "staging_candidate_must_start_inactive": true
+  }
+}
