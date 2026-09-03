@@ -21,7 +21,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: wu107-staging-cr10702-${{ github.event_name }}
+  group: wu107-staging-post-cr10702-${{ github.event_name }}
   cancel-in-progress: false
 
 env:
@@ -52,11 +52,11 @@ env:
   CANDIDATE: n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
   FINAL_SHA: 5aaa9dea37b449506b033e9ea6d933f217518b1d38f9f82b81a22773a1358e95
   WU107_STAGING_ID: RtI7hxjNb6Z0JL0D
-  WU107_PRE_CR10702_VERSION: 13b455a8-1318-4f35-8adc-f42f13e49e76
+  WU107_REMOTE_VERSION: 79a38b64-336a-4bfd-8c65-ed5b0ef1f247
 
 jobs:
   validate:
-    name: WU107 CR-107-02 exact candidate and zero-write validation
+    name: WU107 CR-107-02 exact candidate and post-deployment validation
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -123,12 +123,12 @@ jobs:
           python scripts/wu106/test_state_contract.py
           python scripts/wu106/test_runtime_matrix.py
 
-      - name: Assert CR-107-02 update-pending identity and safety
+      - name: Assert CR-107-02 deployed identity and safety
         run: |
           python - <<'PY'
           import json, os
           d=json.load(open('contracts/WU107_CANDIDATE_IDENTITY_V1.json'))
-          assert d['status']=='CR10702_OFFLINE_CERTIFIED_STAGING_UPDATE_PENDING'
+          assert d['status']=='CR10702_STAGING_DEPLOYED_INTERNAL_CERT_COMPLETE'
           assert d['candidate']['release']=='CR-107-02'
           assert d['candidate']['candidate_sha256']==os.environ['FINAL_SHA']
           assert d['candidate']['node_count']==151
@@ -136,24 +136,30 @@ jobs:
           assert d['candidate']['production_mutation_allowed'] is False
           assert d['cr10702']['static_result']=='CR10702_ACCEPTANCE_EVIDENCE_RECONCILIATION_STATIC_PASS'
           assert d['cr10702']['internal_runtime_result']=='WU107_INTERNAL_RUNTIME_PATH_CERT_PASS'
-          assert d['offline_certification']['rt10710_pii_minimization']=='PASS'
-          assert d['offline_certification']['rt10711_queue_receipt_not_acceptance']=='PASS'
+          for k in ['rt10702_idempotency','rt10710_pii_minimization','rt10711_queue_receipt_not_acceptance','rt10713_corrupt_record_fail_closed','rt10714_redis_load_failure_path','rt10715_redis_save_failure_path']:
+              assert d['offline_certification'][k]=='PASS'
           assert d['offline_certification']['rt10712_authoritative_acceptance']=='PASS_AFTER_CR10702'
-          assert d['offline_certification']['rt10713_corrupt_record_fail_closed']=='PASS'
-          assert d['offline_certification']['rt10714_redis_load_failure_path']=='PASS'
-          assert d['offline_certification']['rt10715_redis_save_failure_path']=='PASS'
+          h=d['staging_history']['cr10702_update']
+          assert h['result']=='SUCCESS'
+          assert h['operation']=='UPDATE_INACTIVE_NONPROD'
+          assert h['workflow_id']==os.environ['WU107_STAGING_ID']
+          assert h['remote_version_id']==os.environ['WU107_REMOTE_VERSION']
+          assert h['remote_active'] is False
+          assert h['remote_readback']=='WU107_CR10702_REMOTE_PASS'
+          assert h['published_or_activated'] is False
+          assert h['production_write_performed'] is False
           t=d['target_staging']
           assert t['workflow_id']==os.environ['WU107_STAGING_ID']
-          assert t['current_remote_release']=='CR-107-01'
-          assert t['current_remote_version_id']==os.environ['WU107_PRE_CR10702_VERSION']
+          assert t['current_remote_release']=='CR-107-02'
+          assert t['current_remote_version_id']==os.environ['WU107_REMOTE_VERSION']
           assert t['current_remote_active'] is False
-          assert t['operation_planned']=='UPDATE_EXISTING_INACTIVE_NONPROD_TO_CR10702'
-          assert t['desired_candidate_sha256']==os.environ['FINAL_SHA']
+          assert t['deployment_status']=='CR10702_REMOTE_PASS_INTERNAL_CERT_COMPLETE'
+          assert t['candidate_sha256']==os.environ['FINAL_SHA']
           assert t['production_write_allowed'] is False
-          print('WU107_CR10702_UPDATE_PENDING_IDENTITY_PASS')
+          print('WU107_CR10702_DEPLOYED_IDENTITY_PASS')
           PY
 
-      - name: Zero-write CR-107-02 dry-run
+      - name: Zero-write CR-107-02 post-deployment dry-run
         run: |
           python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "$FINAL_SHA" --mode dry-run --result-file wu107-cr10702-dry-run.json
           python - <<'PY'
@@ -165,14 +171,14 @@ jobs:
           assert d['node_count']==151
           assert d['artifact_sha256']==os.environ['FINAL_SHA']
           assert d['target_workflow_id'] is None
-          print('WU107_CR10702_ZERO_WRITE_DRY_RUN_PASS')
+          print('WU107_CR10702_ZERO_WRITE_POST_DEPLOY_PASS')
           PY
 
-      - name: Upload CR-107-02 pre-update validation evidence
+      - name: Upload CR-107-02 post-deployment validation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wu107-cr10702-pre-update-validation
+          name: wu107-cr10702-post-deployment-validation
           path: |
             n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
             contracts/WU107_CANDIDATE_IDENTITY_V1.json
