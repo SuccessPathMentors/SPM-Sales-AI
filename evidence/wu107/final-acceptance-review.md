@@ -172,7 +172,9 @@ The configured n8n API key returns HTTP 403 for execution-list/read access. No w
 - Production mutation: none.
 - WU-108 boundary: preserved.
 - Historical adapter direct reuse: blocked.
-- Final CI suite on the prior review commit: 4/4 SUCCESS.
+- Final CI suite on the latest reviewed PR head before documentation cleanup: 4/4 SUCCESS.
+- Fresh read-only remote audit after final review: SUCCESS (`33811422682` / `100833880066`).
+- Fresh remote identity: version `79a38b64-336a-4bfd-8c65-ed5b0ef1f247`, 151 nodes, `active=false`, `WU107_CR10702_REMOTE_PASS`.
 
 ## Decision
 Technical/material review result: **PASS**.
