@@ -100,12 +100,30 @@ STAGING deployment:
 
 Certification scope: GJ-05 customer-visible behavior is now PASS after CR-106-03.
 
+## GJ-06 — Known Context → Single-Field Correction
+Result: PASS ✅
+
+Owner-observed sequence:
+1. `My son is in Grade 8 and needs Math tutoring.`
+2. `Correction: he is actually in Grade 9, not Grade 8.`
+3. bot acknowledged the correction, used Grade 9, retained Math, and continued the tutoring conversation without re-asking the corrected field.
+
+Observed PASS evidence:
+- explicit current correction replaced Grade 8 with Grade 9;
+- compatible uncorrected subject context (Math) was preserved;
+- the conflicting old grade was not retained in the response;
+- the bot did not re-ask the student's grade;
+- the bot did not restart discovery or reinterpret the correction as support/complaint.
+
+Certification scope: customer-visible single-field correction behavior PASS. The screenshot demonstrates the required state behavior at the response layer; exact internal state lineage remains covered by WU-106 contracts and deterministic CI.
+
 ## Progress
 - GJ-01: PASS
 - GJ-02: PASS
 - GJ-03: PASS
 - GJ-04: PASS after CR-106-02
 - GJ-05: PASS after CR-106-03
-- GJ-06 → GJ-12: PENDING
+- GJ-06: PASS
+- GJ-07 → GJ-12: PENDING
 
-Current certified owner-observed live journey score: `5 / 12 PASS`.
+Current certified owner-observed live journey score: `6 / 12 PASS`.
