@@ -1,100 +1,101 @@
 # WU-107 — Owner-Observed Runtime Certification Results
 
-Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-09 PASSED
+Status: RUNTIME_CERT_COMPLETE — 15/15 PASS / FINAL REVIEW PENDING
 Issue: #67
 PR: #68
 STAGING workflow: `RtI7hxjNb6Z0JL0D` (`[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1`)
-Current STAGING release: `CR-107-01`
-Current STAGING version: `13b455a8-1318-4f35-8adc-f42f13e49e76`
-Current candidate SHA-256: `a258d9c294fe56c43ea120b14739119f294f7254b03cbecd9f21bf7831ac8809`
+Current STAGING release: `CR-107-02`
+Current STAGING version: `79a38b64-336a-4bfd-8c65-ed5b0ef1f247`
+Current candidate SHA-256: `5aaa9dea37b449506b033e9ea6d933f217518b1d38f9f82b81a22773a1358e95`
 Node count: 151
 Remote state: `active=false`
-Remote verification: `WU107_CR10701_REMOTE_PASS`
+Remote verification: `WU107_CR10702_REMOTE_PASS`
 Production mutation allowed: false
 
-## Automated prerequisites / CR-107-01 status
-- Exact locked WU-106 lineage: PASS
-- WU-107 V1 static candidate: PASS
-- WU-107 handoff contract: PASS
-- 24-scenario deterministic matrix: PASS
-- 10 provider-neutral executable runtime cases: PASS
-- WU-106 48-scenario regression matrix: PASS
-- CR-107-01 support-signal regression: PASS (`10` cases)
-- `technical_issue` recovery: PASS
-- stale support state alone guard: PASS
-- WU-106 locked nodes mutated: false
-- CR-107-01 STAGING update: PASS (`UPDATE_INACTIVE_NONPROD`)
-- Remote readback after update: PASS
-- One-time CR-107-01 update workflow removed after deployment: PASS
-- Production write: false
-- Publish/activate: false
+## Certification score
+Overall WU-107 runtime test coverage: **15 / 15 PASS**
 
-## Owner-observed live score
-Customer-facing checkpoints passed so far: `9 / 15`
+- Owner-observed customer-facing journeys: RT-107-01 through RT-107-09 — PASS, including RT-107-05 after CR-107-01.
+- Internal exact-Code-node certification: RT-107-10 through RT-107-15 — PASS after CR-107-02.
+- RT-107-02 idempotency received both owner-observed customer-facing evidence and exact executable internal evidence.
 
 | Test | Result | Evidence / finding |
 |---|---|---|
-| RT-107-01 — EN explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Queue-truth response, no false human acceptance. |
-| RT-107-02 — Same-session repeat / idempotency | PASS-CUSTOMER-FACING / INTERNAL PENDING | Existing queue request reused visibly; internal duplicate-record evidence pending. |
-| RT-107-03 — AR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Arabic queue-truth response, no false acceptance. |
-| RT-107-04 — FR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | French queue-truth response, no false acceptance. |
-| RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01 — CUSTOMER-FACING / INTERNAL PENDING** | Technical issue stopped sales and entered truthful support-queue flow. |
-| RT-107-06 — Complaint escalation | **PASS-CUSTOMER-FACING / INTERNAL PENDING** | Complaint interrupted sales and entered truthful support-queue flow. |
-| RT-107-07 — Pricing must not hand off | **PASS-CUSTOMER-FACING** | Pure pricing remained normal sales; no handoff/escalation wording. |
-| RT-107-08 — Short query must not hand off | **PASS-CUSTOMER-FACING** | `Math` stayed in ambiguity clarification; no handoff/escalation. |
-| RT-107-09 — Handoff after existing sales context | **PASS-CUSTOMER-FACING / INTERNAL PENDING** | Session suffix `b629d…`: Grade 8 Math discovery and pricing ran normally; `I want to speak with a person before I decide.` then interrupted sales and returned truthful support-queue wording with no false human acceptance. |
-| RT-107-10 — Queue PII minimization inspection | READY FOR INTERNAL CERTIFICATION | Automated/internal evidence next. |
-| RT-107-11 — Queue receipt != human acceptance | PENDING | — |
-| RT-107-12 — Controlled authoritative acceptance fixture | PENDING | — |
-| RT-107-13 — Corrupt queue record fail-closed | PENDING | — |
-| RT-107-14 — Redis load failure injection | PENDING | — |
-| RT-107-15 — Redis save failure injection | PENDING | — |
+| RT-107-01 — EN explicit human request | **PASS** | Queue-truth response; no false human acceptance. |
+| RT-107-02 — Same-session repeat / idempotency | **PASS — CUSTOMER + INTERNAL** | Owner saw `already in support queue`; exact decision-node execution proves existing QUEUED record sets `write_required=false`, reuses the same idempotency key, and does not execute a duplicate tool write. |
+| RT-107-03 — AR explicit human request | **PASS** | Arabic queue-truth response; no false acceptance. |
+| RT-107-04 — FR explicit human request | **PASS** | French queue-truth response; no false acceptance. |
+| RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01** | Technical issue interrupted sales and entered truthful support-queue flow. |
+| RT-107-06 — Complaint escalation | **PASS** | Complaint interrupted sales and entered truthful support-queue flow. |
+| RT-107-07 — Pricing must not hand off | **PASS** | Pure pricing remained normal sales; no handoff/escalation wording. |
+| RT-107-08 — Short query must not hand off | **PASS** | `Math` remained ambiguity clarification; no handoff/escalation. |
+| RT-107-09 — Handoff after existing sales context | **PASS** | Grade 8 Math discovery/pricing ran normally; explicit person request then interrupted sales and queued handoff truthfully. |
+| RT-107-10 — Queue PII minimization inspection | **PASS-INTERNAL** | Exact queue-record JS executed with PII-heavy fixture; raw message/session/contact/secrets and sensitive literals were absent from the record. Only pseudonymous session key and boolean contact-presence flags remained. Marker: `WU107_RT10_PII_MINIMIZATION_EXECUTABLE_PASS`. |
+| RT-107-11 — Queue receipt != human acceptance | **PASS-INTERNAL** | Exact verified-queue result JS yields `QUEUED`, `queue_receipt_verified=true`, `human_acceptance_verified=false`. Marker: `WU107_RT11_QUEUE_RECEIPT_NOT_ACCEPTANCE_EXECUTABLE_PASS`. |
+| RT-107-12 — Controlled authoritative acceptance fixture | **PASS-INTERNAL AFTER CR-107-02** | Verified receipt + acceptance evidence yields ACCEPTED. Persisted ACCEPTED without acceptance evidence reconciles to QUEUED when receipt remains valid; unsupported ACCEPTED fails closed. Marker: `WU107_RT12_AUTHORITATIVE_ACCEPTANCE_EXECUTABLE_PASS`. |
+| RT-107-13 — Corrupt queue record fail-closed | **PASS-INTERNAL** | Corrupt persisted record blocks blind overwrite/success and returns FAILED/fail-closed. Marker: `WU107_RT13_CORRUPT_RECORD_FAIL_CLOSED_EXECUTABLE_PASS`. |
+| RT-107-14 — Redis load failure injection | **PASS-INTERNAL** | Exact load-failure Code node preserves REQUESTED, verifies neither queue receipt nor human acceptance, and uses truthful failure wording. Marker: `WU107_RT14_REDIS_LOAD_FAILURE_EXECUTABLE_PASS`. |
+| RT-107-15 — Redis save failure injection | **PASS-INTERNAL** | Exact save-failure Code node preserves REQUESTED, verifies neither queue receipt nor human acceptance, and uses truthful failure wording. Marker: `WU107_RT15_REDIS_SAVE_FAILURE_EXECUTABLE_PASS`. |
 
-## CR-107-01 root cause and correction
-The initial RT-107-05 failure was caused by WU-107 V1 consuming a narrower classifier allowlist than the authoritative WU96/WU106 current-turn support signals. CR-107-01 consumes the current-turn support decision/override, maps technical support and complaints into the WU-107 execution contract, and explicitly prevents sticky historical support state alone from initiating a new handoff. Only one WU-107 node changed; topology and all 141 locked WU-106 nodes remain unchanged.
+## Owner-observed evidence highlights
+- RT-107-05 retest session suffix `1c9c8…`: `The portal is not working. I need help.` correctly changed from the pre-CR legacy no-handoff wording to verified support-queue wording.
+- RT-107-06 session suffix `8a406…`: complaint stopped sales and entered support queue.
+- RT-107-07 session suffix `6faf9…`: pricing did not trigger support.
+- RT-107-09 session suffix `b629d…`: existing sales context was interrupted only after explicit human request.
 
-## CR-107-01 deployment evidence
-- GitHub Actions update run: `33790623526`
-- job: `100766072749`
+## CR-107-01
+Trigger: technical-support routing failure in RT-107-05.
+
+Correction:
+- consumes authoritative current-turn WU96/WU106 support signals;
+- maps `technical_issue` / `technical_support` to `TECHNICAL_SUPPORT`;
+- maps complaint to `COMPLAINT_ESCALATION`;
+- prevents sticky historical support state alone from initiating a new handoff;
+- changes one WU-107 node; no topology or WU-106 locked-node mutation.
+
+Deployed CR-107-01 remote version: `13b455a8-1318-4f35-8adc-f42f13e49e76`.
+
+## CR-107-02
+Trigger: internal RT-107-12 P0 finding.
+
+Initial inconsistency:
+- persisted label could be `ACCEPTED` while `downstream_acceptance_present=false`;
+- customer wording was cautious, but internal `handoff_state` and `success` still trusted the raw persisted label.
+
+Correction:
+- truth is now derived from evidence, not persisted label alone;
+- ACCEPTED requires durable queue receipt + authoritative acceptance evidence;
+- unverified ACCEPTED with valid receipt reconciles to QUEUED;
+- unsupported ACCEPTED/QUEUED truth fails closed;
+- changes one WU-107 node only; topology unchanged; WU-106 locked nodes unchanged.
+
+Exact-lineage/offline certification:
+- run: `33796151509`
+- job: `100784208145`
+- candidate SHA: `5aaa9dea37b449506b033e9ea6d933f217518b1d38f9f82b81a22773a1358e95`
+- artifact: `9909230931`
+- `WU107_INTERNAL_RUNTIME_PATH_CERT_PASS`
+- WU-106 48-scenario regression: PASS
+
+STAGING update/readback:
+- run: `33796639028`
+- job: `100785831605`
 - operation: `UPDATE_INACTIVE_NONPROD`
-- artifact SHA: `a258d9c294fe56c43ea120b14739119f294f7254b03cbecd9f21bf7831ac8809`
 - workflow: `RtI7hxjNb6Z0JL0D`
-- remote version: `13b455a8-1318-4f35-8adc-f42f13e49e76`
+- pre-version: `13b455a8-1318-4f35-8adc-f42f13e49e76`
+- remote version: `79a38b64-336a-4bfd-8c65-ed5b0ef1f247`
 - `active=false`
-- remote verifier: `WU107_CR10701_REMOTE_PASS`
-- update evidence artifact: `9907166309`
+- remote verifier: `WU107_CR10702_REMOTE_PASS`
+- evidence artifact: `9909420376`
 - production write: false
+- publish/activate: false
+- one-time update workflow removed after successful readback.
 
-## RT-107-09 sales-context handoff evidence
-Owner-observed session suffix: `b629d…`
+## Execution-API observation
+A separate read-only attempt to fetch n8n execution data through the configured API key returned HTTP 403. The audit performed no write and was removed. Internal certification therefore executes the exact JavaScript embedded in the reconstructed candidate Code nodes with controlled fixtures, in addition to the live owner-observed customer-facing journeys and remote candidate readback.
 
-Sequence:
-1. `My son is in Grade 8 and needs Math tutoring.`
-2. `How much does it cost?`
-3. `I want to speak with a person before I decide.`
-
-Observed third-turn response:
-`Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
-
-Customer-facing acceptance criteria:
-- sales/discovery established first: PASS
-- pricing answered normally: PASS
-- explicit human request interrupted sales: PASS
-- no continued package selling after handoff request: PASS
-- WU-107 queue-truth wording surfaced: PASS
-- no false human acceptance claim: PASS
-- no invented staff/case/ETA metadata: PASS
-
-## Internal certification phase — RT-107-10 through RT-107-15
-These tests are primarily internal and should be automated/read-only or isolated-failure-injection where possible. Owner screenshots are not required unless an internal gate cannot be observed safely through CI/runtime evidence.
-
-Required coverage:
-- RT-107-10: inspect queue-record schema / PII minimization and prove raw chat/session/contact/secrets are not persisted by default;
-- RT-107-11: prove durable queue receipt yields `QUEUED` and never `ACCEPTED` without authoritative acceptance evidence;
-- RT-107-12: controlled authoritative acceptance fixture may transition `QUEUED -> ACCEPTED` only with explicit acceptance evidence;
-- RT-107-13: corrupt queue record must fail closed and must not create false acceptance/duplicate truth;
-- RT-107-14: Redis load failure path preserves request and truthfully reports queue verification failure;
-- RT-107-15: Redis save failure path preserves request and truthfully reports queue write failure.
+## Next gate
+Run final regression/material review on the exact CR-107-02 candidate and current remote identity. If all review gates pass, WU-107 may move to `READY_FOR_REVIEW — OWNER LOCK PENDING`.
 
 ## Lock rule
-WU-107 cannot advance to READY_FOR_REVIEW until remaining internal evidence gates and final regression/material review pass.
+WU-107 cannot be locked without explicit Owner approval.
