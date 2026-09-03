@@ -128,7 +128,7 @@ jobs:
           python - <<'PY'
           import json, os
           d=json.load(open('contracts/WU107_CANDIDATE_IDENTITY_V1.json'))
-          assert d['status']=='CR10702_STAGING_DEPLOYED_INTERNAL_CERT_COMPLETE'
+          assert d['status']=='CR10702_FINAL_AUDIT_PASS_OWNER_LOCK_PENDING'
           assert d['candidate']['release']=='CR-107-02'
           assert d['candidate']['candidate_sha256']==os.environ['FINAL_SHA']
           assert d['candidate']['node_count']==151
@@ -156,6 +156,12 @@ jobs:
           assert t['deployment_status']=='CR10702_REMOTE_PASS_INTERNAL_CERT_COMPLETE'
           assert t['candidate_sha256']==os.environ['FINAL_SHA']
           assert t['production_write_allowed'] is False
+          a=d['final_read_only_audit']
+          assert a['result']=='SUCCESS'
+          assert a['remote_readback']=='WU107_CR10702_REMOTE_PASS'
+          assert a['identity_assert']=='WU107_FINAL_REMOTE_IDENTITY_ASSERT_PASS'
+          assert a['remote_active'] is False
+          assert a['production_write_performed'] is False
           print('WU107_CR10702_DEPLOYED_IDENTITY_PASS')
           PY
 
