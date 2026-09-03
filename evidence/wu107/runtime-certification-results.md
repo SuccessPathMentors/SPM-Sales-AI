@@ -1,6 +1,6 @@
 # WU-107 — Owner-Observed Runtime Certification Results
 
-Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-05 RETEST PENDING
+Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-05 RETEST PASSED
 Issue: #67
 PR: #68
 STAGING workflow: `RtI7hxjNb6Z0JL0D` (`[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1`)
@@ -30,7 +30,7 @@ Production mutation allowed: false
 - Publish/activate: false
 
 ## Owner-observed live score
-Customer-facing checkpoints passed so far: `4 / 15`
+Customer-facing checkpoints passed so far: `5 / 15`
 
 | Test | Result | Evidence / finding |
 |---|---|---|
@@ -38,8 +38,8 @@ Customer-facing checkpoints passed so far: `4 / 15`
 | RT-107-02 — Same-session repeat / idempotency | PASS-CUSTOMER-FACING / INTERNAL PENDING | Existing queue request reused visibly; internal duplicate-record evidence pending. |
 | RT-107-03 — AR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Arabic queue-truth response, no false acceptance. |
 | RT-107-04 — FR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | French queue-truth response, no false acceptance. |
-| RT-107-05 — Technical support interrupts sales | **RETEST PENDING AFTER CR-107-01** | Initial V1 attempt failed: technical support stopped sales but returned legacy `Automatic human handoff is not enabled...` wording. Root cause fixed and CR-107-01 is now deployed/remote-verified. Re-run only this test. |
-| RT-107-06 — Complaint escalation | PENDING | Run only after RT-107-05 retest passes. |
+| RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01 — CUSTOMER-FACING / INTERNAL PENDING** | Retest session suffix `1c9c8…`: pricing answered first; on `The portal is not working. I need help.` sales stopped and response changed to `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` Legacy `Automatic human handoff is not enabled...` wording did not appear; no false human acceptance claim. |
+| RT-107-06 — Complaint escalation | READY TO RUN | Next owner test. |
 | RT-107-07 — Pricing must not hand off | PENDING | — |
 | RT-107-08 — Short query must not hand off | PENDING | — |
 | RT-107-09 — Handoff after existing sales context | PENDING | — |
@@ -82,17 +82,33 @@ CR-107-01 correction:
 - update evidence artifact: `9907166309`
 - production write: false
 
-## Required next owner test — RT-107-05 Retest only
-Start a new Test Chat session and repeat exactly:
+## RT-107-05 retest evidence after CR-107-01
+Owner-observed session suffix: `1c9c8…`
+
+Sequence:
 1. `My son is in Grade 8 and needs Math tutoring. How much does it cost?`
 2. `The portal is not working. I need help.`
 
-Expected second-turn behavior after CR-107-01:
-- sales stops;
-- technical support is routed to WU-107 queue execution;
-- customer sees truthful support-queue wording;
-- old `Automatic human handoff is not enabled in this release candidate.` wording must not appear;
-- no claim that a specific human accepted the case.
+Observed support-turn response:
+`Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
+
+Customer-facing acceptance criteria:
+- sales interrupted by technical support: PASS
+- WU-107 queue-truth wording surfaced: PASS
+- legacy WU-106 no-handoff wording absent: PASS
+- no false human acceptance claim: PASS
+
+Internal Redis/queue-record evidence remains intentionally deferred to the dedicated internal evidence tests later in this certification sequence.
+
+## Required next owner test — RT-107-06 Complaint Escalation
+Run in a new Test Chat session.
+
+Expected behavior:
+- complaint overrides/interrupts sales;
+- complaint is routed to WU-107 as `COMPLAINT_ESCALATION`;
+- customer sees truthful queue wording only;
+- no promise that a specific person accepted the complaint unless authoritative acceptance evidence exists;
+- no sales continuation after the complaint turn.
 
 ## Lock rule
-WU-107 cannot advance to READY_FOR_REVIEW until RT-107-05 retest and remaining runtime/internal evidence gates pass.
+WU-107 cannot advance to READY_FOR_REVIEW until remaining runtime/internal evidence gates pass.
