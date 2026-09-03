@@ -1,0 +1,41 @@
+name: WU-107 one-time final remote readback
+
+on:
+  push:
+    branches:
+      - wu107-human-handoff
+    paths:
+      - '.github/workflows/wu107-one-time-final-remote-readback.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  readback:
+    if: github.event.head_commit.message == 'WU-107: one-time final remote readback'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    environment: n8n-staging
+    env:
+      N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
+      N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
+      N8N_TARGET_WORKFLOW_ID: RtI7hxjNb6Z0JL0D
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Read-only current remote verifier
+        run: python scripts/wu107/verify_remote_staging.py
+      - name: Assert current candidate identity
+        run: |
+          python - <<'PY'
+          import json
+          d=json.load(open('contracts/WU107_CANDIDATE_IDENTITY_V1.json'))
+          assert d['candidate']['release']=='CR-107-02'
+          assert d['candidate']['candidate_sha256']=='5aaa9dea37b449506b033e9ea6d933f217518b1d38f9f82b81a22773a1358e95'
+          assert d['target_staging']['current_remote_version_id']=='79a38b64-336a-4bfd-8c65-ed5b0ef1f247'
+          assert d['target_staging']['current_remote_active'] is False
+          assert d['target_staging']['production_write_allowed'] is False
+          print('WU107_FINAL_REMOTE_IDENTITY_ASSERT_PASS')
+          PY
