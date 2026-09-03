@@ -129,11 +129,14 @@ jobs:
           python - <<'PY'
           import json, os
           d=json.load(open('contracts/WU107_CANDIDATE_IDENTITY_V1.json'))
-          assert d['status']=='OFFLINE_CERTIFIED_STAGING_NOT_CREATED'
+          assert d['status']=='OFFLINE_CERTIFIED_STAGING_DRY_RUN_PASS'
           assert d['candidate']['candidate_sha256']==os.environ['FINAL_SHA']
           assert d['candidate']['node_count']==151
           assert d['candidate']['input_wu106_sha256']==os.environ['WU106_FINAL_SHA']
           assert d['candidate']['production_mutation_allowed'] is False
+          assert d['staging_dry_run']['deployer_result']=='PASS_DRY_RUN'
+          assert d['staging_dry_run']['operation']=='NONE'
+          assert d['staging_dry_run']['n8n_write_performed'] is False
           assert d['target_staging']['workflow_id'] is None
           assert d['target_staging']['operation_planned']=='CREATE_INACTIVE_NONPROD'
           assert d['execution_provider']['queue_receipt_is_human_acceptance'] is False
