@@ -2,7 +2,7 @@
   "schema": "SPM_WU107_CANDIDATE_IDENTITY_V1",
   "version": "1.0",
   "work_unit": "WU-107",
-  "status": "OFFLINE_CERTIFIED_STAGING_NOT_CREATED",
+  "status": "OFFLINE_CERTIFIED_STAGING_DRY_RUN_PASS",
   "purpose": "Deterministic human-handoff execution with verifiable queue truth, idempotency, bounded retry, privacy minimization, and explicit separation of queue receipt from human acceptance.",
   "candidate": {
     "name": "[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1",
@@ -46,6 +46,24 @@
     "artifact_name": "wu107-handoff-candidate",
     "artifact_id": 9904151752,
     "artifact_zip_sha256": "78cbaefd044c19beb02f94794efb559eaec5e708864478a317c1c96462f8af20"
+  },
+  "staging_dry_run": {
+    "github_actions_run_id": 33783223881,
+    "job_id": 100741687841,
+    "result": "SUCCESS",
+    "deployer_result": "PASS_DRY_RUN",
+    "assertion_result": "WU107_ZERO_WRITE_DRY_RUN_PASS",
+    "operation": "NONE",
+    "target_workflow_id": null,
+    "node_count": 151,
+    "connection_source_count": 149,
+    "credential_reference_count": 33,
+    "artifact_sha256": "fc4263b6bf029195a58b819ce4b06d6f499090d39017ff6ca906f173b7443f59",
+    "published_or_activated": false,
+    "n8n_write_performed": false,
+    "artifact_name": "wu107-final-candidate-and-dry-run",
+    "artifact_id": 9904396127,
+    "artifact_zip_sha256": "7e64deb06bcdf05db09587cd1e454cf5c05c088b3bde99c49693fae6d990063d"
   },
   "historical_adapter_audit": {
     "source": "drive-mirror/03_Workflows_Current/Validated_Human_Handoff_FIXED.json",
