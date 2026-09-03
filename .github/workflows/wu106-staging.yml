@@ -13,23 +13,13 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "dry-run performs zero n8n writes; apply may create/update only inactive WU-106 STAGING"
+        description: "dry-run performs zero n8n writes; apply updates only the existing inactive WU-106 STAGING workflow"
         required: true
         type: choice
         default: dry-run
         options:
           - dry-run
           - apply
-      target_workflow_id:
-        description: "Existing WU-106 STAGING workflow ID. Leave blank only for first deliberate create."
-        required: false
-        type: string
-        default: ""
-      allow_create:
-        description: "Explicitly permit one-time WU-106 STAGING creation when target_workflow_id is blank"
-        required: true
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -52,8 +42,11 @@ env:
   CR10503_SHA: aaaa139faa67815f4196fb9779232471c4c8b051a26f0ba0a3be4c56231d4653
   WU105_FINAL: /tmp/SPM_WU105_FINAL_CR10504.json
   WU105_FINAL_SHA: 42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1
+  WU106_BASELINE: n8n/generated/SPM_WU106_OBSERVE_ONLY_BASELINE.json
+  WU106_BASELINE_SHA: 134b2d861d6c5060ca52d8fd838b2cdd7d5d88ffa74855e3de1665e302afda67
   CANDIDATE: n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
-  FINAL_SHA: 134b2d861d6c5060ca52d8fd838b2cdd7d5d88ffa74855e3de1665e302afda67
+  FINAL_SHA: 5db680c1e2b51d35408f78077ef4bb098da542bdf5e071125532948ad6783e2e
+  EXPECTED_WU106_STAGING_ID: vvHvidUHVxM5wTVT
   PRODUCTION_WORKFLOW_ID: CMBMpxX5AqqK2UTn
   WU101_STAGING_ID: mMZVFxJIxE7a9SSW
   WU102_STAGING_ID: 1kaRBBFVJYbPxvQG
@@ -63,7 +56,7 @@ env:
 
 jobs:
   validate:
-    name: WU106 exact candidate and non-production dry-run
+    name: WU106 CR-106-01 final candidate and non-production dry-run
     runs-on: ubuntu-latest
     timeout-minutes: 10
     outputs:
@@ -73,13 +66,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Download exact locked WU-104 CR-104-05 evidence
+      - name: Download exact locked WU-104 evidence
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.WU104_ARTIFACT_NAME }}
@@ -87,8 +78,8 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           run-id: ${{ env.WU104_LOCK_RUN_ID }}
-
-      - name: Verify formal WU-105 lock and exact WU-104 artifact
+      - name: Rebuild exact locked lineage and CR-106-01
+        id: build
         shell: bash
         run: |
           set -euo pipefail
@@ -97,11 +88,6 @@ jobs:
           grep -q "$WU105_FINAL_SHA" /tmp/WU-105.lock.md
           test "$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')" = "$WU104_EXPECTED_SHA256"
           test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU104_UPSTREAM"]))["nodes"]))')" = "126"
-
-      - name: Rebuild exact locked WU-105 CR-105-04 lineage
-        shell: bash
-        run: |
-          set -euo pipefail
           python scripts/wu105/build_candidate.py --baseline "$WU104_UPSTREAM" --manifest contracts/WU105_GOLDEN_INTENTS_V1.json --output "$CR10501"
           test "$(sha256sum "$CR10501" | awk '{print $1}')" = "$CR10501_SHA"
           python scripts/wu105/apply_cr10502.py --input "$CR10501" --output "$CR10502"
@@ -111,57 +97,54 @@ jobs:
           python scripts/wu105/apply_cr10504.py --input "$CR10503" --output "$WU105_FINAL"
           test "$(sha256sum "$WU105_FINAL" | awk '{print $1}')" = "$WU105_FINAL_SHA"
           test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_FINAL"]))["nodes"]))')" = "131"
-
-      - name: Build and verify exact WU-106 observe-only candidate
-        id: build
-        shell: bash
-        run: |
-          set -euo pipefail
+          mkdir -p n8n/generated
+          python scripts/wu106/build_candidate.py --baseline "$WU105_FINAL" --output "$WU106_BASELINE"
+          python scripts/wu106/test_candidate.py --baseline "$WU105_FINAL" --candidate "$WU106_BASELINE"
+          test "$(sha256sum "$WU106_BASELINE" | awk '{print $1}')" = "$WU106_BASELINE_SHA"
+          python scripts/wu106/apply_cr10601.py --input "$WU106_BASELINE" --output "$CANDIDATE"
+          python scripts/wu106/test_cr10601.py --candidate "$CANDIDATE"
+          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
+          echo "WU106_CR10601_FINAL_SHA256=$actual"
+          test "$actual" = "$FINAL_SHA"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "133"
+          echo "sha=$actual" >> "$GITHUB_OUTPUT"
           python scripts/wu106/test_journey_manifest.py
           python scripts/wu106/test_state_contract.py
           python scripts/wu106/test_runtime_matrix.py
-          mkdir -p n8n/generated
-          python scripts/wu106/build_candidate.py --baseline "$WU105_FINAL" --output "$CANDIDATE"
-          python scripts/wu106/test_candidate.py --baseline "$WU105_FINAL" --candidate "$CANDIDATE"
-          actual="$(sha256sum "$CANDIDATE" | awk '{print $1}')"
-          echo "WU106_FINAL_CANDIDATE_SHA256=$actual"
-          test "$actual" = "$FINAL_SHA"
-          echo "sha=$actual" >> "$GITHUB_OUTPUT"
-          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "132"
           python - <<'PY'
           import json, os
-          identity=json.load(open('contracts/WU106_CANDIDATE_IDENTITY_V1.json'))
-          assert identity['candidate_sha256']==os.environ['FINAL_SHA']
-          assert identity['node_count']==132
-          assert identity['deployment']['production_mutation_allowed'] is False
-          print('WU106_CANDIDATE_IDENTITY_PASS')
+          d=json.load(open('contracts/WU106_CR10601_IDENTITY_V1.json'))
+          assert d['candidate']['candidate_sha256']==os.environ['FINAL_SHA']
+          assert d['candidate']['node_count']==133
+          assert d['target_staging']['workflow_id']==os.environ['EXPECTED_WU106_STAGING_ID']
+          assert d['candidate']['production_mutation_allowed'] is False
+          print('WU106_CR10601_IDENTITY_PASS')
           PY
-
-      - name: Existing non-production deployer dry-run
+      - name: Non-production deployer dry-run
         run: |
-          set -euo pipefail
           python scripts/n8n/deploy_nonprod.py \
             --artifact "$CANDIDATE" \
             --environment staging \
             --expected-sha256 "${{ steps.build.outputs.sha }}" \
+            --target-workflow-id "$EXPECTED_WU106_STAGING_ID" \
             --mode dry-run \
             --result-file wu106-dry-run-result.json
-
-      - name: Upload WU-106 candidate and dry-run evidence
+      - name: Upload final CR-106-01 dry-run evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wu106-candidate-and-dry-run
+          name: wu106-cr10601-final-candidate-and-dry-run
           path: |
+            n8n/generated/SPM_WU106_OBSERVE_ONLY_BASELINE.json
             n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
-            contracts/WU106_CANDIDATE_IDENTITY_V1.json
+            contracts/WU106_CR10601_IDENTITY_V1.json
             contracts/WU106_RUNTIME_MATRIX_V1.json
             wu106-dry-run-result.json
           if-no-files-found: ignore
           retention-days: 30
 
   deploy-staging:
-    name: WU106 ${{ inputs.mode }} to staging
+    name: WU106 CR-106-01 ${{ inputs.mode }} to existing staging
     if: github.event_name == 'workflow_dispatch'
     needs: validate
     runs-on: ubuntu-latest
@@ -170,20 +153,18 @@ jobs:
     env:
       N8N_API_BASE_URL: ${{ secrets.N8N_API_BASE_URL }}
       N8N_API_KEY: ${{ secrets.N8N_API_KEY }}
-      N8N_TARGET_WORKFLOW_ID: ${{ inputs.target_workflow_id }}
+      N8N_TARGET_WORKFLOW_ID: vvHvidUHVxM5wTVT
       SPM_DEPLOY_CONFIRM: SPM_NONPROD_ONLY
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-
-      - name: Download exact locked WU-104 CR-104-05 evidence
+      - name: Download exact locked WU-104 evidence
         uses: actions/download-artifact@v4
         with:
           name: ${{ env.WU104_ARTIFACT_NAME }}
@@ -191,20 +172,16 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           run-id: ${{ env.WU104_LOCK_RUN_ID }}
-
-      - name: Re-verify formal WU-105 lock before any write
+      - name: Rebuild exact CR-106-01 candidate before write
         shell: bash
         run: |
           set -euo pipefail
+          test "$N8N_TARGET_WORKFLOW_ID" = "$EXPECTED_WU106_STAGING_ID"
+          for denied in "$PRODUCTION_WORKFLOW_ID" "$WU101_STAGING_ID" "$WU102_STAGING_ID" "$WU103_STAGING_ID" "$WU104_STAGING_ID" "$WU105_STAGING_ID"; do test "$N8N_TARGET_WORKFLOW_ID" != "$denied"; done
           git show origin/main:work-units/WU-105.lock.md > /tmp/WU-105.lock.md
           grep -q '^Status: LOCKED$' /tmp/WU-105.lock.md
           grep -q "$WU105_FINAL_SHA" /tmp/WU-105.lock.md
           test "$(sha256sum "$WU104_UPSTREAM" | awk '{print $1}')" = "$WU104_EXPECTED_SHA256"
-
-      - name: Rebuild exact WU-106 candidate
-        shell: bash
-        run: |
-          set -euo pipefail
           python scripts/wu105/build_candidate.py --baseline "$WU104_UPSTREAM" --manifest contracts/WU105_GOLDEN_INTENTS_V1.json --output "$CR10501"
           test "$(sha256sum "$CR10501" | awk '{print $1}')" = "$CR10501_SHA"
           python scripts/wu105/apply_cr10502.py --input "$CR10501" --output "$CR10502"
@@ -214,75 +191,31 @@ jobs:
           python scripts/wu105/apply_cr10504.py --input "$CR10503" --output "$WU105_FINAL"
           test "$(sha256sum "$WU105_FINAL" | awk '{print $1}')" = "$WU105_FINAL_SHA"
           mkdir -p n8n/generated
-          python scripts/wu106/build_candidate.py --baseline "$WU105_FINAL" --output "$CANDIDATE"
-          python scripts/wu106/test_candidate.py --baseline "$WU105_FINAL" --candidate "$CANDIDATE"
-          test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "${{ needs.validate.outputs.candidate_sha }}"
+          python scripts/wu106/build_candidate.py --baseline "$WU105_FINAL" --output "$WU106_BASELINE"
+          test "$(sha256sum "$WU106_BASELINE" | awk '{print $1}')" = "$WU106_BASELINE_SHA"
+          python scripts/wu106/apply_cr10601.py --input "$WU106_BASELINE" --output "$CANDIDATE"
+          python scripts/wu106/test_cr10601.py --candidate "$CANDIDATE"
           test "$(sha256sum "$CANDIDATE" | awk '{print $1}')" = "$FINAL_SHA"
-          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "132"
-
-      - name: Hard-stop protected target checks
-        shell: bash
-        run: |
-          set -euo pipefail
-          target="${{ inputs.target_workflow_id }}"
-          for denied in "$PRODUCTION_WORKFLOW_ID" "$WU101_STAGING_ID" "$WU102_STAGING_ID" "$WU103_STAGING_ID" "$WU104_STAGING_ID" "$WU105_STAGING_ID"; do
-            if [[ "$target" == "$denied" ]]; then
-              echo "Denied protected workflow ID: $target" >&2
-              exit 1
-            fi
-          done
-          if [[ "${{ inputs.mode }}" == "apply" && -z "$target" && "${{ inputs.allow_create }}" != "true" ]]; then
-            echo "First WU-106 apply with no target requires allow_create=true" >&2
-            exit 1
-          fi
-          if [[ "${{ inputs.allow_create }}" == "true" && -n "$target" ]]; then
-            echo "allow_create=true is permitted only when target_workflow_id is blank" >&2
-            exit 1
-          fi
-
-      - name: Run safe non-production deployer
-        shell: bash
-        run: |
-          set -euo pipefail
-          args=(
-            --artifact "$CANDIDATE"
-            --environment staging
-            --expected-sha256 "${{ needs.validate.outputs.candidate_sha }}"
-            --mode "${{ inputs.mode }}"
-            --result-file wu106-deployment-result.json
-          )
-          if [[ -n "${{ inputs.target_workflow_id }}" ]]; then
-            args+=(--target-workflow-id "${{ inputs.target_workflow_id }}")
-          fi
-          if [[ "${{ inputs.allow_create }}" == "true" ]]; then
-            args+=(--allow-create)
-          fi
-          python scripts/n8n/deploy_nonprod.py "${args[@]}"
-
-      - name: Verify remote WU-106 STAGING content after apply
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["CANDIDATE"]))["nodes"]))')" = "133"
+      - name: Apply only to existing inactive WU-106 STAGING
         if: inputs.mode == 'apply'
-        shell: bash
         run: |
-          set -euo pipefail
-          target="$(python - <<'PY'
-          import json
-          print(json.load(open('wu106-deployment-result.json'))['target_workflow_id'])
-          PY
-          )"
-          for denied in "$PRODUCTION_WORKFLOW_ID" "$WU101_STAGING_ID" "$WU102_STAGING_ID" "$WU103_STAGING_ID" "$WU104_STAGING_ID" "$WU105_STAGING_ID"; do
-            test "$target" != "$denied"
-          done
-          N8N_TARGET_WORKFLOW_ID="$target" python scripts/wu106/verify_remote_staging.py
-
-      - name: Upload WU-106 STAGING deployment evidence
+          python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "$FINAL_SHA" --target-workflow-id "$EXPECTED_WU106_STAGING_ID" --mode apply --result-file wu106-deployment-result.json
+      - name: Dry-run when requested
+        if: inputs.mode == 'dry-run'
+        run: |
+          python scripts/n8n/deploy_nonprod.py --artifact "$CANDIDATE" --environment staging --expected-sha256 "$FINAL_SHA" --target-workflow-id "$EXPECTED_WU106_STAGING_ID" --mode dry-run --result-file wu106-deployment-result.json
+      - name: Verify remote CR-106-01 after apply
+        if: inputs.mode == 'apply'
+        run: N8N_TARGET_WORKFLOW_ID="$EXPECTED_WU106_STAGING_ID" python scripts/wu106/verify_remote_staging.py
+      - name: Upload WU-106 deployment evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wu106-staging-${{ inputs.mode }}-evidence
+          name: wu106-cr10601-staging-${{ inputs.mode }}-evidence
           path: |
             n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
-            contracts/WU106_CANDIDATE_IDENTITY_V1.json
-            contracts/WU106_RUNTIME_MATRIX_V1.json
+            contracts/WU106_CR10601_IDENTITY_V1.json
             wu106-deployment-result.json
           if-no-files-found: ignore
           retention-days: 30
