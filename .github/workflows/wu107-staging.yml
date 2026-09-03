@@ -20,7 +20,7 @@ permissions:
   actions: read
 
 concurrency:
-  group: wu107-staging-post-create-${{ github.event_name }}
+  group: wu107-staging-post-cr10701-${{ github.event_name }}
   cancel-in-progress: false
 
 env:
@@ -49,7 +49,7 @@ env:
   CANDIDATE: n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
   FINAL_SHA: a258d9c294fe56c43ea120b14739119f294f7254b03cbecd9f21bf7831ac8809
   WU107_STAGING_ID: RtI7hxjNb6Z0JL0D
-  WU107_PRE_CR_VERSION: f52c7000-539f-4675-9fe8-2addc9354077
+  WU107_REMOTE_VERSION: 13b455a8-1318-4f35-8adc-f42f13e49e76
 
 jobs:
   validate:
@@ -116,12 +116,12 @@ jobs:
           python scripts/wu106/test_state_contract.py
           python scripts/wu106/test_runtime_matrix.py
 
-      - name: Assert CR-107-01 identity is update-pending and safe
+      - name: Assert CR-107-01 deployed identity and safety
         run: |
           python - <<'PY'
           import json, os
           d=json.load(open('contracts/WU107_CANDIDATE_IDENTITY_V1.json'))
-          assert d['status']=='CR10701_OFFLINE_CERTIFIED_STAGING_UPDATE_PENDING'
+          assert d['status']=='CR10701_STAGING_DEPLOYED_RETEST_PENDING'
           assert d['candidate']['release']=='CR-107-01'
           assert d['candidate']['candidate_sha256']==os.environ['FINAL_SHA']
           assert d['candidate']['node_count']==151
@@ -129,15 +129,25 @@ jobs:
           assert d['candidate']['production_mutation_allowed'] is False
           assert d['cr10701']['support_signal_regression_result']=='CR10701_SUPPORT_SIGNAL_RECOVERY_PASS'
           assert d['cr10701']['technical_issue_recovery']=='PASS'
+          h=d['staging_history']['cr10701_update']
+          assert h['result']=='SUCCESS'
+          assert h['operation']=='UPDATE_INACTIVE_NONPROD'
+          assert h['workflow_id']==os.environ['WU107_STAGING_ID']
+          assert h['remote_version_id']==os.environ['WU107_REMOTE_VERSION']
+          assert h['remote_active'] is False
+          assert h['remote_readback']=='WU107_CR10701_REMOTE_PASS'
+          assert h['published_or_activated'] is False
+          assert h['production_write_performed'] is False
           t=d['target_staging']
           assert t['workflow_id']==os.environ['WU107_STAGING_ID']
-          assert t['current_remote_version_id']==os.environ['WU107_PRE_CR_VERSION']
+          assert t['current_remote_release']=='CR-107-01'
+          assert t['current_remote_version_id']==os.environ['WU107_REMOTE_VERSION']
           assert t['current_remote_active'] is False
-          assert t['operation_planned']=='UPDATE_EXISTING_INACTIVE_NONPROD_TO_CR10701'
-          assert t['desired_candidate_sha256']==os.environ['FINAL_SHA']
+          assert t['deployment_status']=='CR10701_REMOTE_PASS_RETEST_PENDING'
+          assert t['candidate_sha256']==os.environ['FINAL_SHA']
           assert t['production_write_allowed'] is False
           assert d['execution_provider']['queue_receipt_is_human_acceptance'] is False
-          print('WU107_CR10701_UPDATE_PENDING_IDENTITY_PASS')
+          print('WU107_CR10701_DEPLOYED_IDENTITY_PASS')
           PY
 
       - name: Zero-write CR-107-01 dry-run
@@ -152,14 +162,14 @@ jobs:
           assert d['node_count']==151
           assert d['artifact_sha256']==os.environ['FINAL_SHA']
           assert d['target_workflow_id'] is None
-          print('WU107_CR10701_ZERO_WRITE_DRY_RUN_PASS')
+          print('WU107_CR10701_ZERO_WRITE_POST_DEPLOY_PASS')
           PY
 
-      - name: Upload CR-107-01 pre-update validation evidence
+      - name: Upload CR-107-01 post-deployment validation evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wu107-cr10701-pre-update-validation
+          name: wu107-cr10701-post-deployment-validation
           path: |
             n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
             contracts/WU107_CANDIDATE_IDENTITY_V1.json
