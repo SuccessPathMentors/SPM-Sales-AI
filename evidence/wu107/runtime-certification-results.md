@@ -1,6 +1,6 @@
 # WU-107 — Owner-Observed Runtime Certification Results
 
-Status: IN_PROGRESS — OWNER TESTING REQUIRED
+Status: IN_PROGRESS — OWNER TESTING
 Issue: #67
 PR: #68
 STAGING workflow: `RtI7hxjNb6Z0JL0D` (`[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1`)
@@ -23,11 +23,12 @@ Production mutation allowed: false
 - One-time creation workflow removed from branch: PASS
 
 ## Owner-observed live score
-`0 / 15 completed`
+`0 / 15 fully certified`  
+Customer-facing checkpoints observed: `1 / 15`
 
 | Test | Result | Evidence / finding |
 |---|---|---|
-| RT-107-01 — EN explicit human request | PENDING | — |
+| RT-107-01 — EN explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Owner Test Chat, session suffix `c9543…`: input `I want to speak with a person.` Response: `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` This correctly represents queue truth and explicitly avoids false human-acceptance truth. Internal execution/Redis evidence (`EXPLICIT_HUMAN_REQUEST`, one durable record, `queue_receipt_verified=true`, `human_acceptance_verified=false`) remains to be confirmed before the test is fully certified. |
 | RT-107-02 — Same-session repeat / idempotency | PENDING | — |
 | RT-107-03 — AR explicit human request | PENDING | — |
 | RT-107-04 — FR explicit human request | PENDING | — |
@@ -43,6 +44,44 @@ Production mutation allowed: false
 | RT-107-14 — Redis load failure injection | PENDING | — |
 | RT-107-15 — Redis save failure injection | PENDING | — |
 
+## RT-107-01 owner evidence
+Observed input:
+
+`I want to speak with a person.`
+
+Observed customer-visible response:
+
+`Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
+
+Customer-facing verdict: PASS.
+
+Why this passes the truth-language gate:
+- the bot states that the request is in the support queue;
+- it does not claim that a named/specific staff member received or accepted it;
+- it explicitly says acceptance has not yet been confirmed;
+- there is no invented ETA, case owner, or staff identity.
+
+Still required for full RT-107-01 certification:
+- execution reason `EXPLICIT_HUMAN_REQUEST`;
+- exactly one durable WU-107 queue record;
+- `handoff_state=QUEUED`;
+- `queue_receipt_verified=true`;
+- `human_acceptance_verified=false`;
+- no prohibited PII in the queue record.
+
+## Next owner-observed test — RT-107-02
+Use the **same Test Chat session** immediately after RT-107-01 and send:
+
+`Can I speak to a person please?`
+
+Expected customer-facing behavior:
+- the request is already in the support queue / existing handoff is reused;
+- no second logical case is implied;
+- no new staff acceptance is claimed;
+- no fabricated case ID, staff name, or ETA.
+
+Internal evidence later must confirm that the same active handoff generation/record was reused and no duplicate logical queue record was created.
+
 ## P0 stop conditions
 Testing stops and WU-107 becomes BLOCKED if any of these are observed:
 - queue evidence is rendered as human acceptance;
@@ -53,20 +92,6 @@ Testing stops and WU-107 becomes BLOCKED if any of these are observed:
 - STAGING workflow becomes active/published;
 - Production is mutated;
 - material locked WU-106 behavior regresses.
-
-## RT-107-01 input
-Start a fresh owner-observed Test Chat session and send exactly:
-
-`I want to speak with a person.`
-
-Expected minimum evidence:
-- handoff execution is required;
-- reason is `EXPLICIT_HUMAN_REQUEST`;
-- exactly one durable queue record is created;
-- customer-visible truth is `QUEUED` only after Redis tool evidence;
-- `queue_receipt_verified=true`;
-- `human_acceptance_verified=false`;
-- answer does not claim that a specific staff member has received/accepted the case.
 
 ## Lock rule
 This ledger cannot produce a WU-107 lock by itself. After all required runtime tests and WU-106 representative regression pass, a separate material review and explicit Owner approval are required before LOCK.
