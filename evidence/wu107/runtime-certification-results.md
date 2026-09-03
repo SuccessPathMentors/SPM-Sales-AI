@@ -1,6 +1,6 @@
 # WU-107 — Owner-Observed Runtime Certification Results
 
-Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-07 PASSED
+Status: IN_PROGRESS — CR-107-01 DEPLOYED / RT-107-08 PASSED
 Issue: #67
 PR: #68
 STAGING workflow: `RtI7hxjNb6Z0JL0D` (`[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1`)
@@ -30,7 +30,7 @@ Production mutation allowed: false
 - Publish/activate: false
 
 ## Owner-observed live score
-Customer-facing checkpoints passed so far: `7 / 15`
+Customer-facing checkpoints passed so far: `8 / 15`
 
 | Test | Result | Evidence / finding |
 |---|---|---|
@@ -41,8 +41,8 @@ Customer-facing checkpoints passed so far: `7 / 15`
 | RT-107-05 — Technical support interrupts sales | **PASS AFTER CR-107-01 — CUSTOMER-FACING / INTERNAL PENDING** | Retest session suffix `1c9c8…`: pricing answered first; technical issue stopped sales and entered truthful support-queue flow. |
 | RT-107-06 — Complaint escalation | **PASS-CUSTOMER-FACING / INTERNAL PENDING** | Session suffix `8a406…`: complaint interrupted sales and entered truthful support-queue flow. |
 | RT-107-07 — Pricing must not hand off | **PASS-CUSTOMER-FACING** | Session suffix `6faf9…`: `How much are your tutoring packages?` returned the normal pricing answer only. No support queue, handoff, complaint, or escalation wording appeared. |
-| RT-107-08 — Short query must not hand off | READY TO RUN | Next owner test. |
-| RT-107-09 — Handoff after existing sales context | PENDING | — |
+| RT-107-08 — Short query must not hand off | **PASS-CUSTOMER-FACING** | Short query `Math` stayed in ambiguity clarification: `Are you asking whether we offer this subject, or are you giving me the subject you need tutoring in?` No support queue, human handoff, complaint, or escalation wording appeared. |
+| RT-107-09 — Handoff after existing sales context | READY TO RUN | Next owner test. |
 | RT-107-10 — Queue PII minimization inspection | PENDING | — |
 | RT-107-11 — Queue receipt != human acceptance | PENDING | — |
 | RT-107-12 — Controlled authoritative acceptance fixture | PENDING | — |
@@ -81,13 +81,28 @@ Customer-facing acceptance criteria:
 - no complaint/support escalation: PASS
 - no sales interruption: PASS
 
-## Required next owner test — RT-107-08 Short query must not hand off
+## RT-107-08 short-query no-handoff evidence
+Input:
+`Math`
+
+Observed response:
+`Are you asking whether we offer this subject, or are you giving me the subject you need tutoring in?`
+
+Customer-facing acceptance criteria:
+- short/ambiguous query stayed in clarification flow: PASS
+- no support queue wording: PASS
+- no human handoff wording: PASS
+- no complaint/support escalation: PASS
+- WU-104 short-query behavior preserved: PASS
+
+## Required next owner test — RT-107-09 Handoff after existing sales context
 Run in a new Test Chat session.
 
 Expected behavior:
-- a short ambiguous sales query must stay in normal clarification/sales handling;
-- WU-107 must not create or claim a support queue request;
-- no support/handoff wording should appear solely because the message is short or ambiguous.
+- normal sales context is established first;
+- an explicit later request for a person must override the active sales objective and enter WU-107 queue execution;
+- known sales context must not cause the system to keep selling after the human request;
+- queue truth must remain honest: queued does not mean accepted by a specific human.
 
 ## Lock rule
 WU-107 cannot advance to READY_FOR_REVIEW until remaining runtime/internal evidence gates pass.
