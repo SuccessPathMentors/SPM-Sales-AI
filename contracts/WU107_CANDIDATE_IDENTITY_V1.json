@@ -1,8 +1,8 @@
 {
   "schema": "SPM_WU107_CANDIDATE_IDENTITY_V1",
-  "version": "1.1",
+  "version": "1.2",
   "work_unit": "WU-107",
-  "status": "CR10701_OFFLINE_CERTIFIED_STAGING_UPDATE_PENDING",
+  "status": "CR10701_STAGING_DEPLOYED_RETEST_PENDING",
   "purpose": "Deterministic human-handoff execution with verifiable queue truth, idempotency, bounded retry, privacy minimization, and explicit separation of queue receipt from human acceptance.",
   "candidate": {
     "release": "CR-107-01",
@@ -28,7 +28,8 @@
     "technical_issue_recovery": "PASS",
     "stale_support_guard": "PASS",
     "not_interested_handoff_guard": "PASS",
-    "do_not_contact_handoff_guard": "PASS"
+    "do_not_contact_handoff_guard": "PASS",
+    "runtime_retest": "RT-107-05 PENDING"
   },
   "execution_provider": {
     "type": "STAGING_REDIS_QUEUE",
@@ -66,17 +67,37 @@
       "remote_readback": "WU107_REMOTE_PASS",
       "published_or_activated": false,
       "production_write_performed": false
+    },
+    "cr10701_update": {
+      "github_actions_run_id": 33790623526,
+      "job_id": 100766072749,
+      "result": "SUCCESS",
+      "operation": "UPDATE_INACTIVE_NONPROD",
+      "candidate_sha256": "a258d9c294fe56c43ea120b14739119f294f7254b03cbecd9f21bf7831ac8809",
+      "workflow_id": "RtI7hxjNb6Z0JL0D",
+      "pre_version_id": "f52c7000-539f-4675-9fe8-2addc9354077",
+      "remote_version_id": "13b455a8-1318-4f35-8adc-f42f13e49e76",
+      "remote_active": false,
+      "remote_node_count": 151,
+      "remote_readback": "WU107_CR10701_REMOTE_PASS",
+      "cr10701_support_signal_recovery_present": true,
+      "stale_support_state_alone_guard_present": true,
+      "published_or_activated": false,
+      "production_write_performed": false,
+      "artifact_name": "wu107-cr10701-one-time-update-evidence",
+      "artifact_id": 9907166309,
+      "artifact_zip_sha256": "7353ff2a611318f02c90cbb1186b38a4023f4e2edc14b5ceb614475ead0488fe"
     }
   },
   "target_staging": {
     "workflow_id": "RtI7hxjNb6Z0JL0D",
     "workflow_name": "[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1",
-    "current_remote_release": "WU107_V1",
-    "current_remote_version_id": "f52c7000-539f-4675-9fe8-2addc9354077",
+    "current_remote_release": "CR-107-01",
+    "current_remote_version_id": "13b455a8-1318-4f35-8adc-f42f13e49e76",
     "current_remote_node_count": 151,
     "current_remote_active": false,
-    "operation_planned": "UPDATE_EXISTING_INACTIVE_NONPROD_TO_CR10701",
-    "desired_candidate_sha256": "a258d9c294fe56c43ea120b14739119f294f7254b03cbecd9f21bf7831ac8809",
+    "deployment_status": "CR10701_REMOTE_PASS_RETEST_PENDING",
+    "candidate_sha256": "a258d9c294fe56c43ea120b14739119f294f7254b03cbecd9f21bf7831ac8809",
     "remote_active_required": false,
     "published_or_activated_allowed": false,
     "production_write_allowed": false
