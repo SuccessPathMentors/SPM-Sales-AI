@@ -2,7 +2,7 @@
   "schema": "SPM_WU107_CANDIDATE_IDENTITY_V1",
   "version": "1.0",
   "work_unit": "WU-107",
-  "status": "OFFLINE_CERTIFIED_STAGING_DRY_RUN_PASS",
+  "status": "STAGING_CREATED_INACTIVE_RUNTIME_PENDING",
   "purpose": "Deterministic human-handoff execution with verifiable queue truth, idempotency, bounded retry, privacy minimization, and explicit separation of queue receipt from human acceptance.",
   "candidate": {
     "name": "[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1",
@@ -65,6 +65,37 @@
     "artifact_id": 9904396127,
     "artifact_zip_sha256": "7e64deb06bcdf05db09587cd1e454cf5c05c088b3bde99c49693fae6d990063d"
   },
+  "staging_creation": {
+    "first_attempt": {
+      "github_actions_run_id": 33784127232,
+      "job_id": 100744670955,
+      "result": "BLOCKED_BEFORE_WRITE",
+      "blocking_step": "remote duplicate-list preflight",
+      "blocking_reason": "n8n API returned HTTP 403 for workflow listing",
+      "candidate_rebuild": "PASS",
+      "n8n_create_step": "SKIPPED",
+      "n8n_write_performed": false,
+      "artifact_id": 9904737262,
+      "artifact_zip_sha256": "588fd4ab37772ce9ab91fa745fed345ba6ba30b74f405d55f4ea2cc9c362eec9"
+    },
+    "successful_attempt": {
+      "github_actions_run_id": 33784285015,
+      "job_id": 100745186371,
+      "result": "SUCCESS",
+      "deployer_result": "PASS_APPLY",
+      "operation": "CREATE_INACTIVE_NONPROD",
+      "target_workflow_id": "RtI7hxjNb6Z0JL0D",
+      "remote_version_id": "f52c7000-539f-4675-9fe8-2addc9354077",
+      "remote_active": false,
+      "remote_node_count": 151,
+      "remote_readback": "WU107_REMOTE_PASS",
+      "published_or_activated": false,
+      "production_write_performed": false,
+      "artifact_name": "wu107-one-time-staging-create-evidence-retry1",
+      "artifact_id": 9904795983,
+      "artifact_zip_sha256": "a3ecf75793a7b1632d8fc834d46d0eae617410590ef95a59bf44028fde93cf70"
+    }
+  },
   "historical_adapter_audit": {
     "source": "drive-mirror/03_Workflows_Current/Validated_Human_Handoff_FIXED.json",
     "direct_reuse": "BLOCKED",
@@ -72,10 +103,13 @@
     "reason": "Historical Google Sheets upsert conflates lead persistence with team receipt, requires excessive default PII, lacks explicit WU-107 truth states/idempotency/retry semantics, and contains no human-acceptance evidence path."
   },
   "target_staging": {
-    "workflow_id": null,
+    "workflow_id": "RtI7hxjNb6Z0JL0D",
     "workflow_name": "[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1",
-    "creation_status": "NOT_CREATED",
-    "operation_planned": "CREATE_INACTIVE_NONPROD",
+    "creation_status": "CREATED_INACTIVE_REMOTE_PASS",
+    "operation_completed": "CREATE_INACTIVE_NONPROD",
+    "remote_version_id": "f52c7000-539f-4675-9fe8-2addc9354077",
+    "remote_node_count": 151,
+    "remote_active": false,
     "remote_active_required": false,
     "published_or_activated_allowed": false,
     "production_write_allowed": false
