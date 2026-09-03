@@ -30,7 +30,10 @@ env:
   WU106_BASELINE_SHA: 134b2d861d6c5060ca52d8fd838b2cdd7d5d88ffa74855e3de1665e302afda67
   CR10601: /tmp/SPM_WU106_CR10601.json
   CR10601_SHA: 5db680c1e2b51d35408f78077ef4bb098da542bdf5e071125532948ad6783e2e
+  CR10602: /tmp/SPM_WU106_CR10602.json
+  CR10602_SHA: 50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014
   WU106_CANDIDATE: n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
+  CR10603_SHA: 2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f
 
 jobs:
   candidate:
@@ -84,7 +87,7 @@ jobs:
           test "$actual" = "$WU105_FINAL_SHA"
           test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU105_FINAL"]))["nodes"]))')" = "131"
 
-      - name: Build WU-106 baseline, CR-106-01, then root-cause CR-106-02
+      - name: Build WU-106 baseline through CR-106-03
         shell: bash
         run: |
           set -euo pipefail
@@ -95,12 +98,16 @@ jobs:
           python scripts/wu106/apply_cr10601.py --input "$WU106_BASELINE" --output "$CR10601"
           python scripts/wu106/test_cr10601.py --candidate "$CR10601"
           test "$(sha256sum "$CR10601" | awk '{print $1}')" = "$CR10601_SHA"
-          python scripts/wu106/apply_cr10602.py --input "$CR10601" --output "$WU106_CANDIDATE"
-          python scripts/wu106/test_cr10602.py --candidate "$WU106_CANDIDATE"
+          python scripts/wu106/apply_cr10602.py --input "$CR10601" --output "$CR10602"
+          python scripts/wu106/test_cr10602.py --candidate "$CR10602"
+          test "$(sha256sum "$CR10602" | awk '{print $1}')" = "$CR10602_SHA"
+          python scripts/wu106/apply_cr10603.py --input "$CR10602" --output "$WU106_CANDIDATE"
+          python scripts/wu106/test_cr10603.py --candidate "$WU106_CANDIDATE"
           actual="$(sha256sum "$WU106_CANDIDATE" | awk '{print $1}')"
-          echo "WU106_CR10602_CANDIDATE_SHA256=$actual"
-          echo "WU106_CR10602_NODE_COUNT=$(python -c 'import json,os; print(len(json.load(open(os.environ["WU106_CANDIDATE"]))["nodes"]))')"
-          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU106_CANDIDATE"]))["nodes"]))')" = "139"
+          echo "WU106_CR10603_CANDIDATE_SHA256=$actual"
+          echo "WU106_CR10603_NODE_COUNT=$(python -c 'import json,os; print(len(json.load(open(os.environ["WU106_CANDIDATE"]))["nodes"]))')"
+          test "$actual" = "$CR10603_SHA"
+          test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU106_CANDIDATE"]))["nodes"]))')" = "141"
 
       - name: Validate journey contracts and 48-scenario matrix
         run: |
@@ -108,11 +115,11 @@ jobs:
           python scripts/wu106/test_state_contract.py
           python scripts/wu106/test_runtime_matrix.py
 
-      - name: Upload WU-106 CR-106-02 root-cause candidate evidence
+      - name: Upload WU-106 CR-106-03 candidate evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: wu106-cr10602-candidate
+          name: wu106-cr10603-candidate
           path: |
             n8n/generated/SPM_WU106_OBSERVE_ONLY_BASELINE.json
             n8n/generated/SPM_WU106_STAGING_END_TO_END_JOURNEYS_CANDIDATE.json
