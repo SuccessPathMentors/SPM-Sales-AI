@@ -160,6 +160,28 @@ Observed PASS evidence:
 
 Certification scope: customer-visible handoff-interruption behavior PASS. Actual downstream human-assignment success is intentionally not claimed because automatic handoff is not enabled in the current release candidate.
 
+## GJ-09 — Sales Journey → Technical Support / Complaint Interruption
+Result: PASS ✅
+
+Owner-observed sequence:
+1. `My son is in Grade 8 and needs Math tutoring. How much does it cost?`
+2. bot returned approved package pricing.
+3. `I can't open my son's lesson and the audio is not working.`
+4. bot stopped the sales objective, preserved the support request/context, and stated that automatic human handoff is not enabled in this release candidate.
+5. `This is really frustrating. We already missed part of the class because of this.`
+6. bot remained on the support/complaint path and did not resume sales or claim that the issue had been resolved.
+
+Observed PASS evidence:
+- technical-support intent interrupted pricing immediately;
+- complaint/frustration remained support-owned rather than being interpreted as a sales objection;
+- no package, free-trial, or conversion pressure resumed after the support interruption;
+- no Grade/Subject re-ask occurred;
+- no false statement claimed that the technical issue was fixed;
+- no false statement claimed that a human agent had received the case;
+- relevant prior conversation context was preserved without driving the current answer back into sales.
+
+Certification scope: customer-visible support/complaint interruption behavior PASS. Downstream human support assignment remains intentionally unclaimed because automatic handoff is not enabled in this release candidate.
+
 ## Progress
 - GJ-01: PASS
 - GJ-02: PASS
@@ -169,6 +191,7 @@ Certification scope: customer-visible handoff-interruption behavior PASS. Actual
 - GJ-06: PASS
 - GJ-07: PASS
 - GJ-08: PASS
-- GJ-09 → GJ-12: PENDING
+- GJ-09: PASS
+- GJ-10 → GJ-12: PENDING
 
-Current certified owner-observed live journey score: `8 / 12 PASS`.
+Current certified owner-observed live journey score: `9 / 12 PASS`.
