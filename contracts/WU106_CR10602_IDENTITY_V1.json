@@ -3,7 +3,7 @@
   "version": "1.0",
   "work_unit": "WU-106",
   "change_request": "CR-106-02",
-  "status": "OFFLINE_CERTIFIED_STAGING_DEPLOY_PENDING",
+  "status": "STAGING_DEPLOYED_RETEST_PENDING",
   "purpose": "Root-cause repair for durable registration continuation and explicit availability transitions across turns.",
   "previous_live_result": {
     "journey": "GJ-04",
@@ -54,7 +54,18 @@
   "target_staging": {
     "workflow_id": "vvHvidUHVxM5wTVT",
     "workflow_name": "[STAGING] SPM_WU106_END_TO_END_JOURNEYS_V1",
-    "deployment_status": "PENDING",
+    "deployment_status": "PASS_APPLY",
+    "operation": "UPDATE_INACTIVE_NONPROD",
+    "remote_version_id": "1734f210-1fc3-4a90-96ca-de09edde4c23",
+    "remote_node_count": 139,
+    "remote_active": false,
+    "published_or_activated": false,
+    "remote_readback": "WU106_CR10602_REMOTE_PASS",
+    "github_actions_run_id": 33767318872,
+    "job_id": 100688392540,
+    "evidence_artifact_name": "wu106-cr10602-staging-update-evidence",
+    "evidence_artifact_id": 9898090717,
+    "evidence_artifact_zip_sha256": "89a6dc5cdbe93b71e4dbea2559544c58f9d614c09ec724103c7e7c13b8810e1b",
     "remote_active_required": false,
     "production_write_performed": false
   },
