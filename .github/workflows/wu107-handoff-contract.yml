@@ -7,6 +7,8 @@ on:
       - 'contracts/wu107-handoff-contract.json'
       - 'contracts/wu107-handoff-scenarios.json'
       - 'scripts/validate_wu107_handoff_contract.py'
+      - 'scripts/wu107_handoff_runtime.py'
+      - 'scripts/test_wu107_handoff_runtime.py'
       - '.github/workflows/wu107-handoff-contract.yml'
   push:
     branches:
@@ -16,6 +18,8 @@ on:
       - 'contracts/wu107-handoff-contract.json'
       - 'contracts/wu107-handoff-scenarios.json'
       - 'scripts/validate_wu107_handoff_contract.py'
+      - 'scripts/wu107_handoff_runtime.py'
+      - 'scripts/test_wu107_handoff_runtime.py'
       - '.github/workflows/wu107-handoff-contract.yml'
 
 permissions:
@@ -32,3 +36,6 @@ jobs:
           python-version: '3.12'
       - name: Validate truth, idempotency, privacy and scenario coverage
         run: python scripts/validate_wu107_handoff_contract.py
+      - name: Execute provider-neutral handoff state-machine tests
+        working-directory: scripts
+        run: python test_wu107_handoff_runtime.py
