@@ -4,117 +4,101 @@ Status: IN PROGRESS
 Issue: #65
 PR: #66
 STAGING workflow: `vvHvidUHVxM5wTVT` (`[STAGING] SPM_WU106_END_TO_END_JOURNEYS_V1`)
-Current candidate SHA-256: `50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014` (CR-106-02, 139 nodes)
+Current candidate SHA-256: `2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f` (CR-106-03, 141 nodes)
 
 ## Evidence method
-Owner executes the exact prescribed multi-turn prompts in n8n Test Chat and shares screenshots of customer-visible responses. These screenshots certify customer-visible journey behavior. They do not, by themselves, expose or certify internal `sales_state`; internal state/lineage is covered separately by deterministic contracts and CI.
+Owner executes the prescribed multi-turn prompts in n8n Test Chat and shares screenshots of customer-visible responses. Screenshots certify customer-visible behavior; internal state/lineage is covered separately by deterministic CI and remote readback.
 
 ## GJ-01 — Discovery → Pricing → Package Comparison
 Result: PASS ✅
-
-Observed sequence:
-1. `My son is in Grade 8 and needs Math tutoring.`
-2. `How much does it cost?`
-3. `What is the difference between your tutoring packages?`
-
-Observed PASS evidence:
-- initial response recognized Grade 8 + Math;
-- pricing response returned the approved package structure;
-- package-comparison response compared 4 / 8 / 12 lesson packages and per-lesson economics;
-- no re-ask of Grade or Subject;
-- no unsolicited registration/action claim;
-- no invented discount or package guarantee.
+- Grade 8 + Math recognized and reused.
+- Approved pricing and package comparison returned.
+- No unnecessary Grade/Subject re-ask or unsolicited registration.
 
 ## GJ-02 — Discovery → Pricing → Price Objection → Explicit Free Trial
 Result: PASS ✅
-
-Observed PASS evidence:
-- Grade 10 + Physics + daughter context preserved;
-- approved package prices returned;
-- price objection handled without invented discount or pressure;
-- explicit free-trial request transitioned into intake;
-- no false trial booking/confirmation claim.
+- Grade 10 + Physics preserved.
+- Price objection handled without invented discount or pressure.
+- Explicit trial request entered intake without false booking claim.
 
 ## GJ-03 — Trial Details → Explicit Trial Start → Registration Intake
 Result: PASS ✅
-
-Observed PASS evidence:
-- Grade 8 + Math preserved;
-- trial-details question remained informational;
-- explicit trial-start request entered intake;
-- registration request remained in intake;
-- no false trial/registration completion claim.
+- Trial-details inquiry remained informational.
+- Explicit trial start entered intake.
+- Registration continued without false trial/registration completion claim.
 
 ## GJ-04 — Registration → Availability → Schedule Request
 Initial result: FAIL ❌
 CR-106-01 live retest: FAIL ❌
 Final result after CR-106-02: PASS ✅
 
-Owner-observed corrected sequence:
-1. `I want to register my son for Grade 8 Math tutoring.`
-2. bot requested parent/guardian name
-3. `Ahmed`
-4. bot accepted `Ahmed` as the awaited parent/guardian field and moved to the student-name field without clarification
-5. `Omar`
-6. bot accepted `Omar` and moved to the phone field
-7. `Is Saturday available?`
-8. bot suspended the still-open registration intake objective and answered the availability objective safely: it stated that a live schedule check is required before confirming whether the requested day/time has a slot.
+Corrected live evidence:
+- `Ahmed` bound to the awaited parent/guardian field and advanced to student name.
+- `Omar` advanced to the phone field.
+- `Is Saturday available?` interrupted stale registration intake and became the active availability objective.
+- No re-ask of Grade 8/Math and no false availability/booking claim.
 
-Observed PASS evidence:
-- `Ahmed` no longer triggered `Could you tell me what you mean by that?`;
-- awaited registration field binding continued across turns;
-- the student-name field advanced correctly after the parent name was supplied;
-- explicit availability wording overrode the stale awaiting phone field without losing control of the journey;
-- no re-ask of Grade 8 or Math;
-- no false availability claim;
-- no false booking/confirmation claim;
-- current-message priority over stale registration context was demonstrated in live Test Chat.
+CR-106-02 root control:
+- dedicated PII-free Redis key `spm:staging:regctrl:<session_id>`;
+- registration control restored before classification when canonical continuation was absent;
+- explicit current availability wording overrides stale registration clarification;
+- canonical WU95 sales-state remains authoritative.
 
-### Why CR-106-01 was insufficient
-CR-106-01 could recover the short registration value only when the canonical registration continuation state (`registration_active` / `awaiting_field`) was already present in the next-turn payload. Live testing showed that this precondition was not reliable. Its availability override was also still coupled to classifier/clarification conditions rather than being fully current-message deterministic.
+## GJ-05 — Availability → Requested Slot → Safe Alternative
+Initial result: FAIL ❌
+Current status: RETEST PENDING after CR-106-03
 
-### CR-106-02 root-cause remediation
-Candidate: `50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014` (139 nodes).
+Owner-observed failing sequence:
+1. `My son is in Grade 8 and needs Math tutoring. Is Saturday at 6 PM Toronto time available?`
+2. bot incorrectly asked the owner to confirm timezone/city even though `Toronto time` was explicitly supplied;
+3. `Please schedule Saturday at 6 PM.`
+4. bot remained action-safe and did not falsely claim booking success;
+5. `If 6 PM is not available, what other time could work?`
+6. bot incorrectly returned the generic action-system-check fallback instead of treating the turn as an alternative availability inquiry.
+
+Failure classification:
+- `Toronto time` was not normalized by WU89 into the canonical scheduling timezone, so downstream WU90/WU94 treated timezone as missing;
+- the alternative-slot wording did not match the existing explicit-availability recovery because it contained no repeated day word, so it remained on the schedule/action path;
+- action honesty itself remained intact: no invented slot and no false booking confirmation.
+
+### CR-106-03 root remediation
+Candidate: `2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f` (141 nodes).
 
 Root controls:
-- dedicated PII-free STAGING Redis control key: `spm:staging:regctrl:<session_id>`;
-- control key stores only registration control metadata, never customer field values or raw messages;
-- control metadata is loaded and merged before classifier/catalog processing when canonical registration continuation is missing;
-- active canonical `sales_state` remains authoritative when present;
-- awaited registration values such as `Ahmed` bind deterministically even if the classifier is strongly wrong;
-- explicit availability wording such as `Is Saturday available?` gets current-message deterministic priority over stale registration/clarification context;
-- human/support/opt-out precedence is preserved;
-- a PII-free registration-control snapshot is redundantly persisted after final WU95/WU104 registration state is known;
-- canonical WU95 sales-state persistence remains unchanged and authoritative.
+- WU89 deterministic current-message scheduling normalization marker: `SPM_WU106_CR10603_SCHEDULING_NORMALIZATION_V1`;
+- explicit `Toronto time`, `Mississauga time`, or `Milton time` maps to the explicitly supplied city plus `America/Toronto`; this is not country-based timezone inference;
+- explicit scheduling day/time is normalized into `preferred_day` / `preferred_time` for the current request;
+- new `Apply WU106 Alternative Slot Recovery [CR-106-03]` recognizes alternative-slot wording as `availability` without overwriting the existing requested preference;
+- new `Apply WU106 Alternative Availability Response Guard [CR-106-03]` requires a live schedule check for alternatives and never invents a slot or claims a booking;
+- human/support/opt-out precedence remains higher priority.
 
-Offline exact-lineage certification:
-- run `33766888766`: SUCCESS;
-- executable result: `WU106_CR10602_ROOT_CAUSE_EXECUTABLE_PASS`;
-- multi-turn simulation: PASS;
-- 12 Golden Journey manifest: PASS;
-- Journey State Contract: PASS;
-- 48-scenario matrix: PASS.
+Offline/exact-lineage evidence:
+- exact-lineage run `33770742954`: SUCCESS;
+- executable result: `WU106_CR10603_GJ05_ROOT_FIX_EXECUTABLE_PASS`;
+- 12-journey contract: PASS;
+- 48-scenario deterministic matrix: PASS;
+- permanent STAGING dry-run: PASS;
+- Repository Guard: PASS.
 
 STAGING deployment:
-- run `33767318872`: SUCCESS;
+- update run `33770812500`: SUCCESS;
 - operation: `UPDATE_INACTIVE_NONPROD`;
+- candidate SHA: `2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f`;
 - workflow remains `vvHvidUHVxM5wTVT`;
-- remote versionId: `1734f210-1fc3-4a90-96ca-de09edde4c23`;
-- remote node count: 139;
-- active=false;
-- remote readback: `WU106_CR10602_REMOTE_PASS`;
-- registration-control Redis namespace isolation: PASS;
-- canonical Redis credential reuse: PASS;
-- WU102 queue idempotency and chat-memory isolation: PASS;
+- remote versionId: `a353d744-8e37-4a8b-ada5-5c43bfc5e0fc`;
+- remote node count: 141;
+- `active=false`;
+- remote readback: `WU106_CR10603_REMOTE_PASS`;
 - Production write performed: false.
 
-Certification scope: customer-visible behavior PASS after CR-106-02. Internal state lineage is separately covered by exact-lineage deterministic CI and remote topology/readback checks.
+GJ-05 remains RETEST PENDING until owner-visible Test Chat confirms the corrected three-turn journey.
 
 ## Progress
 - GJ-01: PASS
 - GJ-02: PASS
 - GJ-03: PASS
 - GJ-04: PASS after CR-106-02
-- GJ-05 → GJ-12: PENDING
+- GJ-05: RETEST PENDING after CR-106-03
+- GJ-06 → GJ-12: PENDING
 
 Current certified owner-observed live journey score: `4 / 12 PASS`.
