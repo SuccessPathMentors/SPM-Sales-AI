@@ -1,0 +1,44 @@
+name: WU-106 journey contract
+
+on:
+  pull_request:
+    paths:
+      - 'work-units/WU-106.md'
+      - 'work-units/WU-105.lock.md'
+      - 'contracts/WU106_GOLDEN_JOURNEYS_V1.json'
+      - 'contracts/WU106_GOLDEN_JOURNEY_MANIFEST_V1.schema.json'
+      - 'scripts/wu106/**'
+      - '.github/workflows/wu106-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate WU-106 Golden Journey contract
+        run: python scripts/wu106/test_journey_manifest.py
+
+      - name: Confirm no Production authorization in WU-106 contract
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = Path('contracts/WU106_GOLDEN_JOURNEYS_V1.json')
+          d = json.loads(p.read_text())
+          assert d['global_rules']['production_mutation_allowed'] is False
+          assert d['global_rules']['irreversible_action_allowed'] is False
+          assert d['global_rules']['second_wu106_agent_allowed'] is False
+          print('WU106_PRODUCTION_HARD_STOP_PASS')
+          PY
