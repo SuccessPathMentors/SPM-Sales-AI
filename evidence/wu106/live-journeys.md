@@ -182,6 +182,28 @@ Observed PASS evidence:
 
 Certification scope: customer-visible support/complaint interruption behavior PASS. Downstream human support assignment remains intentionally unclaimed because automatic handoff is not enabled in this release candidate.
 
+## GJ-10 — Policy Question Inside Active Sales Journey
+Result: PASS ✅
+
+Owner-observed sequence:
+1. `My son is in Grade 8 and needs Math tutoring. How much does it cost?`
+2. bot returned the approved package pricing.
+3. `What is your refund policy?`
+4. bot temporarily switched to the documented refund-policy objective and explained the general policy without treating the question as a refund action.
+5. `Okay, and which package gives the best value?`
+6. bot returned to the package-comparison objective only after the customer's explicit new sales signal and correctly identified the 12-class package as the lowest per-lesson price.
+
+Observed PASS evidence:
+- refund-policy inquiry temporarily replaced the active answer objective;
+- no refund approval, refund execution, amount, timing, or eligibility was promised;
+- the underlying sales context was not lost;
+- sales did not resume automatically during the policy answer;
+- package comparison resumed only after the customer explicitly asked to return to it;
+- no Grade/Subject re-ask or unsolicited registration occurred;
+- approved pricing remained consistent: 4 classes USD 110, 8 classes USD 220, 12 classes USD 280, with the 12-class package at about USD 23.33 per lesson versus USD 27.50 for the smaller packages.
+
+Certification scope: customer-visible policy-interruption and explicit sales-resume behavior PASS.
+
 ## Progress
 - GJ-01: PASS
 - GJ-02: PASS
@@ -192,6 +214,7 @@ Certification scope: customer-visible support/complaint interruption behavior PA
 - GJ-07: PASS
 - GJ-08: PASS
 - GJ-09: PASS
-- GJ-10 → GJ-12: PENDING
+- GJ-10: PASS
+- GJ-11 → GJ-12: PENDING
 
-Current certified owner-observed live journey score: `9 / 12 PASS`.
+Current certified owner-observed live journey score: `10 / 12 PASS`.
