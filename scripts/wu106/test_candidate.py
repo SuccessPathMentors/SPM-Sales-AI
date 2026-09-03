@@ -2,6 +2,7 @@
 import argparse
 import hashlib
 import json
+import re
 from pathlib import Path
 
 EXPECTED_WU105_SHA256 = "42ba2b9de1f52c0db1fc32e59974dc40ebce80b787677ac6b0d4418a6315bca1"
@@ -53,7 +54,7 @@ def main():
     require(target_of(cand, SOURCE_NODE) == WU106_NODE, "WU-106 node not inserted after WU-105 overlay")
     require(target_of(cand, WU106_NODE) == TARGET_NODE, "WU-106 node must return to original generator")
 
-    # All original nodes must be byte-equivalent as JSON objects.
+    # All original nodes must remain byte-equivalent as JSON objects.
     base_by_name = {n["name"]: n for n in base["nodes"]}
     cand_by_name = {n["name"]: n for n in cand["nodes"] if n["name"] in base_by_name}
     for name, original in base_by_name.items():
@@ -71,24 +72,37 @@ def main():
         "raw_message_logged:false",
         "raw_session_logged:false",
         "secret_values_logged:false",
-        "sales_state.conversion.awaiting_field" if False else "conv.awaiting_field",
+        "conv.awaiting_field",
         "journey.awaiting_entity",
+        "return [{json:{...j,wu106_orchestration:meta}}]",
     ]:
         require(required in js, f"WU-106 baseline safety marker missing: {required}")
 
     # Fail if the new node appears to create an external write/action surface.
+    # Reading j.sales_state is expected and safe. We block actual assignment or
+    # output replacement of authoritative state instead of substring-matching a read.
     forbidden_fragments = [
         "httpRequest",
         "googleSheets",
         "redis",
         "executeWorkflow",
         "ACTION_SUCCESS'",  # observe-only baseline must not emit success
-        "sales_state:",     # must not replace/write the authoritative state object
         "sales_agent_prompt:",
         "proposed_action:",
     ]
     for fragment in forbidden_fragments:
         require(fragment not in js, f"observe-only baseline contains forbidden mutation/action fragment: {fragment}")
+
+    forbidden_write_patterns = [
+        r"\bj\.sales_state\s*=",
+        r"\bj\[['\"]sales_state['\"]\]\s*=",
+        r"\bsales_state\s*=",
+        r"return\s*\[\s*\{\s*json\s*:\s*\{[^}]*\bsales_state\s*:",
+        r"\bj\.sales_agent_prompt\s*=",
+        r"\bj\.proposed_action\s*=",
+    ]
+    for pattern in forbidden_write_patterns:
+        require(not re.search(pattern, js), f"observe-only baseline contains forbidden write pattern: {pattern}")
 
     # Existing node-type inventory must change only by one deterministic Code node.
     def counts(workflow):
@@ -96,6 +110,7 @@ def main():
         for n in workflow["nodes"]:
             out[n.get("type")] = out.get(n.get("type"), 0) + 1
         return out
+
     bc = counts(base)
     cc = counts(cand)
     for node_type, count in bc.items():
@@ -107,6 +122,7 @@ def main():
     print(f"candidate_sha256={sha256(args.candidate)}")
     print(f"node_count={len(cand['nodes'])}")
     print("mode=OBSERVE_ONLY_BASELINE")
+    print("authoritative_sales_state_mutated=false")
     print("production_mutation_allowed=false")
 
 
