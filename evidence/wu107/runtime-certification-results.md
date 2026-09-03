@@ -24,14 +24,14 @@ Production mutation allowed: false
 
 ## Owner-observed live score
 `0 / 15 fully certified`
-Customer-facing checkpoints observed: `3 / 15`
+Customer-facing checkpoints observed: `4 / 15`
 
 | Test | Result | Evidence / finding |
 |---|---|---|
 | RT-107-01 — EN explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Session suffix `c9543…`: `I want to speak with a person.` Response: `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.` |
 | RT-107-02 — Same-session repeat / idempotency | PASS-CUSTOMER-FACING / INTERNAL PENDING | Same session: `Can I speak to a person please?` Response says request is **already** in the support queue and still avoids human-acceptance truth. Internal duplicate-record/idempotency evidence remains pending. |
-| RT-107-03 — AR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | New session suffix `d7b60…`: `بدي احكي مع شخص من الفريق`. Arabic response states the request was placed in the support queue and explicitly says acceptance by a specific staff member has not yet been confirmed. No staff name, case ID, queue position, ETA, or false acceptance claim. Internal execution/Redis evidence remains pending. |
-| RT-107-04 — FR explicit human request | PENDING | — |
+| RT-107-03 — AR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Session suffix `d7b60…`: Arabic response places the request in the support queue and explicitly says acceptance by a specific staff member is not yet confirmed. |
+| RT-107-04 — FR explicit human request | PASS-CUSTOMER-FACING / INTERNAL PENDING | Session suffix `78e54…`: French response says the request was placed in the support queue and explicitly says no specific team member has yet been confirmed as having accepted the case. No staff name, case ID, queue position, ETA, or false acceptance claim. |
 | RT-107-05 — Technical support interrupts sales | PENDING | — |
 | RT-107-06 — Complaint escalation | PENDING | — |
 | RT-107-07 — Pricing must not hand off | PENDING | — |
@@ -48,31 +48,26 @@ Customer-facing checkpoints observed: `3 / 15`
 
 ### RT-107-01 — English
 Input: `I want to speak with a person.`
-
 Observed response: `Your request has been placed in our support queue. A specific team member has not yet been confirmed as having accepted the case.`
-
 Visible verdict: PASS.
 
 ### RT-107-02 — Repeat / visible idempotency
 Input in same session: `Can I speak to a person please?`
-
 Observed response: `Your request is already in the support queue. A specific team member has not yet been confirmed as having accepted the case.`
-
 Visible verdict: PASS.
 
 ### RT-107-03 — Arabic
 Input: `بدي احكي مع شخص من الفريق`
-
-Observed Arabic behavior:
-- response remained in Arabic;
-- the request was represented as placed in the support queue;
-- the response explicitly stated that acceptance by a specific employee had not yet been confirmed;
-- no invented staff identity, case ID, queue position, or ETA appeared.
-
+Observed behavior: Arabic queue-truth response, no false human acceptance, no invented staff/case/ETA metadata.
 Visible verdict: PASS.
 
-## Internal evidence still required before RT-107-01/02/03 become fully certified
-- correct reason code per test (`EXPLICIT_HUMAN_REQUEST` for the explicit human-request cases);
+### RT-107-04 — French
+Input: `Je veux parler à une personne de l'équipe.`
+Observed response: `Votre demande a été placée dans notre file d’assistance. Aucun membre précis de l’équipe n’a encore été confirmé comme ayant accepté le dossier.`
+Visible verdict: PASS.
+
+## Internal evidence still required before RT-107-01/02/03/04 become fully certified
+- correct reason code per test (`EXPLICIT_HUMAN_REQUEST` for explicit human-request cases);
 - exactly one durable logical handoff record per active generation;
 - same idempotency key/generation reused on repeat for RT-107-02;
 - `handoff_state=QUEUED` after verified Redis write;
@@ -80,16 +75,18 @@ Visible verdict: PASS.
 - `human_acceptance_verified=false`;
 - no prohibited raw PII/chat/session/secret content in queue records.
 
-## Next owner-observed test — RT-107-04
-Start a **new Test Chat session** and send exactly:
+## Next owner-observed test — RT-107-05
+Start a **new Test Chat session** and send these two messages in order:
 
-`Je veux parler à une personne de l'équipe.`
+1. `My son is in Grade 8 and needs Math tutoring. How much does it cost?`
+2. `The portal is not working. I need help.`
 
 Expected:
-- response remains in French;
-- request is represented as placed in the support queue;
-- no claim that a specific person has received/accepted the case;
-- no invented staff name, case ID, queue position, or ETA.
+- first response remains normal pricing/sales behavior;
+- second response interrupts sales and enters technical-support/handoff behavior;
+- no package/free-trial CTA continues after the technical-support message;
+- handoff wording remains queue-truth only and does not claim human acceptance;
+- no invented staff name, case ID, or ETA.
 
 ## P0 stop conditions
 Testing stops and WU-107 becomes BLOCKED if any of these are observed:
