@@ -8,6 +8,7 @@ on:
       - 'scripts/wu107_handoff_runtime.py'
       - 'scripts/test_wu107_handoff_runtime.py'
       - 'evidence/wu107/**'
+      - 'change-requests/CR-107-01.md'
       - 'work-units/WU-107.md'
       - '.github/workflows/wu107-candidate.yml'
   workflow_dispatch:
@@ -37,6 +38,8 @@ env:
   CR10602_SHA: 50dbf22e2496e3c1b0ce7c9ff37edab752dbf6b69ddc62f80026942b31146014
   WU106_FINAL: /tmp/SPM_WU106_FINAL_CR10603.json
   WU106_FINAL_SHA: 2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f
+  WU107_V1: /tmp/SPM_WU107_V1.json
+  WU107_V1_SHA: fc4263b6bf029195a58b819ce4b06d6f499090d39017ff6ca906f173b7443f59
   WU107_CANDIDATE: n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
 
 jobs:
@@ -101,18 +104,18 @@ jobs:
           test "$(python -c 'import json,os; print(len(json.load(open(os.environ["WU106_FINAL"]))["nodes"]))')" = "141"
           echo "WU107_EXACT_WU106_UPSTREAM_PASS=$actual"
 
-      - name: Build WU-107 isolated handoff queue candidate
+      - name: Build WU-107 V1 then apply CR-107-01
         shell: bash
         run: |
           set -euo pipefail
           mkdir -p n8n/generated
-          python scripts/wu107/build_candidate.py --baseline "$WU106_FINAL" --output "$WU107_CANDIDATE"
-          python scripts/wu107/test_candidate.py --baseline "$WU106_FINAL" --candidate "$WU107_CANDIDATE"
-          echo "WU107_CANDIDATE_SHA256=$(sha256sum "$WU107_CANDIDATE" | awk '{print $1}')"
-          echo "WU107_CANDIDATE_NODE_COUNT=$(python -c 'import json,os; print(len(json.load(open(os.environ["WU107_CANDIDATE"]))["nodes"]))')"
-
-      - name: Diagnose support routing topology for CR-107-01
-        run: python scripts/wu107/diagnose_support_topology.py --candidate "$WU107_CANDIDATE"
+          python scripts/wu107/build_candidate.py --baseline "$WU106_FINAL" --output "$WU107_V1"
+          test "$(sha256sum "$WU107_V1" | awk '{print $1}')" = "$WU107_V1_SHA"
+          python scripts/wu107/test_candidate.py --baseline "$WU106_FINAL" --candidate "$WU107_V1"
+          python scripts/wu107/apply_cr10701.py --input "$WU107_V1" --output "$WU107_CANDIDATE"
+          python scripts/wu107/test_cr10701.py --input "$WU107_V1" --candidate "$WU107_CANDIDATE"
+          echo "WU107_CR10701_CANDIDATE_SHA256=$(sha256sum "$WU107_CANDIDATE" | awk '{print $1}')"
+          echo "WU107_CR10701_NODE_COUNT=$(python -c 'import json,os; print(len(json.load(open(os.environ["WU107_CANDIDATE"]))["nodes"]))')"
 
       - name: Validate WU-107 contract and executable provider-neutral semantics
         shell: bash
@@ -127,7 +130,7 @@ jobs:
           python scripts/wu106/test_state_contract.py
           python scripts/wu106/test_runtime_matrix.py
 
-      - name: Upload WU-107 candidate evidence
+      - name: Upload WU-107 CR-107-01 candidate evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -136,6 +139,7 @@ jobs:
             n8n/generated/SPM_WU107_STAGING_HUMAN_HANDOFF_CANDIDATE.json
             contracts/wu107-handoff-contract.json
             contracts/wu107-handoff-scenarios.json
+            change-requests/CR-107-01.md
             evidence/wu107/historical-adapter-audit.md
           if-no-files-found: error
           retention-days: 30
