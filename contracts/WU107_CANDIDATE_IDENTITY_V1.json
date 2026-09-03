@@ -1,0 +1,72 @@
+{
+  "schema": "SPM_WU107_CANDIDATE_IDENTITY_V1",
+  "version": "1.0",
+  "work_unit": "WU-107",
+  "status": "OFFLINE_CERTIFIED_STAGING_NOT_CREATED",
+  "purpose": "Deterministic human-handoff execution with verifiable queue truth, idempotency, bounded retry, privacy minimization, and explicit separation of queue receipt from human acceptance.",
+  "candidate": {
+    "name": "[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1",
+    "candidate_sha256": "fc4263b6bf029195a58b819ce4b06d6f499090d39017ff6ca906f173b7443f59",
+    "node_count": 151,
+    "input_wu106_sha256": "2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f",
+    "input_wu106_node_count": 141,
+    "new_node_count": 10,
+    "production_mutation_allowed": false,
+    "active_required": false
+  },
+  "execution_provider": {
+    "type": "STAGING_REDIS_QUEUE",
+    "namespace_prefix": "spm:staging:handoff:",
+    "queue_write_truth": "QUEUED",
+    "queue_receipt_is_human_acceptance": false,
+    "human_acceptance_requires_authoritative_evidence": true,
+    "whatsapp_notification_in_scope": false,
+    "historical_validated_handoff_workflow_reconnected": false
+  },
+  "truth_states": [
+    "NONE",
+    "REQUESTED",
+    "QUEUED",
+    "ACCEPTED",
+    "FAILED",
+    "CANCELLED"
+  ],
+  "offline_certification": {
+    "github_actions_run_id": 33782585735,
+    "job_id": 100739591808,
+    "result": "SUCCESS",
+    "candidate_static_result": "WU107_CANDIDATE_STATIC_PASS",
+    "handoff_contract_result": "WU107_HANDOFF_CONTRACT_PASS",
+    "runtime_executable_result": "WU107_HANDOFF_RUNTIME_EXECUTABLE_PASS",
+    "upstream_wu106_journey_contract": "PASS",
+    "upstream_wu106_state_contract": "PASS",
+    "upstream_wu106_runtime_matrix_48_scenarios": "PASS",
+    "scenario_count": 24,
+    "provider_neutral_runtime_case_count": 10,
+    "artifact_name": "wu107-handoff-candidate",
+    "artifact_id": 9904151752,
+    "artifact_zip_sha256": "78cbaefd044c19beb02f94794efb559eaec5e708864478a317c1c96462f8af20"
+  },
+  "historical_adapter_audit": {
+    "source": "drive-mirror/03_Workflows_Current/Validated_Human_Handoff_FIXED.json",
+    "direct_reuse": "BLOCKED",
+    "validation_pattern_reuse": "ALLOWED_WITH_REVIEW",
+    "reason": "Historical Google Sheets upsert conflates lead persistence with team receipt, requires excessive default PII, lacks explicit WU-107 truth states/idempotency/retry semantics, and contains no human-acceptance evidence path."
+  },
+  "target_staging": {
+    "workflow_id": null,
+    "workflow_name": "[STAGING] SPM_WU107_HUMAN_HANDOFF_EXECUTION_V1",
+    "creation_status": "NOT_CREATED",
+    "operation_planned": "CREATE_INACTIVE_NONPROD",
+    "remote_active_required": false,
+    "published_or_activated_allowed": false,
+    "production_write_allowed": false
+  },
+  "locked_upstream": {
+    "work_unit": "WU-106",
+    "status": "LOCKED",
+    "final_cr": "CR-106-03",
+    "candidate_sha256": "2e219adbdd612106b782993cbcb2f94da6c0737b250264060b473f12f0fcc81f",
+    "node_count": 141
+  }
+}
