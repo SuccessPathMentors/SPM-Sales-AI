@@ -26,6 +26,7 @@ widget = '''<div class="widget" id="app">
       <button type="button" data-lang="en" aria-pressed="false">English</button>
       <button type="button" data-lang="fr" aria-pressed="false">Français</button>
     </div>
+    <button type="button" class="tb" id="closeChat" hidden aria-label="Close">✕</button>
   </div>
   <div class="toolbar" id="toolbar"></div>
   <nav class="crumbs" id="crumbs" aria-label="Path"></nav>
@@ -49,6 +50,12 @@ body{padding:0;margin:0;background:var(--surface)}
 .widget{position:relative;height:100vh;height:100dvh;min-height:0;border:0;border-radius:0}
 .mapdrawer{position:absolute;inset:0;background:var(--surface);z-index:5;overflow:auto;padding:14px 16px;display:grid;gap:12px;align-content:start}
 '''
+css += '''
+a.btn{display:inline-block;text-decoration:none}
+/* site brand blue (matches the website chat colours) */
+:root{--accent:#1d5fb8;--accent-soft:#e4eefb;--bg:#f3f7fc;--line:#d7e2f0}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--accent:#8ec0f7;--accent-ink:#0b1f3a;--accent-soft:#16304f}}
+'''
 tpl = sub(tpl, "</style>", css + "</style>")
 
 # 4. JS patches
@@ -60,13 +67,19 @@ tpl = sub(tpl, "nb.addEventListener(\"click\",function(){ if(ok)jump(id); });", 
 tpl = sub(tpl, 'if(n.origin==="composed")row.appendChild', 'if(REVIEW && n.origin==="composed")row.appendChild')
 tpl = sub(tpl, 'if(!ok)row.appendChild(el("span","tag dim","غير متاح"));', 'if(REVIEW && !ok)row.appendChild(el("span","tag dim","غير متاح"));')
 tpl = sub(tpl, 'row.appendChild(el("span","mono",id));', 'if(REVIEW)row.appendChild(el("span","mono",id));')
-tpl = sub(tpl, 'var S = {', 'var REVIEW = !/[?&]clean=1/.test(location.search);\nvar S = {')
+tpl = sub(tpl, 'var S = {', 'var REVIEW = !/[?&]clean=1/.test(location.search);\nvar REGURL = null;\ntry { var qr = /[?&]reg=([^&]+)/.exec(location.search); if (qr) { var ru = decodeURIComponent(qr[1]); if (/^\\/[A-Za-z0-9_\\-\\/]*$/.test(ru) && ru.indexOf("//") !== 0) REGURL = ru; } } catch (e) {}\nvar S = {')
 tpl = sub(tpl, '$("footnote").textContent=W.note[l];', '$("footnote").textContent=REVIEW?W.note[l]:"";\n  $("mapTitle").textContent=UI.map[l]; $("drawer").dir=dirOf(l);')
 tpl = sub(tpl, "renderStats(); render(false);",
           '$("closeMap").addEventListener("click",function(){$("drawer").hidden=true});\n'
           'document.addEventListener("keydown",function(e){if(e.key==="Escape")$("drawer").hidden=true});\n'
+          'if(/[?&]close=1/.test(location.search)){ $("closeChat").hidden=false; $("closeChat").addEventListener("click",function(){ try{ window.parent.postMessage({type:"spm-guided-chat-close"}, location.origin) }catch(e){} }); }\n'
           'var qm=/[?&]lang=(ar|en|fr)/.exec(location.search); if(qm){S.lang=qm[1]; document.documentElement.lang=qm[1]}\n'
           'renderStats(); render(false);')
+
+tpl = sub(tpl, ' note:{ar:"نموذج تجريبي"', ' liveReg:{ar:"للتسجيل، تابعوا إلى صفحة التسجيل الآمنة في موقعنا.",en:"To register, continue to the registration page on our website.",fr:"Pour vous inscrire, continuez vers la page d’inscription de notre site."},\n go:{ar:"الانتقال إلى التسجيل",en:"Go to registration",fr:"Aller à l’inscription"},\n note:{ar:"نموذج تجريبي"')
+tpl = sub(tpl, 'function renderWizard(box){\n  var r=S.reg, l=S.lang, d=r.data;',
+  'function renderWizard(box){\n  var r=S.reg, l=S.lang, d=r.data;\n  if(REGURL){ box.appendChild(el("strong",null,W.liveReg[l])); var ra=document.createElement("a"); ra.className="btn"; ra.href=REGURL; ra.target="_top"; ra.textContent=W.go[l]; var rr=el("div","row"); rr.appendChild(ra); box.appendChild(rr); return; }')
+tpl = sub(tpl, 'bot.appendChild(el("div",null,L(n.text)||"")); var box=el("div");', 'bot.appendChild(el("div",null,REGURL?"":(L(n.text)||""))); var box=el("div");')
 
 j = json.dumps(tree, ensure_ascii=False).replace("</", "<\\/")
 html = "<!doctype html>\n<html lang=\"ar\"><head><meta charset=\"utf-8\"><meta name=\"viewport\" content=\"width=device-width,initial-scale=1,viewport-fit=cover\">\n" + tpl.replace("/*TREE_JSON*/", j) + "\n</html>\n"
