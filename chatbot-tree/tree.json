@@ -1,0 +1,1948 @@
+{
+ "meta": {
+  "source": "Success_Path_Mentors_AI_KB_V2_SPM_2026-08-18.xlsx",
+  "note": "Built from the 2026-08-18 KB snapshot; the live sheet changed on 2026-09-17 and must be re-checked.",
+  "langs": [
+   "ar",
+   "en",
+   "fr"
+  ]
+ },
+ "ui": {
+  "greeting": {
+   "ar": "أهلاً بكم في Success Path Mentors. اختر ما يهمّكم.",
+   "en": "Welcome to Success Path Mentors. Choose what you would like to know.",
+   "fr": "Bienvenue chez Success Path Mentors. Choisissez ce qui vous intéresse."
+  },
+  "pick": {
+   "ar": "اختر من الخيارات التالية.",
+   "en": "Choose one of the options below.",
+   "fr": "Choisissez l’une des options ci-dessous."
+  },
+  "home": {
+   "ar": "الرئيسية",
+   "en": "Home",
+   "fr": "Accueil"
+  },
+  "back1": {
+   "ar": "رجوع",
+   "en": "Back",
+   "fr": "Retour"
+  },
+  "back2": {
+   "ar": "رجوع مستويين",
+   "en": "Back 2 levels",
+   "fr": "Retour de 2 niveaux"
+  },
+  "fwd": {
+   "ar": "إلى الأمام",
+   "en": "Forward",
+   "fr": "Suivant"
+  },
+  "map": {
+   "ar": "خريطة الأسئلة",
+   "en": "Question map",
+   "fr": "Carte des questions"
+  },
+  "you_are_here": {
+   "ar": "أنت هنا",
+   "en": "You are here",
+   "fr": "Vous êtes ici"
+  },
+  "human": {
+   "ar": "تواصل مع الفريق",
+   "en": "Contact the team",
+   "fr": "Contacter l’équipe"
+  },
+  "related": {
+   "ar": "أسئلة قد تهمّك",
+   "en": "You may also want to know",
+   "fr": "Vous pourriez aussi vouloir savoir"
+  },
+  "next_step": {
+   "ar": "الخطوة التالية",
+   "en": "Next step",
+   "fr": "Étape suivante"
+  }
+ },
+ "nodes": {
+  "root": {
+   "id": "root",
+   "parent": null,
+   "kind": "menu",
+   "label": {
+    "ar": "الرئيسية",
+    "en": "Home",
+    "fr": "Accueil"
+   },
+   "text": {
+    "ar": "أهلاً بكم في Success Path Mentors. اختر ما يهمّكم.",
+    "en": "Welcome to Success Path Mentors. Choose what you would like to know.",
+    "fr": "Bienvenue chez Success Path Mentors. Choisissez ce qui vous intéresse."
+   },
+   "options": [
+    {
+     "to": "about"
+    },
+    {
+     "to": "subjects"
+    },
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "classes"
+    },
+    {
+     "to": "policies"
+    },
+    {
+     "to": "concerns"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [],
+   "origin": "ui"
+  },
+  "about": {
+   "id": "about",
+   "parent": "root",
+   "kind": "menu",
+   "label": {
+    "ar": "من نحن وما خدماتنا؟",
+    "en": "Who we are and what we offer",
+    "fr": "Qui sommes-nous et que proposons-nous ?"
+   },
+   "text": {
+    "ar": "دروس خصوصية فردية عبر الإنترنت للطلاب من الصف الأول حتى الصف الثاني عشر.",
+    "en": "One-to-one online tutoring for students in Grades 1–12.",
+    "fr": "Tutorat individuel en ligne pour les élèves de la 1re à la 12e année."
+   },
+   "options": [
+    {
+     "to": "about_online"
+    },
+    {
+     "to": "about_grades"
+    },
+    {
+     "to": "about_curriculum"
+    }
+   ],
+   "sources": [
+    "COM-003",
+    "COM-004",
+    "COM-008"
+   ],
+   "origin": "kb"
+  },
+  "about_online": {
+   "id": "about_online",
+   "parent": "about",
+   "kind": "answer",
+   "label": {
+    "ar": "هل الدروس أونلاين؟",
+    "en": "Are lessons online?",
+    "fr": "Les cours sont-ils en ligne ?"
+   },
+   "text": {
+    "ar": "نعم، جميع الدروس فردية وتُقدَّم عبر الإنترنت.",
+    "en": "Yes. All lessons are delivered online in a one-to-one format.",
+    "fr": "Oui. Les cours sont individuels et se déroulent en ligne."
+   },
+   "options": [
+    {
+     "to": "about_grades"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "FAQ-002",
+    "FAQ-005",
+    "FAQ-008"
+   ],
+   "origin": "kb"
+  },
+  "about_grades": {
+   "id": "about_grades",
+   "parent": "about",
+   "kind": "answer",
+   "label": {
+    "ar": "ما الصفوف التي تدرسونها؟",
+    "en": "Which grades do you support?",
+    "fr": "Quels niveaux accompagnez-vous ?"
+   },
+   "text": {
+    "ar": "نخدم الطلاب من الصف الأول حتى الصف الثاني عشر.",
+    "en": "We support students in Grades 1–12.",
+    "fr": "Nous accompagnons les élèves de la 1re à la 12e année."
+   },
+   "options": [
+    {
+     "to": "subjects"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "FAQ-003",
+    "FAQ-006",
+    "FAQ-009"
+   ],
+   "origin": "kb"
+  },
+  "about_curriculum": {
+   "id": "about_curriculum",
+   "parent": "about",
+   "kind": "answer",
+   "label": {
+    "ar": "ما المناهج التي تدعمونها؟",
+    "en": "Which curricula do you support?",
+    "fr": "Quels programmes soutenez-vous ?"
+   },
+   "text": {
+    "ar": "نقدم دعماً متوافقاً مع المناهج الكندية والأمريكية حسب صف الطالب واحتياجه.",
+    "en": "Support is aligned with Canadian or American curricula based on grade and needs.",
+    "fr": "Le soutien est adapté aux programmes canadiens ou américains selon le niveau et les besoins."
+   },
+   "options": [
+    {
+     "to": "subjects"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "COM-011",
+    "COM-012",
+    "COM-013"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "sub_001_strands": {
+   "id": "sub_001_strands",
+   "parent": "sub_001",
+   "kind": "answer",
+   "label": {
+    "ar": "ما محاور المادة؟",
+    "en": "What topics are covered?",
+    "fr": "Quels sujets sont couverts ?"
+   },
+   "text": {
+    "en": "• Basics and Operations\n• Fractions and Rational Numbers\n• Algebra and Equations\n• Functions\n• Geometry and Trigonometry\n• Statistics and Probability\n• Advanced Mathematics and Pre-Calculus\n• Financial Literacy",
+    "ar": "• الأساسيات والعمليات الحسابية\n• الكسور والأعداد النسبية\n• الجبر والمعادلات\n• الدوال\n• الهندسة وحساب المثلثات\n• الإحصاء والاحتمالات\n• الرياضيات المتقدمة وما قبل التفاضل\n• الثقافة المالية"
+   },
+   "options": [
+    {
+     "to": "sub_001"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "MATH-EN-1",
+    "MATH-EN-2",
+    "MATH-EN-3",
+    "MATH-EN-4",
+    "MATH-EN-5",
+    "MATH-EN-6",
+    "MATH-EN-7",
+    "MATH-EN-8",
+    "MATH-AR-1",
+    "MATH-AR-2",
+    "MATH-AR-3",
+    "MATH-AR-4",
+    "MATH-AR-5",
+    "MATH-AR-6",
+    "MATH-AR-7",
+    "MATH-AR-8"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "sub_001": {
+   "id": "sub_001",
+   "parent": "subjects",
+   "kind": "answer",
+   "label": {
+    "ar": "الرياضيات",
+    "en": "Mathematics"
+   },
+   "text": {
+    "ar": "دروس رياضيات فردية عبر الإنترنت.",
+    "en": "Mathematics: one-to-one online lessons for Grades 1–12."
+   },
+   "options": [
+    {
+     "to": "sub_001_strands"
+    },
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "subject": "sub_001"
+     }
+    }
+   ],
+   "sources": [
+    "SUB-001"
+   ],
+   "origin": "kb"
+  },
+  "sub_002_strands": {
+   "id": "sub_002_strands",
+   "parent": "sub_002",
+   "kind": "answer",
+   "label": {
+    "ar": "ما محاور المادة؟",
+    "en": "What topics are covered?",
+    "fr": "Quels sujets sont couverts ?"
+   },
+   "text": {
+    "en": "• Foundational Reading\n• Grammar & Language Conventions\n• Literature & Literary Analysis\n• Reading Comprehension\n• Reading Fluency\n• Speaking & Listening\n• Vocabulary & Word Study\n• Academic Skills & Assignments\n• Writing\n• Assessment & Test Preparation\n• Cross-Curricular Support",
+    "ar": "• القراءة التأسيسية\n• القواعد والاتفاقيات اللغوية\n• الأدب والتحليل الأدبي\n• الفهم القرائي\n• الطلاقة القرائية\n• التحدث والاستماع\n• المفردات ودراسة الكلمات\n• المهارات والواجبات الأكاديمية\n• الكتابة\n• التحضير للتقييم والاختبارات\n• الدعم عبر المواد",
+    "fr": "• Lecture fondamentale\n• Grammaire et conventions linguistiques\n• Littérature et analyse littéraire\n• Compréhension de lecture\n• Fluidité en lecture\n• Expression orale et écoute\n• Vocabulaire et étude des mots\n• Compétences et travaux scolaires\n• Écriture\n• Préparation aux évaluations\n• Soutien interdisciplinaire"
+   },
+   "options": [
+    {
+     "to": "sub_002"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "P-EN-1",
+    "P-EN-2",
+    "P-EN-3",
+    "P-EN-4",
+    "P-EN-5",
+    "P-EN-6",
+    "P-EN-7",
+    "P-EN-8",
+    "P-EN-9",
+    "P-EN-10",
+    "P-EN-11",
+    "P-AR-1",
+    "P-AR-2",
+    "P-AR-3",
+    "P-AR-4",
+    "P-AR-5",
+    "P-AR-6",
+    "P-AR-7",
+    "P-AR-8",
+    "P-AR-9",
+    "P-AR-10",
+    "P-AR-11",
+    "P-FR-1",
+    "P-FR-2",
+    "P-FR-3",
+    "P-FR-4",
+    "P-FR-5",
+    "P-FR-6",
+    "P-FR-7",
+    "P-FR-8",
+    "P-FR-9",
+    "P-FR-10",
+    "P-FR-11"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "sub_002": {
+   "id": "sub_002",
+   "parent": "subjects",
+   "kind": "answer",
+   "label": {
+    "ar": "اللغة الإنجليزية",
+    "en": "English",
+    "fr": "Anglais"
+   },
+   "text": {
+    "ar": "دروس لغة إنجليزية فردية عبر الإنترنت.",
+    "en": "English: one-to-one online lessons for Grades 1–12.",
+    "fr": "Anglais : cours individuels en ligne de la 1re à la 12e année."
+   },
+   "options": [
+    {
+     "to": "sub_002_strands"
+    },
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "subject": "sub_002"
+     }
+    }
+   ],
+   "sources": [
+    "SUB-002"
+   ],
+   "origin": "kb"
+  },
+  "sub_003_strands": {
+   "id": "sub_003_strands",
+   "parent": "sub_003",
+   "kind": "answer",
+   "label": {
+    "ar": "ما محاور المادة؟",
+    "en": "What topics are covered?",
+    "fr": "Quels sujets sont couverts ?"
+   },
+   "text": {
+    "en": "• Earth and Space Science\n• Life Science\n• Scientific Inquiry and Laboratory Skills\n• Structures and Engineering",
+    "ar": "• علوم الأرض والفضاء\n• علوم الحياة\n• الاستقصاء العلمي ومهارات المختبر\n• الهياكل والهندسة"
+   },
+   "options": [
+    {
+     "to": "sub_003"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "SCI-EN-1",
+    "SCI-EN-2",
+    "SCI-EN-3",
+    "SCI-EN-4",
+    "SCI-AR-1",
+    "SCI-AR-2",
+    "SCI-AR-3",
+    "SCI-AR-4"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "sub_003": {
+   "id": "sub_003",
+   "parent": "subjects",
+   "kind": "answer",
+   "label": {
+    "ar": "العلوم",
+    "en": "General Science"
+   },
+   "text": {
+    "ar": "دروس علوم فردية بحسب الصف والمنهج.",
+    "en": "General Science: one-to-one online lessons for Grades 1–12."
+   },
+   "options": [
+    {
+     "to": "sub_003_strands"
+    },
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "subject": "sub_003"
+     }
+    }
+   ],
+   "sources": [
+    "SUB-003"
+   ],
+   "origin": "kb"
+  },
+  "sub_004_strands": {
+   "id": "sub_004_strands",
+   "parent": "sub_004",
+   "kind": "answer",
+   "label": {
+    "ar": "ما محاور المادة؟",
+    "en": "What topics are covered?",
+    "fr": "Quels sujets sont couverts ?"
+   },
+   "text": {
+    "en": "• Dynamics and Forces\n• Electricity and Circuits\n• Electrostatics and Electromagnetism\n• Integrated Physics\n• Kinematics\n• Measurement, Vectors, and Modeling\n• Modern Physics\n• Momentum and Collisions\n• Optics\n• Oscillations\n• Thermal Physics\n• Waves and Sound\n• Work, Energy, and Power\n• Ontario Grade 11 Physics Curriculum",
+    "ar": "• الديناميكا والقوى\n• الكهرباء والدوائر\n• الكهرباء الساكنة والكهرومغناطيسية\n• الفيزياء المتكاملة\n• الحركة\n• القياس والمتجهات والنمذجة\n• الفيزياء الحديثة\n• الزخم والتصادمات\n• البصريات\n• الاهتزازات\n• الفيزياء الحرارية\n• الموجات والصوت\n• الشغل والطاقة والقدرة\n• منهج أونتاريو للفيزياء - الصف 11",
+    "fr": "• Programme de physique de 11e année en Ontario"
+   },
+   "options": [
+    {
+     "to": "sub_004"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "PHYS-EN-1",
+    "PHYS-EN-2",
+    "PHYS-EN-3",
+    "PHYS-EN-4",
+    "PHYS-EN-5",
+    "PHYS-EN-6",
+    "PHYS-EN-7",
+    "PHYS-EN-8",
+    "PHYS-EN-9",
+    "PHYS-EN-10",
+    "PHYS-EN-11",
+    "PHYS-EN-12",
+    "PHYS-EN-13",
+    "PHYS-ON11-EN",
+    "PHYS-AR-1",
+    "PHYS-AR-2",
+    "PHYS-AR-3",
+    "PHYS-AR-4",
+    "PHYS-AR-5",
+    "PHYS-AR-6",
+    "PHYS-AR-7",
+    "PHYS-AR-8",
+    "PHYS-AR-9",
+    "PHYS-AR-10",
+    "PHYS-AR-11",
+    "PHYS-AR-12",
+    "PHYS-AR-13",
+    "PHYS-ON11-AR",
+    "PHYS-ON11-FR"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "sub_004_ontario": {
+   "id": "sub_004_ontario",
+   "parent": "sub_004",
+   "kind": "answer",
+   "label": {
+    "ar": "هل تدعمون فيزياء الصف الحادي عشر حسب منهج أونتاريو؟",
+    "en": "Do you support Ontario Grade 11 Physics?",
+    "fr": "Proposez-vous du soutien en physique de 11e année selon le programme de l’Ontario ?"
+   },
+   "text": {
+    "ar": "نعم. تدعم Success Path Mentors مادة الفيزياء للصف الحادي عشر وفق منهج أونتاريو في كندا. يمكن مواءمة الدروس مع منهج أونتاريو ومواد الطالب الدراسية وواجباته واحتياجاته التعليمية. تتم مطابقة المدرس حسب المادة والصف والمنهج واللغة واحتياجات الطالب، ويُؤكد توفر المدرس قبل اعتماد المطابقة.",
+    "en": "Yes. Success Path Mentors supports Grade 11 Physics aligned with the Ontario curriculum in Canada. Lessons can be aligned with the Ontario curriculum, the student's course materials, school assignments, and learning needs. Tutor matching considers subject, grade, curriculum, language, and student needs, and tutor availability is confirmed before the match is finalized.",
+    "fr": "Oui. Success Path Mentors offre du soutien en physique de 11e année aligné sur le programme de l’Ontario au Canada. Les cours peuvent être adaptés au programme de l’Ontario, au matériel scolaire, aux devoirs et aux besoins d’apprentissage de l’élève. Le jumelage tient compte de la matière, du niveau, du programme, de la langue et des besoins de l’élève; la disponibilité du tuteur est confirmée avant de finaliser le jumelage."
+   },
+   "options": [
+    {
+     "to": "sub_004"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "FAQ-WU99-004-AR",
+    "FAQ-WU99-004-EN",
+    "FAQ-WU99-004-FR"
+   ],
+   "origin": "kb"
+  },
+  "sub_004": {
+   "id": "sub_004",
+   "parent": "subjects",
+   "kind": "answer",
+   "label": {
+    "ar": "الفيزياء",
+    "en": "Physics",
+    "fr": "Physique"
+   },
+   "text": {
+    "ar": "دروس فيزياء فردية أونلاين للصفوف 9–12. ندعم فيزياء الصف الحادي عشر وفق منهج أونتاريو في كندا، ويمكن مواءمة الدروس مع منهج الطالب ومواد المدرسة والواجبات واحتياجاته التعليمية. تتم مطابقة المدرس حسب المادة والصف والمنهج واللغة واحتياجات الطالب، ويُؤكد توفر المدرس قبل اعتماد المطابقة.",
+    "en": "Physics: one-to-one online lessons for Grades 9–12.",
+    "fr": "Physique : cours individuels en ligne de la 9e à la 12e année."
+   },
+   "options": [
+    {
+     "to": "sub_004_strands"
+    },
+    {
+     "to": "sub_004_ontario"
+    },
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "subject": "sub_004"
+     }
+    }
+   ],
+   "sources": [
+    "SUB-004"
+   ],
+   "origin": "kb"
+  },
+  "sub_005_strands": {
+   "id": "sub_005_strands",
+   "parent": "sub_005",
+   "kind": "answer",
+   "label": {
+    "ar": "ما محاور المادة؟",
+    "en": "What topics are covered?",
+    "fr": "Quels sujets sont couverts ?"
+   },
+   "text": {
+    "en": "• Acids, Bases, and Aqueous Equilibria\n• Atomic Structure and Periodicity\n• Chemical Bonding and Molecular Structure\n• Chemical Equilibrium\n• Chemical Kinetics\n• Chemical Nomenclature and Formulas\n• Chemical Reactions and Equations\n• Integrated Chemistry\n• Matter and Chemical Properties\n• Nuclear Chemistry\n• Organic Chemistry\n• Redox and Electrochemistry\n• Solutions and Solubility\n• States of Matter and Gases\n• Stoichiometry and Quantitative Chemistry\n• Thermochemistry",
+    "ar": "• الأحماض والقواعد والاتزانات المائية\n• البنية الذرية والدورية\n• الروابط الكيميائية والبنية الجزيئية\n• الاتزان الكيميائي\n• الحركية الكيميائية\n• التسمية والصيغ الكيميائية\n• التفاعلات والمعادلات الكيميائية\n• الكيمياء المتكاملة\n• المادة والخواص الكيميائية\n• الكيمياء النووية\n• الكيمياء العضوية\n• الأكسدة والاختزال والكيمياء الكهربائية\n• المحاليل والذوبانية\n• حالات المادة والغازات\n• الحسابات الستوكيومترية والكيمياء الكمية\n• الكيمياء الحرارية"
+   },
+   "options": [
+    {
+     "to": "sub_005"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "CHEM-EN-1",
+    "CHEM-EN-2",
+    "CHEM-EN-3",
+    "CHEM-EN-4",
+    "CHEM-EN-5",
+    "CHEM-EN-6",
+    "CHEM-EN-7",
+    "CHEM-EN-8",
+    "CHEM-EN-9",
+    "CHEM-EN-10",
+    "CHEM-EN-11",
+    "CHEM-EN-12",
+    "CHEM-EN-13",
+    "CHEM-EN-14",
+    "CHEM-EN-15",
+    "CHEM-EN-16",
+    "CHEM-AR-1",
+    "CHEM-AR-2",
+    "CHEM-AR-3",
+    "CHEM-AR-4",
+    "CHEM-AR-5",
+    "CHEM-AR-6",
+    "CHEM-AR-7",
+    "CHEM-AR-8",
+    "CHEM-AR-9",
+    "CHEM-AR-10",
+    "CHEM-AR-11",
+    "CHEM-AR-12",
+    "CHEM-AR-13",
+    "CHEM-AR-14",
+    "CHEM-AR-15",
+    "CHEM-AR-16"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "sub_005": {
+   "id": "sub_005",
+   "parent": "subjects",
+   "kind": "answer",
+   "label": {
+    "ar": "الكيمياء",
+    "en": "Chemistry"
+   },
+   "text": {
+    "ar": "دروس كيمياء فردية لطلاب المرحلة الثانوية.",
+    "en": "Chemistry: one-to-one online lessons for Grades 9–12."
+   },
+   "options": [
+    {
+     "to": "sub_005_strands"
+    },
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "subject": "sub_005"
+     }
+    }
+   ],
+   "sources": [
+    "SUB-005"
+   ],
+   "origin": "kb"
+  },
+  "sub_006": {
+   "id": "sub_006",
+   "parent": "subjects",
+   "kind": "answer",
+   "label": {
+    "ar": "اللغة الفرنسية"
+   },
+   "text": {
+    "ar": "دروس لغة فرنسية فردية عبر الإنترنت."
+   },
+   "options": [
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "subject": "sub_006"
+     }
+    }
+   ],
+   "sources": [
+    "SUB-006"
+   ],
+   "origin": "kb"
+  },
+  "sub_007": {
+   "id": "sub_007",
+   "parent": "subjects",
+   "kind": "answer",
+   "label": {
+    "ar": "اللغة العربية"
+   },
+   "text": {
+    "ar": "دروس لغة عربية فردية عبر الإنترنت."
+   },
+   "options": [
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "subject": "sub_007"
+     }
+    }
+   ],
+   "sources": [
+    "SUB-007"
+   ],
+   "origin": "kb"
+  },
+  "sub_008": {
+   "id": "sub_008",
+   "parent": "subjects",
+   "kind": "answer",
+   "label": {
+    "ar": "الدراسات الإسلامية"
+   },
+   "text": {
+    "ar": "دروس فردية في الدراسات الإسلامية."
+   },
+   "options": [
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "subject": "sub_008"
+     }
+    }
+   ],
+   "sources": [
+    "SUB-008"
+   ],
+   "origin": "kb"
+  },
+  "subjects": {
+   "id": "subjects",
+   "parent": "root",
+   "kind": "menu",
+   "label": {
+    "ar": "المواد والصفوف",
+    "en": "Subjects and grades",
+    "fr": "Matières et niveaux"
+   },
+   "text": {
+    "ar": "اختر المادة.",
+    "en": "Choose a subject.",
+    "fr": "Choisissez une matière."
+   },
+   "options": [
+    {
+     "to": "sub_001"
+    },
+    {
+     "to": "sub_002"
+    },
+    {
+     "to": "sub_003"
+    },
+    {
+     "to": "sub_004"
+    },
+    {
+     "to": "sub_005"
+    },
+    {
+     "to": "sub_006"
+    },
+    {
+     "to": "sub_007"
+    },
+    {
+     "to": "sub_008"
+    }
+   ],
+   "sources": [],
+   "origin": "ui"
+  },
+  "price_ca_4": {
+   "id": "price_ca_4",
+   "parent": "price_ca",
+   "kind": "answer",
+   "label": {
+    "ar": "باقة 4 حصص",
+    "en": "4-lesson package",
+    "fr": "Forfait de 4 cours"
+   },
+   "text": {
+    "ar": "باقة 4 حصص بسعر 110 دولارات كندية (CAD).",
+    "en": "The 4-lesson package is CAD 110.",
+    "fr": "Le forfait de 4 cours coûte 110 CAD."
+   },
+   "options": [
+    {
+     "to": "classes_frequency"
+    },
+    {
+     "to": "concern_price"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "PKG-001",
+    "PKG-004",
+    "PKG-007"
+   ],
+   "origin": "composed"
+  },
+  "price_ca_8": {
+   "id": "price_ca_8",
+   "parent": "price_ca",
+   "kind": "answer",
+   "label": {
+    "ar": "باقة 8 حصص",
+    "en": "8-lesson package",
+    "fr": "Forfait de 8 cours"
+   },
+   "text": {
+    "ar": "باقة 8 حصص بسعر 220 دولارًا كنديًا (CAD).",
+    "en": "The 8-lesson package is CAD 220.",
+    "fr": "Le forfait de 8 cours coûte 220 CAD."
+   },
+   "options": [
+    {
+     "to": "classes_frequency"
+    },
+    {
+     "to": "concern_price"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "PKG-002",
+    "PKG-005",
+    "PKG-008"
+   ],
+   "origin": "composed"
+  },
+  "price_ca_12": {
+   "id": "price_ca_12",
+   "parent": "price_ca",
+   "kind": "answer",
+   "label": {
+    "ar": "باقة 12 حصة",
+    "en": "12-lesson package",
+    "fr": "Forfait de 12 cours"
+   },
+   "text": {
+    "ar": "باقة 12 حصة بسعر 280 دولارًا كنديًا (CAD).",
+    "en": "The 12-lesson package is CAD 280.",
+    "fr": "Le forfait de 12 cours coûte 280 CAD."
+   },
+   "options": [
+    {
+     "to": "classes_frequency"
+    },
+    {
+     "to": "concern_price"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "PKG-003",
+    "PKG-006",
+    "PKG-009"
+   ],
+   "origin": "composed"
+  },
+  "price_ca": {
+   "id": "price_ca",
+   "parent": "pricing",
+   "kind": "menu",
+   "label": {
+    "ar": "كندا",
+    "en": "Canada",
+    "fr": "Canada"
+   },
+   "text": {
+    "ar": "اختر الباقة.",
+    "en": "Choose a package.",
+    "fr": "Choisissez un forfait."
+   },
+   "options": [
+    {
+     "to": "price_ca_4"
+    },
+    {
+     "to": "price_ca_8"
+    },
+    {
+     "to": "price_ca_12"
+    }
+   ],
+   "sources": [],
+   "origin": "ui"
+  },
+  "price_us_4": {
+   "id": "price_us_4",
+   "parent": "price_us",
+   "kind": "answer",
+   "label": {
+    "ar": "باقة 4 حصص",
+    "en": "4-lesson package",
+    "fr": "Forfait de 4 cours"
+   },
+   "text": {
+    "ar": "باقة 4 حصص بسعر 110 دولارات أمريكية (USD).",
+    "en": "The 4-lesson package is USD 110.",
+    "fr": "Le forfait de 4 cours coûte 110 USD."
+   },
+   "options": [
+    {
+     "to": "classes_frequency"
+    },
+    {
+     "to": "concern_price"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "PKG-001",
+    "PKG-004",
+    "PKG-007"
+   ],
+   "origin": "kb"
+  },
+  "price_us_8": {
+   "id": "price_us_8",
+   "parent": "price_us",
+   "kind": "answer",
+   "label": {
+    "ar": "باقة 8 حصص",
+    "en": "8-lesson package",
+    "fr": "Forfait de 8 cours"
+   },
+   "text": {
+    "ar": "باقة 8 حصص بسعر 220 دولارًا أمريكيًا (USD).",
+    "en": "The 8-lesson package is USD 220.",
+    "fr": "Le forfait de 8 cours coûte 220 USD."
+   },
+   "options": [
+    {
+     "to": "classes_frequency"
+    },
+    {
+     "to": "concern_price"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "PKG-002",
+    "PKG-005",
+    "PKG-008"
+   ],
+   "origin": "kb"
+  },
+  "price_us_12": {
+   "id": "price_us_12",
+   "parent": "price_us",
+   "kind": "answer",
+   "label": {
+    "ar": "باقة 12 حصة",
+    "en": "12-lesson package",
+    "fr": "Forfait de 12 cours"
+   },
+   "text": {
+    "ar": "باقة 12 حصة بسعر 280 دولارًا أمريكيًا (USD).",
+    "en": "The 12-lesson package is USD 280.",
+    "fr": "Le forfait de 12 cours coûte 280 USD."
+   },
+   "options": [
+    {
+     "to": "classes_frequency"
+    },
+    {
+     "to": "concern_price"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "PKG-003",
+    "PKG-006",
+    "PKG-009"
+   ],
+   "origin": "kb"
+  },
+  "price_us": {
+   "id": "price_us",
+   "parent": "pricing",
+   "kind": "menu",
+   "label": {
+    "ar": "الولايات المتحدة",
+    "en": "United States",
+    "fr": "États-Unis"
+   },
+   "text": {
+    "ar": "اختر الباقة.",
+    "en": "Choose a package.",
+    "fr": "Choisissez un forfait."
+   },
+   "options": [
+    {
+     "to": "price_us_4"
+    },
+    {
+     "to": "price_us_8"
+    },
+    {
+     "to": "price_us_12"
+    }
+   ],
+   "sources": [],
+   "origin": "ui"
+  },
+  "pricing": {
+   "id": "pricing",
+   "parent": "root",
+   "kind": "menu",
+   "label": {
+    "ar": "الأسعار والباقات",
+    "en": "Prices and packages",
+    "fr": "Tarifs et forfaits"
+   },
+   "text": {
+    "ar": "أين يقيم الطالب؟ يختلف سعر الباقة بحسب البلد.",
+    "en": "Where does the student live? The package price depends on the country.",
+    "fr": "Où réside l’élève ? Le prix du forfait dépend du pays."
+   },
+   "options": [
+    {
+     "to": "price_ca"
+    },
+    {
+     "to": "price_us"
+    }
+   ],
+   "sources": [],
+   "origin": "ui"
+  },
+  "trial": {
+   "id": "trial",
+   "parent": "root",
+   "kind": "answer",
+   "label": {
+    "ar": "الحصة التجريبية المجانية",
+    "en": "Free trial lesson",
+    "fr": "Essai gratuit"
+   },
+   "text": {
+    "ar": "نعم. تتوفر حصة تجريبية مجانية لكل طالب جديد ولكل مادة جديدة. يساعدنا ذلك على فهم مستوى الطالب واحتياجاته ومدى ملاءمة المدرس. يتم تنسيق الموعد حسب توفر الطالب والمدرس.",
+    "en": "Yes. A free trial is available for every new student and for each new subject. It helps us understand the student’s level, needs, and tutor fit. The trial time is coordinated based on student and tutor availability.",
+    "fr": "Oui. Un essai gratuit est offert à chaque nouvel élève et pour chaque nouvelle matière. Il aide à comprendre le niveau, les besoins et l’adéquation avec le tuteur. L’horaire est coordonné selon les disponibilités de l’élève et du tuteur."
+   },
+   "options": [
+    {
+     "to": "classes_duration"
+    },
+    {
+     "to": "classes_matching"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "request": "FREE_TRIAL"
+     }
+    }
+   ],
+   "sources": [
+    "FAQ-001",
+    "FAQ-004",
+    "FAQ-007"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "classes_duration": {
+   "id": "classes_duration",
+   "parent": "classes",
+   "kind": "answer",
+   "label": {
+    "ar": "كم مدة الحصة؟",
+    "en": "How long is each lesson?",
+    "fr": "Combien de temps dure un cours ?"
+   },
+   "text": {
+    "ar": "مدة الحصة القياسية 60 دقيقة.",
+    "en": "The standard lesson duration is 60 minutes.",
+    "fr": "La durée standard d’un cours est de 60 minutes."
+   },
+   "options": [
+    {
+     "to": "classes_frequency"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "FAQ-WU99-001-AR",
+    "FAQ-WU99-001-EN",
+    "FAQ-WU99-001-FR"
+   ],
+   "origin": "kb"
+  },
+  "classes_frequency": {
+   "id": "classes_frequency",
+   "parent": "classes",
+   "kind": "answer",
+   "label": {
+    "ar": "كم حصة تنصحون بها أسبوعياً؟",
+    "en": "How many lessons per week do you recommend?",
+    "fr": "Combien de cours par semaine recommandez-vous ?"
+   },
+   "text": {
+    "ar": "نوصي عادة بحصة إلى حصتين أسبوعياً حسب احتياج الطالب، والحد الأدنى حصة واحدة أسبوعياً للمحافظة على الاستمرارية.",
+    "en": "We usually recommend one to two lessons per week depending on the student’s needs, with a minimum of one lesson per week to maintain continuity.",
+    "fr": "Nous recommandons généralement un à deux cours par semaine selon les besoins de l’élève, avec au moins un cours par semaine pour maintenir la continuité."
+   },
+   "options": [
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "FAQ-WU99-002-AR",
+    "FAQ-WU99-002-EN",
+    "FAQ-WU99-002-FR"
+   ],
+   "origin": "kb"
+  },
+  "classes_homework": {
+   "id": "classes_homework",
+   "parent": "classes",
+   "kind": "answer",
+   "label": {
+    "ar": "هل يوجد واجب بعد الحصة؟",
+    "en": "Do students receive homework after lessons?",
+    "fr": "Les élèves reçoivent-ils des devoirs après les cours ?"
+   },
+   "text": {
+    "ar": "يعطي المدرس واجباً أو تدريباً بعد كل حصة حسب الحاجة لتثبيت التعلم ومتابعة النقاط التي تم شرحها.",
+    "en": "The tutor provides homework or practice after each lesson as needed to reinforce learning and follow up on the topics covered.",
+    "fr": "Le tuteur donne des devoirs ou des exercices après chaque cours selon les besoins afin de renforcer l’apprentissage et les notions étudiées."
+   },
+   "options": [
+    {
+     "to": "classes_matching"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "FAQ-WU99-003-AR",
+    "FAQ-WU99-003-EN",
+    "FAQ-WU99-003-FR"
+   ],
+   "origin": "kb"
+  },
+  "classes_matching": {
+   "id": "classes_matching",
+   "parent": "classes",
+   "kind": "answer",
+   "label": {
+    "ar": "كيف تختارون المدرس؟",
+    "en": "How do you choose the tutor?",
+    "fr": "Comment choisissez-vous le tuteur ?"
+   },
+   "text": {
+    "ar": "تتم المطابقة حسب المادة والصف والمنهج واحتياجات الطالب واللغة المفضلة، ثم يُؤكد التوفر.",
+    "en": "Matching considers subject, grade, curriculum, learning needs, and preferred language; availability is then confirmed.",
+    "fr": "Le jumelage tient compte de la matière, du niveau, du programme, des besoins et de la langue; les disponibilités sont ensuite confirmées."
+   },
+   "options": [
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "FAQ-010",
+    "FAQ-011",
+    "FAQ-012"
+   ],
+   "origin": "kb"
+  },
+  "classes_certificates": {
+   "id": "classes_certificates",
+   "parent": "classes",
+   "kind": "answer",
+   "label": {
+    "ar": "هل يحصل الطالب على شهادة رسمية بعد إكمال عشرين حصة؟"
+   },
+   "text": {
+    "ar": "لا نقدم حالياً شهادة رسمية بعد إكمال عدد محدد من الحصص. يمكن للفريق توفير تقرير عن تقدم الطالب عند الطلب."
+   },
+   "options": [
+    {
+     "to": "classes_homework"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "FAQ-260"
+   ],
+   "origin": "kb"
+  },
+  "classes": {
+   "id": "classes",
+   "parent": "root",
+   "kind": "menu",
+   "label": {
+    "ar": "كيف تسير الحصص؟",
+    "en": "How lessons work",
+    "fr": "Déroulement des cours"
+   },
+   "text": {
+    "ar": "اختر ما تريد معرفته.",
+    "en": "Choose what you want to know.",
+    "fr": "Choisissez ce que vous voulez savoir."
+   },
+   "options": [
+    {
+     "to": "classes_duration"
+    },
+    {
+     "to": "classes_frequency"
+    },
+    {
+     "to": "classes_homework"
+    },
+    {
+     "to": "classes_matching"
+    },
+    {
+     "to": "classes_certificates"
+    }
+   ],
+   "sources": [],
+   "origin": "ui"
+  },
+  "policy_cancellation": {
+   "id": "policy_cancellation",
+   "parent": "policies",
+   "kind": "answer",
+   "label": {
+    "ar": "ما سياسة الإلغاء؟",
+    "en": "What is the cancellation policy?",
+    "fr": "Quelle est la politique d’annulation ?"
+   },
+   "text": {
+    "ar": "يمكن إلغاء حصة واحدة أسبوعيًا وإعادة جدولتها خلال الأسبوع نفسه.",
+    "en": "One eligible change is normally allowed weekly. A replacement is not guaranteed until confirmed.",
+    "fr": "Un changement est normalement permis par semaine, sous réserve de confirmation."
+   },
+   "options": [
+    {
+     "to": "policy_absence"
+    },
+    {
+     "to": "policy_minimum"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "POL-001",
+    "POL-005",
+    "POL-009"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "policy_absence": {
+   "id": "policy_absence",
+   "parent": "policies",
+   "kind": "answer",
+   "label": {
+    "ar": "ماذا يحدث عند الغياب؟",
+    "en": "What happens if a lesson is missed?",
+    "fr": "Que se passe-t-il en cas d’absence ?"
+   },
+   "text": {
+    "ar": "الإلغاء أو الغياب الثاني خلال الأسبوع نفسه يُحتسب من رصيد الحصص.",
+    "en": "A second missed or cancelled lesson in the same week is normally counted.",
+    "fr": "La deuxième séance annulée ou manquée est normalement comptabilisée."
+   },
+   "options": [
+    {
+     "to": "policy_minimum"
+    },
+    {
+     "to": "policy_refund"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "POL-002",
+    "POL-006",
+    "POL-010"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "policy_minimum": {
+   "id": "policy_minimum",
+   "parent": "policies",
+   "kind": "answer",
+   "label": {
+    "ar": "ما الحد الأدنى للحصص؟",
+    "en": "What is the minimum number of lessons?",
+    "fr": "Quel est le nombre minimum de cours ?"
+   },
+   "text": {
+    "ar": "الحد الأدنى المطلوب هو حصة واحدة أسبوعيًا.",
+    "en": "The normal minimum is one lesson weekly unless a pause or exception is approved.",
+    "fr": "Le minimum habituel est d’un cours par semaine."
+   },
+   "options": [
+    {
+     "to": "policy_absence"
+    },
+    {
+     "to": "policy_refund"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "POL-003",
+    "POL-007",
+    "POL-011"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "policy_refund": {
+   "id": "policy_refund",
+   "parent": "policies",
+   "kind": "answer",
+   "label": {
+    "ar": "ماذا لو لم يناسبنا المدرس أو الخدمة؟",
+    "en": "What if the tutor or service is not a good fit?",
+    "fr": "Et si le tuteur ou le service ne convient pas ?"
+   },
+   "text": {
+    "ar": "رضاكم وتقدم الطالب من أولوياتنا. إذا واجه الطالب مشكلة في ملاءمة المدرس أو أسلوبه أو لهجته أو شعر بعدم الارتياح، يرجى إبلاغنا فورًا. سنراجع الحالة وقد نقترح تغيير المدرس، أو حصصًا إضافية، أو خصمًا، أو تحويل الرصيد، أو استردادًا كليًا أو جزئيًا حسب الحالة وبعد موافقة الفريق.",
+    "en": "Your satisfaction and the student’s progress are priorities. If the tutor’s fit, teaching approach, accent, service quality, or the student’s comfort causes concern, please tell us promptly. We will review the case and may offer a tutor change, additional lessons, a discount, credit transfer, or a full or partial refund, subject to team approval.",
+    "fr": "Votre satisfaction et les progrès de l’élève sont nos priorités. En cas de problème concernant le tuteur, sa méthode, son accent, la qualité du service ou le confort de l’élève, informez-nous rapidement. Nous examinerons la situation et pourrons proposer un changement de tuteur, des cours supplémentaires, une réduction, un transfert de crédit ou un remboursement total ou partiel, sous réserve de l’approbation de l’équipe."
+   },
+   "options": [
+    {
+     "to": "policy_absence"
+    },
+    {
+     "to": "policy_minimum"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "POL-004",
+    "POL-008",
+    "POL-012"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "policies": {
+   "id": "policies",
+   "parent": "root",
+   "kind": "menu",
+   "label": {
+    "ar": "الإلغاء والغياب والاسترداد",
+    "en": "Cancellation, absence and refunds",
+    "fr": "Annulation, absence et remboursement"
+   },
+   "text": {
+    "ar": "اختر ما تريد معرفته.",
+    "en": "Choose what you want to know.",
+    "fr": "Choisissez ce que vous voulez savoir."
+   },
+   "options": [
+    {
+     "to": "policy_cancellation"
+    },
+    {
+     "to": "policy_absence"
+    },
+    {
+     "to": "policy_minimum"
+    },
+    {
+     "to": "policy_refund"
+    }
+   ],
+   "sources": [],
+   "origin": "ui"
+  },
+  "concern_price": {
+   "id": "concern_price",
+   "parent": "concerns",
+   "kind": "answer",
+   "label": {
+    "ar": "السعر مرتفع",
+    "en": "The price is high",
+    "fr": "Le prix est élevé"
+   },
+   "text": {
+    "ar": "أتفهم أهمية الميزانية. لدينا باقات تبدأ من 4 حصص، ونختار حسب الهدف دون التزام زائد.",
+    "en": "I understand budget matters. Packages start at 4 lessons, so we can choose based on the goal without unnecessary commitment.",
+    "fr": "Je comprends l’importance du budget. Les forfaits commencent à 4 cours; choisissons selon l’objectif."
+   },
+   "options": [
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "O-AR-1",
+    "O-EN-1",
+    "O-FR-1"
+   ],
+   "origin": "kb"
+  },
+  "concern_online": {
+   "id": "concern_online",
+   "parent": "concerns",
+   "kind": "answer",
+   "label": {
+    "ar": "هل الأونلاين فعّال؟",
+    "en": "Is online tutoring effective?",
+    "fr": "Le tutorat en ligne est-il efficace ?"
+   },
+   "text": {
+    "ar": "يفيد عندما تكون الحصة فردية والخطة مناسبة مع تدريب ومتابعة.",
+    "en": "It can work well when lessons are one-to-one with a suitable plan, practice, and follow-up.",
+    "fr": "Il peut être efficace avec des cours individuels, un plan adapté et un suivi."
+   },
+   "options": [
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "O-AR-2",
+    "O-EN-2",
+    "O-FR-2"
+   ],
+   "origin": "kb"
+  },
+  "concern_tried": {
+   "id": "concern_tried",
+   "parent": "concerns",
+   "kind": "answer",
+   "label": {
+    "ar": "جرّبنا مدرساً ولم يتحسن",
+    "en": "We tried a tutor without improvement",
+    "fr": "Nous avons essayé un tuteur sans progrès"
+   },
+   "text": {
+    "ar": "نتفهم التحفظ؛ نحدد سبب التعثر ونطابق الطالب مع مدرس وخطة أنسب.",
+    "en": "We understand the hesitation; we identify the cause and match a more suitable tutor and plan.",
+    "fr": "Nous comprenons; nous identifions la cause et proposons un jumelage plus adapté."
+   },
+   "options": [
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "O-AR-3",
+    "O-EN-3",
+    "O-FR-3"
+   ],
+   "origin": "kb"
+  },
+  "concern_patient": {
+   "id": "concern_patient",
+   "parent": "concerns",
+   "kind": "answer",
+   "label": {
+    "ar": "نحتاج مدرساً صبوراً",
+    "en": "We need a patient tutor",
+    "fr": "Nous voulons un tuteur patient"
+   },
+   "text": {
+    "ar": "نأخذ أسلوب التعلم والشخصية ضمن المطابقة ثم نتابع الملاءمة.",
+    "en": "Learning style and personality are considered during matching, then we follow up on fit.",
+    "fr": "Le style d’apprentissage et la personnalité sont considérés dans le jumelage."
+   },
+   "options": [
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "O-AR-4",
+    "O-EN-4",
+    "O-FR-4"
+   ],
+   "origin": "kb"
+  },
+  "concern_timing": {
+   "id": "concern_timing",
+   "parent": "concerns",
+   "kind": "answer",
+   "label": {
+    "ar": "الوقت غير مناسب",
+    "en": "The timing does not work",
+    "fr": "L’horaire ne convient pas"
+   },
+   "text": {
+    "ar": "نجمع أوقاتكم ونتحقق من التوفر؛ الموعد نهائي بعد تأكيد الأكاديمية.",
+    "en": "We collect suitable times and check availability; the slot is final after academy confirmation.",
+    "fr": "Nous recueillons vos horaires et vérifions les disponibilités; confirmation finale par l’académie."
+   },
+   "options": [
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "O-AR-5",
+    "O-EN-5",
+    "O-FR-5"
+   ],
+   "origin": "kb"
+  },
+  "concerns": {
+   "id": "concerns",
+   "parent": "root",
+   "kind": "menu",
+   "label": {
+    "ar": "لديّ تحفظ أو قلق",
+    "en": "I have a concern",
+    "fr": "J’ai une réserve"
+   },
+   "text": {
+    "ar": "ما الذي يقلقكم؟",
+    "en": "What is on your mind?",
+    "fr": "Qu’est-ce qui vous préoccupe ?"
+   },
+   "options": [
+    {
+     "to": "concern_price"
+    },
+    {
+     "to": "concern_online"
+    },
+    {
+     "to": "concern_tried"
+    },
+    {
+     "to": "concern_patient"
+    },
+    {
+     "to": "concern_timing"
+    }
+   ],
+   "sources": [],
+   "origin": "ui"
+  },
+  "register": {
+   "id": "register",
+   "parent": "root",
+   "kind": "form",
+   "label": {
+    "ar": "سجّل الآن",
+    "en": "Register now",
+    "fr": "S’inscrire"
+   },
+   "text": {
+    "ar": "سنجمع بضع معلومات بسيطة، خطوة بخطوة، ثم تراجعونها قبل الإرسال.",
+    "en": "We will collect a few details, one step at a time, and you review them before sending.",
+    "fr": "Nous allons recueillir quelques informations, étape par étape, et vous les vérifiez avant l’envoi."
+   },
+   "options": [],
+   "sources": [],
+   "origin": "ui"
+  },
+  "human": {
+   "id": "human",
+   "parent": "root",
+   "kind": "answer",
+   "label": {
+    "ar": "تواصل مع الفريق",
+    "en": "Contact the team",
+    "fr": "Contacter l’équipe"
+   },
+   "text": {
+    "ar": "البريد الإلكتروني: successpathmentors@gmail.com\nالهاتف: +1 647 787 5999",
+    "en": "Email: successpathmentors@gmail.com\nPhone: +1 647 787 5999",
+    "fr": "Courriel: successpathmentors@gmail.com\nTéléphone: +1 647 787 5999"
+   },
+   "options": [
+    {
+     "to": "register",
+     "preset": {
+      "request": "CALLBACK"
+     }
+    }
+   ],
+   "sources": [
+    "COM-005",
+    "COM-009"
+   ],
+   "origin": "composed",
+   "persistent": true
+  }
+ },
+ "register": {
+  "request_types": [
+   [
+    "FREE_TRIAL",
+    {
+     "ar": "حصة تجريبية مجانية",
+     "en": "Free trial lesson",
+     "fr": "Essai gratuit"
+    }
+   ],
+   [
+    "ENROLLMENT",
+    {
+     "ar": "تسجيل",
+     "en": "Registration",
+     "fr": "Inscription"
+    }
+   ],
+   [
+    "CONSULTATION",
+    {
+     "ar": "استشارة",
+     "en": "Consultation",
+     "fr": "Consultation"
+    }
+   ],
+   [
+    "CALLBACK",
+    {
+     "ar": "اتصال هاتفي",
+     "en": "Phone call back",
+     "fr": "Rappel téléphonique"
+    }
+   ]
+  ],
+  "countries": [
+   [
+    "Canada",
+    "ca",
+    {
+     "ar": "كندا",
+     "en": "Canada",
+     "fr": "Canada"
+    }
+   ],
+   [
+    "United States",
+    "us",
+    {
+     "ar": "الولايات المتحدة",
+     "en": "United States",
+     "fr": "États-Unis"
+    }
+   ]
+  ],
+  "timezones": {
+   "ca": [
+    [
+     "America/St_Johns",
+     {
+      "ar": "نيوفاوندلاند",
+      "en": "Newfoundland",
+      "fr": "Terre-Neuve"
+     }
+    ],
+    [
+     "America/Halifax",
+     {
+      "ar": "الأطلسي (هاليفاكس)",
+      "en": "Atlantic (Halifax)",
+      "fr": "Atlantique (Halifax)"
+     }
+    ],
+    [
+     "America/Toronto",
+     {
+      "ar": "الشرقي (تورنتو)",
+      "en": "Eastern (Toronto)",
+      "fr": "Est (Toronto)"
+     }
+    ],
+    [
+     "America/Winnipeg",
+     {
+      "ar": "الأوسط (وينيبيغ)",
+      "en": "Central (Winnipeg)",
+      "fr": "Centre (Winnipeg)"
+     }
+    ],
+    [
+     "America/Regina",
+     {
+      "ar": "ساسكاتشوان (ريجينا)",
+      "en": "Saskatchewan (Regina)",
+      "fr": "Saskatchewan (Regina)"
+     }
+    ],
+    [
+     "America/Edmonton",
+     {
+      "ar": "الجبلي (إدمنتون)",
+      "en": "Mountain (Edmonton)",
+      "fr": "Montagnes (Edmonton)"
+     }
+    ],
+    [
+     "America/Vancouver",
+     {
+      "ar": "الهادئ (فانكوفر)",
+      "en": "Pacific (Vancouver)",
+      "fr": "Pacifique (Vancouver)"
+     }
+    ]
+   ],
+   "us": [
+    [
+     "America/New_York",
+     {
+      "ar": "الشرقي (نيويورك)",
+      "en": "Eastern (New York)",
+      "fr": "Est (New York)"
+     }
+    ],
+    [
+     "America/Chicago",
+     {
+      "ar": "الأوسط (شيكاغو)",
+      "en": "Central (Chicago)",
+      "fr": "Centre (Chicago)"
+     }
+    ],
+    [
+     "America/Denver",
+     {
+      "ar": "الجبلي (دنفر)",
+      "en": "Mountain (Denver)",
+      "fr": "Montagnes (Denver)"
+     }
+    ],
+    [
+     "America/Phoenix",
+     {
+      "ar": "أريزونا (فينيكس)",
+      "en": "Arizona (Phoenix)",
+      "fr": "Arizona (Phoenix)"
+     }
+    ],
+    [
+     "America/Los_Angeles",
+     {
+      "ar": "الهادئ (لوس أنجلوس)",
+      "en": "Pacific (Los Angeles)",
+      "fr": "Pacifique (Los Angeles)"
+     }
+    ],
+    [
+     "America/Anchorage",
+     {
+      "ar": "ألاسكا",
+      "en": "Alaska",
+      "fr": "Alaska"
+     }
+    ]
+   ]
+  },
+  "languages": [
+   [
+    "Arabic",
+    {
+     "ar": "العربية",
+     "en": "Arabic",
+     "fr": "Arabe"
+    }
+   ],
+   [
+    "English",
+    {
+     "ar": "الإنجليزية",
+     "en": "English",
+     "fr": "Anglais"
+    }
+   ],
+   [
+    "French",
+    {
+     "ar": "الفرنسية",
+     "en": "French",
+     "fr": "Français"
+    }
+   ]
+  ],
+  "grades": [
+   1,
+   2,
+   3,
+   4,
+   5,
+   6,
+   7,
+   8,
+   9,
+   10,
+   11,
+   12
+  ],
+  "confirmation_phrase": {
+   "ar": "أؤكد صحة البيانات وأوافق على مشاركتها والتواصل معي",
+   "en": "I confirm the details are correct and consent to sharing them and being contacted",
+   "fr": "Je confirme que les informations sont correctes et j'accepte de les partager et d'être contacté"
+  },
+  "backend_contract": "Validated_Human_Handoff_FIXED.json / Validate Lead Payload (workflow swhmNa0Goo0uYm1k)"
+ }
+}

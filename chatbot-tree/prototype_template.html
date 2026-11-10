@@ -1,0 +1,477 @@
+<title>شجرة أسئلة SPM</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a review desk. Chat widget beside a live map of the question tree; the map shows where the visitor is and lets them jump. */
+:root{
+  --bg:#EDF1F2; --surface:#FFFFFF; --surface-2:#F4F7F7; --ink:#14262B; --muted:#58696E; --line:#D2DBDE;
+  --accent:#0F6B5C; --accent-ink:#FFFFFF; --accent-soft:#DCEEE9; --warn:#7A4F00; --warn-bg:#FBF0D6; --bad:#A12B2B; --bad-bg:#FBE4E4;
+  --font:"IBM Plex Sans Arabic",system-ui,"Segoe UI",Tahoma,Arial,sans-serif; --mono:"IBM Plex Mono",ui-monospace,Consolas,monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0D191C; --surface:#142428; --surface-2:#192D32; --ink:#E5EEF0; --muted:#93A8AC; --line:#26393E;
+  --accent:#4CC2A9; --accent-ink:#06241E; --accent-soft:#173A35; --warn:#E9B949; --warn-bg:#3A2F10; --bad:#F09A9A; --bad-bg:#3B1B1B; color-scheme:dark;}}
+:root[data-theme="dark"]{
+  --bg:#0D191C; --surface:#142428; --surface-2:#192D32; --ink:#E5EEF0; --muted:#93A8AC; --line:#26393E;
+  --accent:#4CC2A9; --accent-ink:#06241E; --accent-soft:#173A35; --warn:#E9B949; --warn-bg:#3A2F10; --bad:#F09A9A; --bad-bg:#3B1B1B; color-scheme:dark;}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:15px;line-height:1.6;
+  padding-block:20px 40px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:18px}
+h1{font-size:1.5rem;line-height:1.3;margin:0;text-wrap:balance;font-weight:600}
+h2{font-size:1rem;margin:0;font-weight:600}
+p{margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.head{display:grid;gap:8px}
+.notice{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:10px 14px;font-size:.9rem}
+.stats{display:flex;flex-wrap:wrap;gap:8px 18px;color:var(--muted);font-size:.85rem}
+.stats b{color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.desk{display:grid;grid-template-columns:minmax(0,440px) minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:900px){.desk{grid-template-columns:minmax(0,1fr)}}
+
+/* chat widget */
+.widget{background:var(--surface);border:1px solid var(--line);border-radius:14px;display:flex;flex-direction:column;height:min(720px,calc(100vh - 40px));min-height:520px;overflow:hidden}
+.w-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-weight:600;font-size:.95rem;direction:ltr}
+.seg{display:flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:4px 12px;font-size:.85rem;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
+.toolbar{display:flex;gap:6px;padding:8px 14px;border-bottom:1px solid var(--line);flex-wrap:wrap;background:var(--surface-2)}
+.tb{border:1px solid var(--line);background:var(--surface);border-radius:8px;padding:4px 10px;font-size:.82rem;display:inline-flex;gap:6px;align-items:center}
+.tb:disabled{opacity:.4;cursor:default}
+.tb:not(:disabled):hover{border-color:var(--accent)}
+.tb svg{width:14px;height:14px;flex:none}
+.crumbs{display:flex;flex-wrap:wrap;gap:2px 4px;padding:8px 14px;font-size:.8rem;color:var(--muted);border-bottom:1px solid var(--line)}
+.crumbs button{border:0;background:none;padding:0 2px;color:var(--accent);text-decoration:underline;text-underline-offset:3px;font-size:inherit}
+.crumbs span[aria-current]{color:var(--ink);font-weight:500}
+.log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){.log{scroll-behavior:auto}}
+.msg{max-width:92%;padding:9px 13px;border-radius:12px;white-space:pre-line;overflow-wrap:anywhere}
+.msg.bot{background:var(--surface-2);border:1px solid var(--line);align-self:flex-start}
+.msg.me{background:var(--accent);color:var(--accent-ink);align-self:flex-end}
+.opts{display:grid;gap:7px;margin-top:2px}
+.opts h3{font-size:.78rem;color:var(--muted);margin:6px 0 0;font-weight:500;letter-spacing:.02em}
+.opt{display:flex;align-items:center;justify-content:space-between;gap:10px;text-align:start;border:1px solid var(--accent);background:var(--surface);color:var(--accent);border-radius:10px;padding:8px 12px;font-weight:500}
+.opt:hover{background:var(--accent-soft)}
+.opt .go{font-size:.75rem;color:var(--muted);font-weight:400;white-space:nowrap}
+.chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(56px,1fr));gap:7px}
+.chips .opt{justify-content:center;padding:8px 4px}
+.w-foot{padding:10px 14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:.82rem;color:var(--muted)}
+.link{border:0;background:none;color:var(--accent);text-decoration:underline;text-underline-offset:3px;padding:0}
+
+/* wizard */
+.field{display:grid;gap:6px;margin-top:6px}
+.field label{font-weight:600}
+.field input[type=text],.field input[type=tel],.field input[type=email]{font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px 10px;width:100%}
+.err{color:var(--bad);background:var(--bad-bg);border-radius:8px;padding:6px 10px;font-size:.85rem}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.btn{border:1px solid var(--accent);background:var(--accent);color:var(--accent-ink);border-radius:8px;padding:7px 16px;font-weight:500}
+.btn.alt{background:transparent;color:var(--accent)}
+.btn:disabled{opacity:.45;cursor:default}
+dl.rev{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;margin:8px 0;align-items:baseline}
+dl.rev dt{color:var(--muted);font-size:.85rem}
+dl.rev dd{margin:0;overflow-wrap:anywhere}
+.consent{display:flex;gap:8px;align-items:flex-start;margin-top:8px}
+.consent input{margin-top:5px;flex:none}
+.sim{background:var(--warn-bg);color:var(--warn);border-radius:8px;padding:8px 12px;margin-top:8px;font-size:.88rem}
+pre{direction:ltr;text-align:left;background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:8px;font:12px/1.5 var(--mono);overflow-x:auto;margin:6px 0 0;white-space:pre-wrap}
+
+/* map */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:14px 16px;display:grid;gap:12px;min-width:0}
+.p-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:.8rem;color:var(--muted)}
+.tag{font-size:.7rem;border-radius:6px;padding:1px 7px;white-space:nowrap}
+.tag.warn{background:var(--warn-bg);color:var(--warn)}
+.tag.dim{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.tag.here{background:var(--accent);color:var(--accent-ink)}
+.tree,.tree ul{list-style:none;margin:0;padding:0}
+.tree ul{margin-inline-start:14px;border-inline-start:1px solid var(--line);padding-inline-start:8px}
+.tree li{margin:1px 0}
+.n{display:flex;align-items:center;gap:6px;border-radius:7px;padding:2px 4px;min-width:0}
+.n button.tog{border:0;background:none;width:20px;height:20px;padding:0;color:var(--muted);flex:none;line-height:1}
+.n .sp{width:20px;flex:none}
+.n button.nav{border:0;background:none;text-align:start;padding:2px 4px;border-radius:6px;overflow-wrap:anywhere;min-width:0}
+.n button.nav:hover{background:var(--accent-soft)}
+.n.onpath button.nav{color:var(--accent);font-weight:500}
+.n.cur{background:var(--accent-soft)}
+.n.cur button.nav{font-weight:600;color:var(--accent)}
+.n.na button.nav{color:var(--muted)}
+.mono{font-family:var(--mono);font-size:.7rem;color:var(--muted);direction:ltr}
+.phases{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.phases li{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:baseline}
+.phases .tag{justify-self:start}
+details summary{cursor:pointer;color:var(--accent)}
+</style>
+
+<div class="wrap">
+  <header class="head">
+    <h1>شجرة أسئلة Success Path Mentors</h1>
+    <p class="notice">نموذج للمراجعة. لا يتصل بأي نظام ولا يرسل أي بيانات. النصوص منقولة من لقطة قاعدة المعرفة بتاريخ 2026-08-18، وقد تغيّر الشيت الحي بعد 17 سبتمبر، فيجب مطابقتها معه قبل الإطلاق.</p>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="desk">
+    <section class="widget" aria-label="الشات">
+      <div class="w-head">
+        <span class="brand">Success Path Mentors</span>
+        <div class="seg" role="group" aria-label="لغة الشات">
+          <button type="button" data-lang="ar" aria-pressed="true">العربية</button>
+          <button type="button" data-lang="en" aria-pressed="false">English</button>
+          <button type="button" data-lang="fr" aria-pressed="false">Français</button>
+        </div>
+      </div>
+      <div class="toolbar" id="toolbar"></div>
+      <nav class="crumbs" id="crumbs" aria-label="المسار"></nav>
+      <div class="log" id="log" role="log" aria-live="polite"></div>
+      <div class="w-foot"><span id="footnote"></span><button type="button" class="link" id="humanBtn"></button></div>
+    </section>
+
+    <section class="panel" aria-label="خريطة الشجرة">
+      <div class="p-head">
+        <h2 id="mapTitle">خريطة الأسئلة</h2>
+        <button type="button" class="tb" id="toggleAll">فتح الكل</button>
+      </div>
+      <p style="color:var(--muted);font-size:.88rem">الشجرة كاملة أمام الزائر. الضغط على أي سؤال ينقله إليه مباشرة، والسهم يفتح الفروع أو يطويها.</p>
+      <div class="legend">
+        <span><span class="tag here">أنت هنا</span> الموضع الحالي</span>
+        <span><span class="tag warn">يحتاج موافقة</span> نص مركّب لم يرد حرفياً في القاعدة</span>
+        <span><span class="tag dim">غير متاح</span> لا يوجد نص معتمد بهذه اللغة، فيُخفى عن الزائر</span>
+      </div>
+      <ul class="tree" id="tree"></ul>
+      <details>
+        <summary>مراحل العمل</summary>
+        <ul class="phases" style="margin-top:10px">
+          <li><span class="tag here">هذا النموذج</span><span>الشجرة والتنقل والتسجيل خطوة بخطوة، مع إجابة واحدة لكل سؤال.</span></li>
+          <li><span class="tag dim">التالية</span><span>وضعها في الموقع الفعلي، وتوصيل التسجيل بسير عمل n8n المعتمد لحفظ العملاء المحتملين، بعد موافقتك.</span></li>
+          <li><span class="tag dim">مؤجلة</span><span>الإجابات متعددة الاختيار داخل السؤال الواحد.</span></li>
+          <li><span class="tag dim">مؤجلة</span><span>الإجابة الصوتية، وتحتاج رصيداً لخدمة الصوت.</span></li>
+        </ul>
+      </details>
+    </section>
+  </div>
+</div>
+
+<script type="application/json" id="tree-data">/*TREE_JSON*/</script>
+<script>
+(function(){
+"use strict";
+var T = JSON.parse(document.getElementById("tree-data").textContent);
+var N = T.nodes, UI = T.ui, R = T.register;
+
+/* ---------- interface strings for the wizard (wording only, no facts) ---------- */
+var W = {
+ request:{ar:"ما نوع طلبكم؟",en:"What would you like to request?",fr:"Quelle est votre demande ?"},
+ parent:{ar:"ما اسم ولي الأمر الكامل؟",en:"What is the parent's full name?",fr:"Quel est le nom complet du parent ?"},
+ student:{ar:"ما اسم الطالب الكامل؟",en:"What is the student's full name?",fr:"Quel est le nom complet de l’élève ?"},
+ phone:{ar:"ما رقم الهاتف؟",en:"What is your phone number?",fr:"Quel est votre numéro de téléphone ?"},
+ email:{ar:"ما البريد الإلكتروني؟",en:"What is your email address?",fr:"Quelle est votre adresse courriel ?"},
+ country:{ar:"في أي بلد يقيم الطالب؟",en:"Which country does the student live in?",fr:"Dans quel pays vit l’élève ?"},
+ tz:{ar:"ما المنطقة الزمنية؟",en:"Which time zone?",fr:"Quel fuseau horaire ?"},
+ city:{ar:"ما اسم المدينة؟",en:"Which city?",fr:"Quelle ville ?"},
+ subject:{ar:"ما المادة المطلوبة؟",en:"Which subject?",fr:"Quelle matière ?"},
+ grade:{ar:"ما صف الطالب؟",en:"Which grade is the student in?",fr:"Dans quelle année est l’élève ?"},
+ plang:{ar:"ما لغة التواصل المفضلة؟",en:"Preferred language?",fr:"Langue préférée ?"},
+ review:{ar:"راجعوا بياناتكم قبل الإرسال",en:"Review your details before sending",fr:"Vérifiez vos informations avant l’envoi"},
+ next:{ar:"التالي",en:"Next",fr:"Suivant"}, prev:{ar:"السابق",en:"Previous",fr:"Précédent"},
+ edit:{ar:"تعديل",en:"Edit",fr:"Modifier"}, send:{ar:"إرسال",en:"Send",fr:"Envoyer"},
+ gradeWord:{ar:"الصف",en:"Grade",fr:"Année"},
+ eName:{ar:"اكتبوا الاسم الأول واسم العائلة.",en:"Enter first and last name.",fr:"Saisissez le prénom et le nom."},
+ ePhone:{ar:"اكتبوا رقماً صحيحاً من 8 إلى 15 خانة.",en:"Enter a valid number with 8 to 15 digits.",fr:"Saisissez un numéro valide de 8 à 15 chiffres."},
+ eEmail:{ar:"اكتبوا بريداً إلكترونياً صحيحاً.",en:"Enter a valid email address.",fr:"Saisissez une adresse courriel valide."},
+ eCity:{ar:"اكتبوا اسم المدينة.",en:"Enter the city name.",fr:"Saisissez le nom de la ville."},
+ simTitle:{ar:"نموذج تجريبي: لم يُرسل أي شيء. في النسخة الفعلية لا تظهر رسالة النجاح إلا بعد أن يؤكد النظام حفظ الطلب.",
+   en:"Prototype: nothing was sent. In the real version the success message appears only after the system confirms the request was saved.",
+   fr:"Prototype : rien n’a été envoyé. Dans la version réelle, le message de réussite n’apparaît qu’après confirmation de l’enregistrement."},
+ payload:{ar:"البيانات التي ستُرسل",en:"Data that would be sent",fr:"Données qui seraient envoyées"},
+ note:{ar:"نموذج تجريبي",en:"Prototype",fr:"Prototype"}
+};
+var FIELD = {request:"request",parent:"parent",student:"student",phone:"phone",email:"email",country:"country",city:"city",tz:"tz",subject:"subject",grade:"grade",plang:"plang"};
+
+var S = { lang:"ar", path:["root"], fwd:[], open:{root:true}, reg:null, sent:false };
+
+/* ---------- helpers ---------- */
+function $(id){return document.getElementById(id)}
+function el(tag, cls, text){var e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e}
+function L(obj){return obj && obj[S.lang]}
+function avail(id){var n=N[id]; return !!(n && L(n.label) && (L(n.text) || n.kind==="form"))}
+function dirOf(l){return l==="ar"?"rtl":"ltr"}
+function children(id){
+  var kids=Object.keys(N).filter(function(k){return N[k].parent===id});
+  var order=(N[id].options||[]).map(function(o){return o.to});
+  kids.sort(function(a,b){var ia=order.indexOf(a),ib=order.indexOf(b); return (ia<0?99:ia)-(ib<0?99:ib)});
+  return kids;
+}
+function ancestors(id){var out=[],c=id; while(c){out.unshift(c); c=N[c].parent} return out}
+function cur(){return S.path[S.path.length-1]}
+
+/* ---------- validators: mirror Validate Lead Payload in the approved R1 handoff workflow ---------- */
+function clean(v){return String(v==null?"":v).replace(/\s+/g," ").trim()}
+function isFullName(v){var t=clean(v); if(t.length<3||t.length>100||!/\p{L}/u.test(t))return false;
+  return t.split(/\s+/).filter(function(w){return /\p{L}{2,}/u.test(w)}).length>=2}
+function isPhone(v){var p=clean(v),d=p.replace(/\D/g,""); if(d.length<8||d.length>15)return false; if(/^(\d)\1+$/.test(d))return false; return /^[+()\d\s.-]+$/.test(p)}
+function isEmail(v){var e=clean(v).toLowerCase(); if(!e||e.indexOf(" ")>=0||e[0]==="."||e[e.length-1]==="."||e.indexOf("..")>=0)return false;
+  if((e.match(/@/g)||[]).length!==1)return false; var p=e.split("@"),d=p[1]; if(!p[0]||p[0].length>64||!d||d.indexOf(".")<0)return false;
+  return d.split(".").every(function(x){return x.length>0&&x[0]!=="-"&&x[x.length-1]!=="-"})}
+function isText(v,min,max){var t=clean(v); return t.length>=(min||2)&&t.length<=(max||120)&&/\p{L}/u.test(t)}
+
+/* ---------- navigation ---------- */
+function go(id, preset){
+  S.path.push(id); S.fwd=[]; if(id==="register") startReg(preset); render(true);
+}
+function back(n){
+  var k=0; while(k<n && S.path.length>1){ S.fwd.push(S.path.pop()); k++ }
+  render(true);
+}
+function forward(){ if(S.fwd.length){ S.path.push(S.fwd.pop()); render(true) } }
+function jump(id){
+  var i=S.path.indexOf(id);
+  if(i>=0){ while(S.path.length>i+1) S.fwd.push(S.path.pop()); }
+  else { S.path=ancestors(id); S.fwd=[]; }
+  if(id==="register" && !S.reg) startReg(); render(true);
+}
+
+/* ---------- registration wizard ---------- */
+var ORDER=["request","parent","student","phone","email","country","tz","city","subject","grade","plang"];
+function startReg(preset){
+  preset=preset||{}; S.sent=false;
+  S.reg={data:{},steps:ORDER.slice(),key:null,err:null,review:false,consent:false,back:false};
+  if(preset.request){S.reg.data.request=preset.request}
+  if(preset.subject){S.reg.data.subject=preset.subject}
+  if(preset.request){S.reg.steps=S.reg.steps.filter(function(s){return s!=="request"})}
+  if(preset.subject){S.reg.steps=S.reg.steps.filter(function(s){return s!=="subject"})}
+  S.reg.key=S.reg.steps[0];
+}
+function regNext(){
+  var r=S.reg; if(r.review){return}
+  if(r.returnReview){r.key=null;r.review=true;r.returnReview=false;return}
+  var i=r.steps.indexOf(r.key); r.key = i+1<r.steps.length ? r.steps[i+1] : null; if(!r.key) r.review=true;
+}
+function regPrev(){
+  var r=S.reg; r.err=null;
+  if(r.review){r.review=false;r.key=r.steps[r.steps.length-1];return}
+  var i=r.steps.indexOf(r.key); if(i<=0){back(1);return} r.key=r.steps[i-1];
+}
+function subjectIds(){return Object.keys(N).filter(function(k){return /^sub_\d+$/.test(k)&&avail(k)})}
+function tzList(){var c=(S.reg.data.country==="United States")?"us":"ca"; return R.timezones[c]}
+function labelOf(field,val){
+  var d=S.reg.data,l=S.lang;
+  if(val==null||val==="")return "";
+  if(field==="request"){var f=R.request_types.filter(function(x){return x[0]===val})[0];return f?f[1][l]:val}
+  if(field==="country"){var c=R.countries.filter(function(x){return x[0]===val})[0];return c?c[2][l]:val}
+  if(field==="tz"){var all=R.timezones.ca.concat(R.timezones.us),t=all.filter(function(x){return x[0]===val})[0];return t?t[1][l]:val}
+  if(field==="subject"){return N[val]&&L(N[val].label)||val}
+  if(field==="grade"){return W.gradeWord[l]+" "+val}
+  if(field==="plang"){var g=R.languages.filter(function(x){return x[0]===val})[0];return g?g[1][l]:val}
+  return val;
+}
+function setChoice(field,val){
+  var r=S.reg; r.data[field]=val; r.err=null;
+  if(field==="country"){r.data.tz=null; r.wasReturn=r.returnReview; r.returnReview=false}
+  if(field==="tz" && r.wasReturn){r.returnReview=true; r.wasReturn=false}
+  regNext(); render(false);
+}
+function submitText(field,val){
+  var r=S.reg, ok=true, msg=null;
+  if(field==="parent"||field==="student"){ok=isFullName(val);msg=W.eName}
+  if(field==="phone"){ok=isPhone(val);msg=W.ePhone}
+  if(field==="email"){ok=isEmail(val);msg=W.eEmail}
+  if(field==="city"){ok=isText(val,2,120);msg=W.eCity}
+  r.data[field]=clean(val);
+  if(!ok){r.err=msg[S.lang]; render(false); return}
+  r.err=null; regNext(); render(false);
+}
+function payload(){
+  var d=S.reg.data,l=S.lang;
+  var req=d.request||"ENROLLMENT";
+  var sbj=(N[d.subject]&&N[d.subject].label.en)||labelOf("subject",d.subject);
+  return {
+    session_id:"proto-"+Math.random().toString(36).slice(2,12),
+    parent_name:d.parent, student_name:d.student, phone:d.phone, email:(d.email||"").toLowerCase(),
+    country:d.country, city:d.city, timezone:d.tz, subject:sbj, grade:W.gradeWord.en+" "+d.grade,
+    preferred_language:d.plang, consent_to_contact:true, confirmed:true,
+    last_summary:req+" request. "+W.gradeWord.en+" "+d.grade+", "+sbj+". "+d.country+", "+d.city+".",
+    request_type:req, confirmation_message:R.confirmation_phrase[l]
+  };
+}
+
+function renderWizard(box){
+  var r=S.reg, l=S.lang, d=r.data;
+  if(S.sent){
+    box.appendChild(el("div","sim",W.simTitle[l]));
+    var det=document.createElement("details"); det.appendChild(el("summary",null,W.payload[l]));
+    det.appendChild(el("pre",null,JSON.stringify(payload(),null,2))); box.appendChild(det);
+    return;
+  }
+  if(r.review){
+    box.appendChild(el("strong",null,W.review[l]));
+    var dl=el("dl","rev");
+    ORDER.forEach(function(f){
+      if(d[f]==null||d[f]==="")return;
+      dl.appendChild(el("dt",null,W[f][l].replace(/[؟?]/g,"")));
+      dl.appendChild(el("dd",null,(f==="parent"||f==="student"||f==="phone"||f==="email"||f==="city")?d[f]:labelOf(f,d[f])));
+      var b=el("button","link",W.edit[l]); b.type="button";
+      b.addEventListener("click",function(){r.review=false;r.key=f;r.returnReview=true;r.err=null;render(false)});
+      dl.appendChild(b);
+    });
+    box.appendChild(dl);
+    var lab=el("label","consent"); var cb=document.createElement("input"); cb.type="checkbox"; cb.id="consent"; cb.checked=r.consent;
+    lab.appendChild(cb); lab.appendChild(el("span",null,R.confirmation_phrase[l])); box.appendChild(lab);
+    var row=el("div","row");
+    var send=el("button","btn",W.send[l]); send.type="button"; send.disabled=!r.consent;
+    cb.addEventListener("change",function(){r.consent=cb.checked;send.disabled=!cb.checked});
+    send.addEventListener("click",function(){ if(r.consent){S.sent=true;render(false)} });
+    var pv=el("button","btn alt",W.prev[l]); pv.type="button"; pv.addEventListener("click",function(){regPrev();render(false)});
+    row.appendChild(send); row.appendChild(pv); box.appendChild(row);
+    return;
+  }
+  var k=r.key; box.appendChild(el("strong",null,W[k][l]));
+  var textFields={parent:"text",student:"text",phone:"tel",email:"email",city:"text"};
+  if(textFields[k]){
+    var f=el("div","field"); var inp=document.createElement("input"); inp.type=textFields[k]; inp.id="reg-input";
+    inp.value=d[k]||""; inp.setAttribute("aria-label",W[k][l]); if(k==="email"||k==="phone")inp.dir="ltr";
+    inp.autocomplete={parent:"name",student:"off",phone:"tel",email:"email",city:"address-level2"}[k];
+    f.appendChild(inp); box.appendChild(f);
+    if(r.err)box.appendChild(el("div","err",r.err));
+    var row2=el("div","row"); var nx=el("button","btn",W.next[l]); nx.type="button";
+    nx.addEventListener("click",function(){submitText(k,inp.value)});
+    inp.addEventListener("keydown",function(e){if(e.key==="Enter"){e.preventDefault();submitText(k,inp.value)}});
+    var pv2=el("button","btn alt",W.prev[l]); pv2.type="button"; pv2.addEventListener("click",function(){regPrev();render(false)});
+    row2.appendChild(nx); row2.appendChild(pv2); box.appendChild(row2);
+    S._focus="reg-input"; return;
+  }
+  var wrap=el("div", k==="grade"?"chips":"opts"); wrap.style.marginTop="8px";
+  function choice(label,val){var b=el("button","opt"); b.type="button"; b.appendChild(el("span",null,label));
+    b.addEventListener("click",function(){setChoice(k,val)}); wrap.appendChild(b)}
+  if(k==="request")R.request_types.forEach(function(x){choice(x[1][l],x[0])});
+  if(k==="country")R.countries.forEach(function(x){choice(x[2][l],x[0])});
+  if(k==="tz")tzList().forEach(function(x){choice(x[1][l],x[0])});
+  if(k==="subject")subjectIds().forEach(function(id){choice(L(N[id].label),id)});
+  if(k==="grade")R.grades.forEach(function(g){choice(String(g),g)});
+  if(k==="plang")R.languages.forEach(function(x){choice(x[1][l],x[0])});
+  box.appendChild(wrap);
+  var row3=el("div","row"); var pv3=el("button","btn alt",W.prev[l]); pv3.type="button";
+  pv3.addEventListener("click",function(){regPrev();render(false)}); row3.appendChild(pv3); box.appendChild(row3);
+}
+
+/* ---------- rendering ---------- */
+var ICON={
+ home:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M2 8l6-5 6 5M3.5 7v6h9V7"/></svg>',
+ back:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="flip"><path d="M10 3L5 8l5 5"/></svg>',
+ back2:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="flip"><path d="M8 3L3 8l5 5M13 3L8 8l5 5"/></svg>',
+ fwd:'<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" class="flip"><path d="M6 3l5 5-5 5"/></svg>'
+};
+function renderToolbar(){
+  var tb=$("toolbar"); tb.innerHTML=""; tb.dir=dirOf(S.lang); var l=S.lang;
+  function mk(icon,label,fn,dis){var b=el("button","tb"); b.type="button"; b.innerHTML=icon; b.appendChild(el("span",null,label)); b.disabled=!!dis; b.addEventListener("click",fn); tb.appendChild(b)}
+  mk(ICON.home,UI.home[l],function(){jump("root")},S.path.length<2);
+  mk(ICON.back,UI.back1[l],function(){back(1)},S.path.length<2);
+  mk(ICON.back2,UI.back2[l],function(){back(2)},S.path.length<3);
+  mk(ICON.fwd,UI.fwd[l],forward,!S.fwd.length);
+  // arrows point along the reading direction
+  [].forEach.call(tb.querySelectorAll("svg.flip"),function(s){ if(l==="ar") s.style.transform="scaleX(-1)"; });
+  var fw=tb.querySelectorAll("button")[3].querySelector("svg"); if(fw){ fw.style.transform = (l==="ar")?"":"scaleX(-1)"; }
+  var bk=[tb.querySelectorAll("button")[1],tb.querySelectorAll("button")[2]]; bk.forEach(function(b){var s=b.querySelector("svg"); s.style.transform=(l==="ar")?"scaleX(-1)":"";});
+  // forward arrow: opposite of back
+  var f2=tb.querySelectorAll("button")[3].querySelector("svg"); f2.style.transform=(l==="ar")?"scaleX(-1)":"";
+}
+function renderCrumbs(){
+  var c=$("crumbs"); c.innerHTML=""; c.dir=dirOf(S.lang);
+  S.path.forEach(function(id,i){
+    var last=i===S.path.length-1, t=L(N[id].label)||N[id].label.ar;
+    if(last){var s=el("span",null,t); s.setAttribute("aria-current","page"); c.appendChild(s)}
+    else{var b=el("button",null,t); b.type="button"; b.addEventListener("click",function(){jump(id)}); c.appendChild(b); c.appendChild(el("span",null,"›"))}
+  });
+}
+function optionsFor(id){
+  var n=N[id], out=[];
+  if(n.kind==="form")return out;
+  n.options.forEach(function(o){ if(avail(o.to)) out.push(o) });
+  return out;
+}
+function renderLog(scroll){
+  var log=$("log"); log.innerHTML=""; log.dir=dirOf(S.lang); var l=S.lang;
+  S._focus=null;
+  S.path.forEach(function(id,i){
+    var n=N[id];
+    if(i>0)log.appendChild(el("div","msg me",L(n.label)||n.label.ar));
+    var bot=el("div","msg bot");
+    if(n.kind==="form"){bot.appendChild(el("div",null,L(n.text)||"")); var box=el("div"); bot.appendChild(box); if(i===S.path.length-1)renderWizard(box); else box.hidden=true;}
+    else bot.appendChild(el("div",null,L(n.text)||""));
+    log.appendChild(bot);
+  });
+  var id=cur(), n=N[id], opts=optionsFor(id);
+  if(opts.length){
+    var wrap=el("div","opts");
+    if(n.kind==="answer")wrap.appendChild(el("h3",null,UI.related[l]));
+    opts.forEach(function(o){
+      var t=N[o.to], b=el("button","opt"); b.type="button";
+      b.appendChild(el("span",null,L(t.label)));
+      if(t.parent!==id) b.appendChild(el("span","go","›"));
+      b.addEventListener("click",function(){go(o.to,o.preset)});
+      wrap.appendChild(b);
+    });
+    log.appendChild(wrap);
+  }
+  if(scroll!==false) log.scrollTop=log.scrollHeight;
+  if(S._focus){var f=$(S._focus); if(f)f.focus()}
+}
+function renderMap(){
+  var ul=$("tree"); ul.innerHTML=""; ul.dir=dirOf(S.lang);
+  var path=ancestors(cur()); path.forEach(function(p){S.open[p]=true});
+  function build(id,parentUl){
+    var n=N[id], li=el("li"), row=el("div","n"), kids=children(id);
+    var isCur=id===cur(), onPath=S.path.indexOf(id)>=0 || path.indexOf(id)>=0;
+    if(isCur)row.classList.add("cur"); if(onPath)row.classList.add("onpath");
+    var ok=avail(id); if(!ok)row.classList.add("na");
+    if(kids.length){
+      var tg=el("button","tog",S.open[id]?"▾":"▸"); tg.type="button"; tg.setAttribute("aria-expanded",S.open[id]?"true":"false"); tg.setAttribute("aria-label","فتح أو طيّ الفرع");
+      tg.addEventListener("click",function(){S.open[id]=!S.open[id]; renderMap()}); row.appendChild(tg);
+    } else row.appendChild(el("span","sp"));
+    var nb=el("button","nav",L(n.label)||n.label.ar); nb.type="button"; if(isCur)nb.setAttribute("aria-current","location");
+    nb.addEventListener("click",function(){ if(ok)jump(id); }); if(!ok){nb.disabled=true;nb.style.cursor="default"}
+    row.appendChild(nb);
+    if(isCur)row.appendChild(el("span","tag here",UI.you_are_here.ar));
+    if(n.origin==="composed")row.appendChild(el("span","tag warn","يحتاج موافقة"));
+    if(!ok)row.appendChild(el("span","tag dim","غير متاح"));
+    row.appendChild(el("span","mono",id));
+    li.appendChild(row);
+    if(kids.length && S.open[id]){var sub=el("ul"); kids.forEach(function(k){build(k,sub)}); li.appendChild(sub)}
+    parentUl.appendChild(li);
+  }
+  build("root",ul);
+}
+function renderStats(){
+  var ids=Object.keys(N), comp=ids.filter(function(k){return N[k].origin==="composed"}).length;
+  var srcs={}; ids.forEach(function(k){N[k].sources.forEach(function(s){srcs[s]=1})});
+  var gaps={ar:0,en:0,fr:0}; ids.forEach(function(k){["ar","en","fr"].forEach(function(l){ if(!(N[k].label[l]&&(N[k].text[l]||N[k].kind==="form"))) gaps[l]++ })});
+  $("stats").innerHTML='<span>العقد <b>'+ids.length+'</b></span><span>سجلات قاعدة المعرفة المستخدمة <b>'+Object.keys(srcs).length+'</b></span><span>نصوص تحتاج موافقة <b>'+comp+'</b></span><span>غير متاح بالإنجليزية <b>'+gaps.en+'</b></span><span>غير متاح بالفرنسية <b>'+gaps.fr+'</b></span>';
+}
+function render(scroll){
+  var l=S.lang, w=document.querySelector(".widget");
+  w.lang=l;
+  renderToolbar(); renderCrumbs(); renderLog(scroll); renderMap();
+  $("humanBtn").textContent=UI.human[l]; $("humanBtn").dir=dirOf(l);
+  $("footnote").textContent=W.note[l];
+  [].forEach.call(document.querySelectorAll(".seg button"),function(b){b.setAttribute("aria-pressed",b.dataset.lang===l?"true":"false")});
+}
+
+/* ---------- wire up ---------- */
+[].forEach.call(document.querySelectorAll(".seg button"),function(b){
+  b.addEventListener("click",function(){
+    S.lang=b.dataset.lang;
+    // a node with no text in the new language cannot be shown: step back to the nearest one that can
+    while(S.path.length>1 && !avail(cur())) S.path.pop();
+    S.fwd=[]; render(true);
+  });
+});
+$("humanBtn").addEventListener("click",function(){ if(cur()!=="human") go("human") });
+$("toggleAll").addEventListener("click",function(){
+  var anyClosed=Object.keys(N).some(function(k){return children(k).length && !S.open[k]});
+  Object.keys(N).forEach(function(k){ if(children(k).length) S.open[k]=anyClosed });
+  S.open.root=true; $("toggleAll").textContent=anyClosed?"طيّ الكل":"فتح الكل"; renderMap();
+});
+renderStats(); render(false);
+})();
+</script>
