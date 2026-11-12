@@ -189,7 +189,7 @@ var W = {
 };
 var FIELD = {request:"request",parent:"parent",student:"student",phone:"phone",email:"email",country:"country",city:"city",tz:"tz",subject:"subject",grade:"grade",plang:"plang"};
 
-var S = { lang:"ar", path:["root"], fwd:[], open:{root:true}, reg:null, sent:false };
+var S = { lang:"ar", path:["root"], fwd:[], open:{root:true}, reg:null, sent:false, picked:false };
 
 /* ---------- helpers ---------- */
 function $(id){return document.getElementById(id)}
@@ -448,8 +448,29 @@ function renderStats(){
   var gaps={ar:0,en:0,fr:0}; ids.forEach(function(k){["ar","en","fr"].forEach(function(l){ if(!(N[k].label[l]&&(N[k].text[l]||N[k].kind==="form"))) gaps[l]++ })});
   $("stats").innerHTML='<span>العقد <b>'+ids.length+'</b></span><span>سجلات قاعدة المعرفة المستخدمة <b>'+Object.keys(srcs).length+'</b></span><span>نصوص تحتاج موافقة <b>'+comp+'</b></span><span>غير متاح بالإنجليزية <b>'+gaps.en+'</b></span><span>غير متاح بالفرنسية <b>'+gaps.fr+'</b></span>';
 }
+function renderPicker(){
+  var w=document.querySelector(".widget");
+  $("toolbar").innerHTML=""; $("crumbs").innerHTML=""; $("humanBtn").textContent="";
+  var log=$("log"); log.innerHTML=""; log.dir="ltr";
+  var bot=el("div","msg bot");
+  [["ar","rtl","اختر لغتك"],["en","ltr","Choose your language"],["fr","ltr","Choisissez votre langue"]].forEach(function(x){
+    var d=el("div",null,x[2]); d.dir=x[1]; d.lang=x[0]; bot.appendChild(d);
+  });
+  log.appendChild(bot);
+  var wrap=el("div","opts");
+  [["ar","العربية"],["en","English"],["fr","Français"]].forEach(function(x){
+    var b=el("button","opt"); b.type="button"; b.lang=x[0]; b.dir=x[0]==="ar"?"rtl":"ltr";
+    b.appendChild(el("span",null,x[1]));
+    b.addEventListener("click",function(){ S.lang=x[0]; S.picked=true; document.documentElement.lang=x[0]; render(true); });
+    wrap.appendChild(b);
+  });
+  log.appendChild(wrap);
+  w.lang="en";
+  [].forEach.call(document.querySelectorAll(".seg button"),function(b){b.setAttribute("aria-pressed","false")});
+}
 function render(scroll){
   var l=S.lang, w=document.querySelector(".widget");
+  if(!S.picked){ renderPicker(); if(typeof renderMap==="function") renderMap(); return; }
   w.lang=l;
   renderToolbar(); renderCrumbs(); renderLog(scroll); renderMap();
   $("humanBtn").textContent=UI.human[l]; $("humanBtn").dir=dirOf(l);
@@ -460,7 +481,7 @@ function render(scroll){
 /* ---------- wire up ---------- */
 [].forEach.call(document.querySelectorAll(".seg button"),function(b){
   b.addEventListener("click",function(){
-    S.lang=b.dataset.lang;
+    S.lang=b.dataset.lang; S.picked=true;
     // a node with no text in the new language cannot be shown: step back to the nearest one that can
     while(S.path.length>1 && !avail(cur())) S.path.pop();
     S.fwd=[]; render(true);

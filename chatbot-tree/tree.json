@@ -97,6 +97,9 @@
      "to": "classes"
     },
     {
+     "to": "followup"
+    },
+    {
      "to": "policies"
     },
     {
@@ -1287,9 +1290,76 @@
    ],
    "origin": "kb"
   },
+  "classes_tech": {
+   "id": "classes_tech",
+   "parent": "classes",
+   "kind": "answer",
+   "label": {
+    "ar": "ما الأجهزة والتقنية المطلوبة للحصص؟",
+    "en": "What equipment and technology do lessons require?",
+    "fr": "De quel équipement a-t-on besoin pour les cours ?"
+   },
+   "text": {
+    "ar": "تُعقد الحصص أساساً عبر Google Meet. يمكن استخدام كمبيوتر مكتبي أو لابتوب أو تابلت أو هاتف، مع تفضيل شاشة أكبر مثل اللابتوب أو الكمبيوتر واتصال إنترنت مستقر.",
+    "en": "Lessons are delivered primarily through Google Meet. A desktop, laptop, tablet, or phone can be used; a laptop or computer with a larger screen is preferred, together with a stable internet connection.",
+    "fr": "Les cours sont principalement donnés via Google Meet. Un ordinateur de bureau, un portable, une tablette ou un téléphone peuvent être utilisés; un portable ou un ordinateur avec un écran plus grand est préférable, avec une connexion Internet stable."
+   },
+   "options": [
+    {
+     "to": "classes_duration"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "S-AR-6",
+    "S-EN-6",
+    "S-FR-6"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "classes_booking": {
+   "id": "classes_booking",
+   "parent": "classes",
+   "kind": "answer",
+   "label": {
+    "ar": "هل الموعد والمدرس مؤكدان؟",
+    "en": "Are the tutor and lesson time confirmed?",
+    "fr": "Le tuteur et l’horaire sont-ils confirmés ?"
+   },
+   "text": {
+    "ar": "الموعد أو توفر المدرس يحتاج تأكيدًا من الفريق. أرسلوا اليوم والوقت والمنطقة الزمنية المناسبة.",
+    "en": "The tutor or time slot requires team confirmation. Please share your preferred day, time, and time zone.",
+    "fr": "Le tuteur ou le créneau doit être confirmé par l’équipe. Indiquez le jour, l’heure et le fuseau horaire souhaités."
+   },
+   "options": [
+    {
+     "to": "register",
+     "preset": {
+      "request": "CALLBACK"
+     }
+    },
+    {
+     "to": "classes_matching"
+    },
+    {
+     "to": "policy_reschedule"
+    }
+   ],
+   "sources": [
+    "FB-007",
+    "FB-008",
+    "FB-009"
+   ],
+   "origin": "kb+ui-label"
+  },
   "classes_certificates": {
    "id": "classes_certificates",
-   "parent": "classes",
+   "parent": "followup",
    "kind": "answer",
    "label": {
     "ar": "هل يحصل الطالب على شهادة رسمية بعد إكمال عشرين حصة؟"
@@ -1299,7 +1369,7 @@
    },
    "options": [
     {
-     "to": "classes_homework"
+     "to": "followup_updates"
     },
     {
      "to": "register"
@@ -1309,6 +1379,98 @@
     "FAQ-260"
    ],
    "origin": "kb"
+  },
+  "followup_assessment": {
+   "id": "followup_assessment",
+   "parent": "followup",
+   "kind": "answer",
+   "label": {
+    "ar": "هل يوجد تقييم للطالب؟",
+    "en": "Is the student assessed?",
+    "fr": "L’élève est-il évalué ?"
+   },
+   "text": {
+    "ar": "تقييم أولي مجاني لفهم المستوى والفجوات والتحديات، مع حصة تجريبية مجانية لكل طالب جديد ولكل مادة جديدة. بعد نحو 4–6 حصص يمكن إجراء تقييم متابعة لقياس التقدم وتقديم ملاحظات لولي الأمر.",
+    "en": "A free initial assessment to identify level, gaps, and challenges, plus a free trial for every new student and each new subject. After about 4–6 lessons, a follow-up assessment may be used to review progress and provide parent feedback.",
+    "fr": "Une évaluation initiale gratuite pour identifier le niveau, les lacunes et les difficultés, ainsi qu’un essai gratuit pour chaque nouvel élève et chaque nouvelle matière. Après environ 4 à 6 cours, une évaluation de suivi peut mesurer les progrès et informer les parents."
+   },
+   "options": [
+    {
+     "to": "followup_updates"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "S-AR-2",
+    "S-EN-2",
+    "S-FR-2"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "followup_updates": {
+   "id": "followup_updates",
+   "parent": "followup",
+   "kind": "answer",
+   "label": {
+    "ar": "كيف يتابع ولي الأمر تقدم الطالب؟",
+    "en": "How can parents follow the student’s progress?",
+    "fr": "Comment les parents suivent-ils les progrès de l’élève ?"
+   },
+   "text": {
+    "ar": "تحديثات يومية أو أسبوعية من المدرس حول التحديات والفجوات والإنجازات والخطة والخطوات التالية، مع إمكانية تقييم متابعة بعد نحو 4–6 حصص ومشاركة الملاحظات مع ولي الأمر.",
+    "en": "Daily or weekly teacher updates on challenges, gaps, achievements, the plan, and next steps, with a follow-up assessment possible after about 4–6 lessons and feedback shared with the parent.",
+    "fr": "Mises à jour quotidiennes ou hebdomadaires du tuteur sur les difficultés, les lacunes, les réussites, le plan et les prochaines étapes, avec une évaluation de suivi possible après environ 4 à 6 cours et un retour aux parents."
+   },
+   "options": [
+    {
+     "to": "followup_assessment"
+    },
+    {
+     "to": "classes_certificates"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "S-AR-5",
+    "S-EN-5",
+    "S-FR-5"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "followup": {
+   "id": "followup",
+   "parent": "root",
+   "kind": "menu",
+   "label": {
+    "ar": "التقييم ومتابعة الطالب",
+    "en": "Assessment and progress follow-up",
+    "fr": "Évaluation et suivi de l’élève"
+   },
+   "text": {
+    "ar": "اختر ما تريد معرفته.",
+    "en": "Choose what you want to know.",
+    "fr": "Choisissez ce que vous voulez savoir."
+   },
+   "options": [
+    {
+     "to": "followup_assessment"
+    },
+    {
+     "to": "followup_updates"
+    },
+    {
+     "to": "classes_certificates"
+    }
+   ],
+   "sources": [],
+   "origin": "ui"
   },
   "classes": {
    "id": "classes",
@@ -1338,7 +1500,10 @@
      "to": "classes_matching"
     },
     {
-     "to": "classes_certificates"
+     "to": "classes_tech"
+    },
+    {
+     "to": "classes_booking"
     }
    ],
    "sources": [],
@@ -1472,6 +1637,41 @@
    ],
    "origin": "kb+ui-label"
   },
+  "policy_reschedule": {
+   "id": "policy_reschedule",
+   "parent": "policies",
+   "kind": "answer",
+   "label": {
+    "ar": "كيف أغيّر موعد حصة؟",
+    "en": "How do I reschedule a lesson?",
+    "fr": "Comment déplacer un cours ?"
+   },
+   "text": {
+    "ar": "يمكن إلغاء حصة واحدة أسبوعيًا وإعادة جدولتها خلال الأسبوع نفسه.",
+    "en": "One eligible change is normally allowed weekly. A replacement is not guaranteed until confirmed.",
+    "fr": "Un changement est normalement permis par semaine, sous réserve de confirmation."
+   },
+   "options": [
+    {
+     "to": "policy_absence"
+    },
+    {
+     "to": "classes_booking"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "request": "CALLBACK"
+     }
+    }
+   ],
+   "sources": [
+    "POL-001",
+    "POL-005",
+    "POL-009"
+   ],
+   "origin": "kb+ui-label"
+  },
   "policies": {
    "id": "policies",
    "parent": "root",
@@ -1489,6 +1689,9 @@
    "options": [
     {
      "to": "policy_cancellation"
+    },
+    {
+     "to": "policy_reschedule"
     },
     {
      "to": "policy_absence"

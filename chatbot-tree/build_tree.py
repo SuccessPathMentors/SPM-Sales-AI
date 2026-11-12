@@ -29,8 +29,8 @@ def rows(name):
     return out
 
 
-FAQ, POL, PKG, SUB, COM, PATH, OBJ = (rows(n) for n in
-    ["FAQ", "POLICIES", "PACKAGES", "SUBJECTS", "COMPANY", "SUBJECT_PATHWAYS", "OBJECTIONS"])
+FAQ, POL, PKG, SUB, COM, PATH, OBJ, SERV, FB = (rows(n) for n in
+    ["FAQ", "POLICIES", "PACKAGES", "SUBJECTS", "COMPANY", "SUBJECT_PATHWAYS", "OBJECTIONS", "SERVICES", "FALLBACKS"])
 
 # Records that must never reach customers (test row, conversation-specific example, duplicates)
 EXCLUDED = {"FAQ-UQ-39556": "test record", "FAQ-358": "conversation-specific example, not a general answer"}
@@ -99,6 +99,7 @@ MAIN = [
     ("pricing",  {"ar": "الأسعار والباقات", "en": "Prices and packages", "fr": "Tarifs et forfaits"}),
     ("trial",    {"ar": "الحصة التجريبية المجانية", "en": "Free trial lesson", "fr": "Essai gratuit"}),
     ("classes",  {"ar": "كيف تسير الحصص؟", "en": "How lessons work", "fr": "Déroulement des cours"}),
+    ("followup", {"ar": "التقييم ومتابعة الطالب", "en": "Assessment and progress follow-up", "fr": "Évaluation et suivi de l’élève"}),
     ("policies", {"ar": "الإلغاء والغياب والاسترداد", "en": "Cancellation, absence and refunds", "fr": "Annulation, absence et remboursement"}),
     ("concerns", {"ar": "لديّ تحفظ أو قلق", "en": "I have a concern", "fr": "J’ai une réserve"}),
     ("register", {"ar": "سجّل الآن", "en": "Register now", "fr": "S’inscrire"}),
@@ -253,10 +254,43 @@ faq_leaf("classes_duration", "classes", "lesson_duration", ["classes_frequency",
 faq_leaf("classes_frequency", "classes", "lesson_frequency", ["pricing", "trial", "register"])
 faq_leaf("classes_homework", "classes", "homework", ["classes_matching", "trial", "register"])
 faq_leaf("classes_matching", "classes", "matching", ["trial", "register"])
-faq_leaf("classes_certificates", "classes", "certificates", ["classes_homework", "register"])
+
+
+def svc_leaf(nid, parent, num, label, follow):
+    """Answer = verbatim 'description' of the ACTIVE SERVICES row S-<LANG>-<num>; label is interface wording."""
+    rs = {l: by(SERV, "service_id", f"S-{l.upper()}-{num}", l) for l in LANGS}
+    for l in LANGS:
+        if not rs[l]:
+            gaps.append((nid, l, f"no ACTIVE SERVICES row S-{l.upper()}-{num}"))
+    add(nid, parent, "answer", label, {l: rs[l]["description"] for l in LANGS if rs[l]}, follow,
+        src(*rs.values()), origin="kb+ui-label")
+
+
+svc_leaf("classes_tech", "classes", 6,
+         {"ar": "ما الأجهزة والتقنية المطلوبة للحصص؟", "en": "What equipment and technology do lessons require?",
+          "fr": "De quel équipement a-t-on besoin pour les cours ?"},
+         ["classes_duration", "trial", "register"])
+fb = {l: by(FB, "scenario", "unconfirmed_booking", l) for l in LANGS}
+for l in LANGS:
+    if not fb[l]:
+        gaps.append(("classes_booking", l, "no ACTIVE FALLBACKS unconfirmed_booking row"))
+add("classes_booking", "classes", "answer",
+    {"ar": "هل الموعد والمدرس مؤكدان؟", "en": "Are the tutor and lesson time confirmed?", "fr": "Le tuteur et l’horaire sont-ils confirmés ?"},
+    {l: fb[l]["message"] for l in LANGS if fb[l]},
+    [{"to": "register", "preset": {"request": "CALLBACK"}}, "classes_matching", "policy_reschedule"], src(*fb.values()), origin="kb+ui-label")
+faq_leaf("classes_certificates", "followup", "certificates", ["followup_updates", "register"])
+svc_leaf("followup_assessment", "followup", 2,
+         {"ar": "هل يوجد تقييم للطالب؟", "en": "Is the student assessed?", "fr": "L’élève est-il évalué ?"},
+         ["followup_updates", "trial", "register"])
+svc_leaf("followup_updates", "followup", 5,
+         {"ar": "كيف يتابع ولي الأمر تقدم الطالب؟", "en": "How can parents follow the student’s progress?", "fr": "Comment les parents suivent-ils les progrès de l’élève ?"},
+         ["followup_assessment", "classes_certificates", "register"])
+add("followup", "root", "menu", MAIN[5][1],
+    {"ar": "اختر ما تريد معرفته.", "en": "Choose what you want to know.", "fr": "Choisissez ce que vous voulez savoir."},
+    ["followup_assessment", "followup_updates", "classes_certificates"], [], origin="ui")
 add("classes", "root", "menu", MAIN[4][1],
     {"ar": "اختر ما تريد معرفته.", "en": "Choose what you want to know.", "fr": "Choisissez ce que vous voulez savoir."},
-    ["classes_duration", "classes_frequency", "classes_homework", "classes_matching", "classes_certificates"], [], origin="ui")
+    ["classes_duration", "classes_frequency", "classes_homework", "classes_matching", "classes_tech", "classes_booking"], [], origin="ui")
 # pricing leaves point to the frequency answer (cross-link)
 for n in pk:
     for c in ("ca", "us"):
@@ -277,7 +311,14 @@ for k in ("cancellation", "absence", "minimum", "refund"):
     add(nid, "policies", "answer", POL_LABEL[k], {l: rs[l]["customer_answer"] for l in LANGS if rs[l]},
         [o for o in ["policy_absence", "policy_minimum", "policy_refund", "policy_cancellation"] if o != nid][:2] + ["register"],
         src(*rs.values()), origin="kb+ui-label")
-add("policies", "root", "menu", MAIN[5][1],
+# reschedule: the approved cancellation rule also covers rescheduling, so the same ACTIVE rows answer it directly
+rs = {l: pol("cancellation", l) for l in LANGS}
+add("policy_reschedule", "policies", "answer",
+    {"ar": "كيف أغيّر موعد حصة؟", "en": "How do I reschedule a lesson?", "fr": "Comment déplacer un cours ?"},
+    {l: rs[l]["customer_answer"] for l in LANGS if rs[l]},
+    ["policy_absence", "classes_booking", {"to": "register", "preset": {"request": "CALLBACK"}}], src(*rs.values()), origin="kb+ui-label")
+pids.insert(1, "policy_reschedule")
+add("policies", "root", "menu", MAIN[6][1],
     {"ar": "اختر ما تريد معرفته.", "en": "Choose what you want to know.", "fr": "Choisissez ce que vous voulez savoir."},
     pids, [], origin="ui")
 
@@ -292,11 +333,11 @@ for n in range(1, 6):
         [{"to": "pricing"}, {"to": "trial"}, {"to": "register"}] if n == 1 else [{"to": "trial"}, {"to": "register"}],
         src(*rs.values()))
 excluded_note.append(("O-AR/EN/FR-6", "'I need time to think' promises to send a summary; the tree cannot send one, so it is not offered"))
-add("concerns", "root", "menu", MAIN[6][1],
+add("concerns", "root", "menu", MAIN[7][1],
     {"ar": "ما الذي يقلقكم؟", "en": "What is on your mind?", "fr": "Qu’est-ce qui vous préoccupe ?"}, cids, [], origin="ui")
 
 # ---------------------------------------------------------------- register + human
-add("register", "root", "form", MAIN[7][1],
+add("register", "root", "form", MAIN[8][1],
     {"ar": "سنجمع بضع معلومات بسيطة، خطوة بخطوة، ثم تراجعونها قبل الإرسال.",
      "en": "We will collect a few details, one step at a time, and you review them before sending.",
      "fr": "Nous allons recueillir quelques informations, étape par étape, et vous les vérifiez avant l’envoi."},
