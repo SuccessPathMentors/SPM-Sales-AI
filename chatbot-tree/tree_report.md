@@ -1,7 +1,7 @@
 # Tree build report
 
 Source: Success_Path_Mentors_AI_KB_V2_SPM_2026-08-18.xlsx
-Nodes: 55  |  KB records used: 207
+Nodes: 59  |  KB records used: 215
 
 ## Excluded from customers
 - FAQ-UQ-39556: test record

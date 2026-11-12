@@ -117,9 +117,9 @@
    "parent": "root",
    "kind": "menu",
    "label": {
-    "ar": "من نحن وما خدماتنا؟",
-    "en": "Who we are and what we offer",
-    "fr": "Qui sommes-nous et que proposons-nous ?"
+    "ar": "من أنتم وما الخدمات التي تقدمونها؟",
+    "en": "Who are you and what do you offer?",
+    "fr": "Qui êtes-vous et que proposez-vous ?"
    },
    "text": {
     "ar": "دروس خصوصية فردية عبر الإنترنت للطلاب من الصف الأول حتى الصف الثاني عشر.",
@@ -135,6 +135,12 @@
     },
     {
      "to": "about_curriculum"
+    },
+    {
+     "to": "about_exam"
+    },
+    {
+     "to": "about_mentoring"
     }
    ],
    "sources": [
@@ -142,7 +148,7 @@
     "COM-004",
     "COM-008"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "about_online": {
    "id": "about_online",
@@ -289,8 +295,8 @@
    "parent": "subjects",
    "kind": "answer",
    "label": {
-    "ar": "الرياضيات",
-    "en": "Mathematics"
+    "ar": "هل تدرّسون الرياضيات؟",
+    "en": "Do you teach Mathematics?"
    },
    "text": {
     "ar": "دروس رياضيات فردية عبر الإنترنت.",
@@ -316,7 +322,7 @@
    "sources": [
     "SUB-001"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "sub_002_strands": {
    "id": "sub_002_strands",
@@ -385,9 +391,9 @@
    "parent": "subjects",
    "kind": "answer",
    "label": {
-    "ar": "اللغة الإنجليزية",
-    "en": "English",
-    "fr": "Anglais"
+    "ar": "هل تدرّسون اللغة الإنجليزية؟",
+    "en": "Do you teach English?",
+    "fr": "Enseignez-vous l’anglais ?"
    },
    "text": {
     "ar": "دروس لغة إنجليزية فردية عبر الإنترنت.",
@@ -414,7 +420,7 @@
    "sources": [
     "SUB-002"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "sub_003_strands": {
    "id": "sub_003_strands",
@@ -457,8 +463,8 @@
    "parent": "subjects",
    "kind": "answer",
    "label": {
-    "ar": "العلوم",
-    "en": "General Science"
+    "ar": "هل تدرّسون العلوم؟",
+    "en": "Do you teach General Science?"
    },
    "text": {
     "ar": "دروس علوم فردية بحسب الصف والمنهج.",
@@ -484,7 +490,7 @@
    "sources": [
     "SUB-003"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "sub_004_strands": {
    "id": "sub_004_strands",
@@ -581,9 +587,9 @@
    "parent": "subjects",
    "kind": "answer",
    "label": {
-    "ar": "الفيزياء",
-    "en": "Physics",
-    "fr": "Physique"
+    "ar": "هل تدرّسون الفيزياء؟",
+    "en": "Do you teach Physics?",
+    "fr": "Enseignez-vous la physique ?"
    },
    "text": {
     "ar": "دروس فيزياء فردية أونلاين للصفوف 9–12. ندعم فيزياء الصف الحادي عشر وفق منهج أونتاريو في كندا، ويمكن مواءمة الدروس مع منهج الطالب ومواد المدرسة والواجبات واحتياجاته التعليمية. تتم مطابقة المدرس حسب المادة والصف والمنهج واللغة واحتياجات الطالب، ويُؤكد توفر المدرس قبل اعتماد المطابقة.",
@@ -613,7 +619,7 @@
    "sources": [
     "SUB-004"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "sub_005_strands": {
    "id": "sub_005_strands",
@@ -680,8 +686,8 @@
    "parent": "subjects",
    "kind": "answer",
    "label": {
-    "ar": "الكيمياء",
-    "en": "Chemistry"
+    "ar": "هل تدرّسون الكيمياء؟",
+    "en": "Do you teach Chemistry?"
    },
    "text": {
     "ar": "دروس كيمياء فردية لطلاب المرحلة الثانوية.",
@@ -707,14 +713,14 @@
    "sources": [
     "SUB-005"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "sub_006": {
    "id": "sub_006",
    "parent": "subjects",
    "kind": "answer",
    "label": {
-    "ar": "اللغة الفرنسية"
+    "ar": "هل تدرّسون اللغة الفرنسية؟"
    },
    "text": {
     "ar": "دروس لغة فرنسية فردية عبر الإنترنت."
@@ -736,14 +742,14 @@
    "sources": [
     "SUB-006"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "sub_007": {
    "id": "sub_007",
    "parent": "subjects",
    "kind": "answer",
    "label": {
-    "ar": "اللغة العربية"
+    "ar": "هل تدرّسون اللغة العربية؟"
    },
    "text": {
     "ar": "دروس لغة عربية فردية عبر الإنترنت."
@@ -765,14 +771,14 @@
    "sources": [
     "SUB-007"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "sub_008": {
    "id": "sub_008",
    "parent": "subjects",
    "kind": "answer",
    "label": {
-    "ar": "الدراسات الإسلامية"
+    "ar": "هل تدرّسون الدراسات الإسلامية؟"
    },
    "text": {
     "ar": "دروس فردية في الدراسات الإسلامية."
@@ -794,16 +800,16 @@
    "sources": [
     "SUB-008"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "subjects": {
    "id": "subjects",
    "parent": "root",
    "kind": "menu",
    "label": {
-    "ar": "المواد والصفوف",
-    "en": "Subjects and grades",
-    "fr": "Matières et niveaux"
+    "ar": "ما المواد والصفوف التي تدرّسونها؟",
+    "en": "Which subjects and grades do you teach?",
+    "fr": "Quelles matières et quels niveaux enseignez-vous ?"
    },
    "text": {
     "ar": "اختر المادة.",
@@ -844,9 +850,9 @@
    "parent": "price_ca",
    "kind": "answer",
    "label": {
-    "ar": "باقة 4 حصص",
-    "en": "4-lesson package",
-    "fr": "Forfait de 4 cours"
+    "ar": "كم سعر باقة 4 حصص؟",
+    "en": "How much is the 4-lesson package?",
+    "fr": "Combien coûte le forfait de 4 cours ?"
    },
    "text": {
     "ar": "باقة 4 حصص بسعر 110 دولارات كندية (CAD).",
@@ -879,9 +885,9 @@
    "parent": "price_ca",
    "kind": "answer",
    "label": {
-    "ar": "باقة 8 حصص",
-    "en": "8-lesson package",
-    "fr": "Forfait de 8 cours"
+    "ar": "كم سعر باقة 8 حصص؟",
+    "en": "How much is the 8-lesson package?",
+    "fr": "Combien coûte le forfait de 8 cours ?"
    },
    "text": {
     "ar": "باقة 8 حصص بسعر 220 دولارًا كنديًا (CAD).",
@@ -914,9 +920,9 @@
    "parent": "price_ca",
    "kind": "answer",
    "label": {
-    "ar": "باقة 12 حصة",
-    "en": "12-lesson package",
-    "fr": "Forfait de 12 cours"
+    "ar": "كم سعر باقة 12 حصة؟",
+    "en": "How much is the 12-lesson package?",
+    "fr": "Combien coûte le forfait de 12 cours ?"
    },
    "text": {
     "ar": "باقة 12 حصة بسعر 280 دولارًا كنديًا (CAD).",
@@ -949,9 +955,9 @@
    "parent": "pricing",
    "kind": "menu",
    "label": {
-    "ar": "كندا",
-    "en": "Canada",
-    "fr": "Canada"
+    "ar": "كم الأسعار في كندا؟",
+    "en": "What are the prices in Canada?",
+    "fr": "Quels sont les tarifs au Canada ?"
    },
    "text": {
     "ar": "اختر الباقة.",
@@ -977,9 +983,9 @@
    "parent": "price_us",
    "kind": "answer",
    "label": {
-    "ar": "باقة 4 حصص",
-    "en": "4-lesson package",
-    "fr": "Forfait de 4 cours"
+    "ar": "كم سعر باقة 4 حصص؟",
+    "en": "How much is the 4-lesson package?",
+    "fr": "Combien coûte le forfait de 4 cours ?"
    },
    "text": {
     "ar": "باقة 4 حصص بسعر 110 دولارات أمريكية (USD).",
@@ -1005,16 +1011,16 @@
     "PKG-004",
     "PKG-007"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "price_us_8": {
    "id": "price_us_8",
    "parent": "price_us",
    "kind": "answer",
    "label": {
-    "ar": "باقة 8 حصص",
-    "en": "8-lesson package",
-    "fr": "Forfait de 8 cours"
+    "ar": "كم سعر باقة 8 حصص؟",
+    "en": "How much is the 8-lesson package?",
+    "fr": "Combien coûte le forfait de 8 cours ?"
    },
    "text": {
     "ar": "باقة 8 حصص بسعر 220 دولارًا أمريكيًا (USD).",
@@ -1040,16 +1046,16 @@
     "PKG-005",
     "PKG-008"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "price_us_12": {
    "id": "price_us_12",
    "parent": "price_us",
    "kind": "answer",
    "label": {
-    "ar": "باقة 12 حصة",
-    "en": "12-lesson package",
-    "fr": "Forfait de 12 cours"
+    "ar": "كم سعر باقة 12 حصة؟",
+    "en": "How much is the 12-lesson package?",
+    "fr": "Combien coûte le forfait de 12 cours ?"
    },
    "text": {
     "ar": "باقة 12 حصة بسعر 280 دولارًا أمريكيًا (USD).",
@@ -1075,16 +1081,16 @@
     "PKG-006",
     "PKG-009"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "price_us": {
    "id": "price_us",
    "parent": "pricing",
    "kind": "menu",
    "label": {
-    "ar": "الولايات المتحدة",
-    "en": "United States",
-    "fr": "États-Unis"
+    "ar": "كم الأسعار في الولايات المتحدة؟",
+    "en": "What are the prices in the United States?",
+    "fr": "Quels sont les tarifs aux États-Unis ?"
    },
    "text": {
     "ar": "اختر الباقة.",
@@ -1110,9 +1116,9 @@
    "parent": "root",
    "kind": "menu",
    "label": {
-    "ar": "الأسعار والباقات",
-    "en": "Prices and packages",
-    "fr": "Tarifs et forfaits"
+    "ar": "ما الأسعار والباقات المتاحة؟",
+    "en": "What prices and packages are available?",
+    "fr": "Quels sont les tarifs et forfaits disponibles ?"
    },
    "text": {
     "ar": "أين يقيم الطالب؟ يختلف سعر الباقة بحسب البلد.",
@@ -1135,9 +1141,9 @@
    "parent": "root",
    "kind": "answer",
    "label": {
-    "ar": "الحصة التجريبية المجانية",
-    "en": "Free trial lesson",
-    "fr": "Essai gratuit"
+    "ar": "كيف أحصل على الحصة التجريبية المجانية؟",
+    "en": "How do I get the free trial lesson?",
+    "fr": "Comment obtenir l’essai gratuit ?"
    },
    "text": {
     "ar": "نعم. تتوفر حصة تجريبية مجانية لكل طالب جديد ولكل مادة جديدة. يساعدنا ذلك على فهم مستوى الطالب واحتياجاته ومدى ملاءمة المدرس. يتم تنسيق الموعد حسب توفر الطالب والمدرس.",
@@ -1449,9 +1455,9 @@
    "parent": "root",
    "kind": "menu",
    "label": {
-    "ar": "التقييم ومتابعة الطالب",
-    "en": "Assessment and progress follow-up",
-    "fr": "Évaluation et suivi de l’élève"
+    "ar": "كيف تتم متابعة تقدم الطالب؟",
+    "en": "How is the student’s progress followed?",
+    "fr": "Comment suit-on les progrès de l’élève ?"
    },
    "text": {
     "ar": "اختر ما تريد معرفته.",
@@ -1478,8 +1484,8 @@
    "kind": "menu",
    "label": {
     "ar": "كيف تسير الحصص؟",
-    "en": "How lessons work",
-    "fr": "Déroulement des cours"
+    "en": "How do lessons work?",
+    "fr": "Comment se déroulent les cours ?"
    },
    "text": {
     "ar": "اختر ما تريد معرفته.",
@@ -1500,6 +1506,12 @@
      "to": "classes_matching"
     },
     {
+     "to": "classes_tutor"
+    },
+    {
+     "to": "classes_tailored"
+    },
+    {
      "to": "classes_tech"
     },
     {
@@ -1508,6 +1520,130 @@
    ],
    "sources": [],
    "origin": "ui"
+  },
+  "about_exam": {
+   "id": "about_exam",
+   "parent": "about",
+   "kind": "answer",
+   "label": {
+    "ar": "هل تقدمون التحضير للاختبارات؟",
+    "en": "Do you help with exam preparation?",
+    "fr": "Aidez-vous à préparer les examens ?"
+   },
+   "text": {
+    "ar": "مراجعة موجهة حسب المنهج والفجوات ونوع التقييم.",
+    "en": "Targeted review based on curriculum, gaps, and assessment needs.",
+    "fr": "Révision ciblée selon le programme, les lacunes et l’évaluation."
+   },
+   "options": [
+    {
+     "to": "subjects"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "S-AR-4",
+    "S-EN-4",
+    "S-FR-4"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "about_mentoring": {
+   "id": "about_mentoring",
+   "parent": "about",
+   "kind": "answer",
+   "label": {
+    "ar": "هل تقدمون إرشاداً أكاديمياً وتنظيماً للدراسة؟",
+    "en": "Do you offer academic mentoring and study organization?",
+    "fr": "Offrez-vous du mentorat scolaire et de l’aide à l’organisation ?"
+   },
+   "text": {
+    "ar": "تنظيم الدراسة وتحديد الأهداف وبناء العادات ومتابعة التقدم.",
+    "en": "Study organization, goals, learning habits, and progress follow-up.",
+    "fr": "Organisation, objectifs, habitudes d’étude et suivi des progrès."
+   },
+   "options": [
+    {
+     "to": "subjects"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "S-AR-3",
+    "S-EN-3",
+    "S-FR-3"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "classes_tutor": {
+   "id": "classes_tutor",
+   "parent": "classes",
+   "kind": "answer",
+   "label": {
+    "ar": "ما الخبرة التي تراعونها في المدرسين؟",
+    "en": "What tutor experience do you look for?",
+    "fr": "Quelle expérience recherchez-vous chez les tuteurs ?"
+   },
+   "text": {
+    "ar": "نتفهم أهمية خبرة المدرس. نراعي الخبرة المناسبة للمادة والصف والمنهج واحتياجات الطالب، ثم يؤكد الفريق المدرس المتاح.",
+    "en": "We understand the importance of tutor experience. We consider relevant experience with the subject, grade, curriculum, and student needs before the team confirms availability.",
+    "fr": "Nous comprenons l’importance de l’expérience du tuteur. Nous tenons compte de son expérience dans la matière, le niveau, le programme et les besoins de l’élève avant confirmation."
+   },
+   "options": [
+    {
+     "to": "classes_matching"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "objection.tutor.tutor_experience"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "classes_tailored": {
+   "id": "classes_tailored",
+   "parent": "classes",
+   "kind": "answer",
+   "label": {
+    "ar": "كيف تُصمَّم الحصص لتناسب الطالب؟",
+    "en": "How are lessons tailored to each student?",
+    "fr": "Comment les cours sont-ils adaptés à chaque élève ?"
+   },
+   "text": {
+    "ar": "نبدأ بفهم صف الطالب ومستواه حتى تكون التوصية مناسبة لاحتياجاته الدراسية.",
+    "en": "We begin by understanding the student’s grade and current level so the recommendation matches their academic needs.",
+    "fr": "Nous commençons par comprendre le niveau scolaire et le niveau actuel de l’élève afin d’adapter la recommandation à ses besoins."
+   },
+   "options": [
+    {
+     "to": "followup_assessment"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "personalized_assessment"
+   ],
+   "origin": "kb+ui-label"
   },
   "policy_cancellation": {
    "id": "policy_cancellation",
@@ -1677,9 +1813,9 @@
    "parent": "root",
    "kind": "menu",
    "label": {
-    "ar": "الإلغاء والغياب والاسترداد",
-    "en": "Cancellation, absence and refunds",
-    "fr": "Annulation, absence et remboursement"
+    "ar": "كيف يمكن الإلغاء أو تغيير الموعد أو استرداد المبلغ؟",
+    "en": "How can I cancel, reschedule or ask for a refund?",
+    "fr": "Comment annuler, déplacer un cours ou demander un remboursement ?"
    },
    "text": {
     "ar": "اختر ما تريد معرفته.",
@@ -1711,9 +1847,9 @@
    "parent": "concerns",
    "kind": "answer",
    "label": {
-    "ar": "السعر مرتفع",
-    "en": "The price is high",
-    "fr": "Le prix est élevé"
+    "ar": "ماذا لو كان السعر مرتفعاً علينا؟",
+    "en": "What if the price is too high for us?",
+    "fr": "Et si le prix est trop élevé pour nous ?"
    },
    "text": {
     "ar": "أتفهم أهمية الميزانية. لدينا باقات تبدأ من 4 حصص، ونختار حسب الهدف دون التزام زائد.",
@@ -1736,7 +1872,7 @@
     "O-EN-1",
     "O-FR-1"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "concern_online": {
    "id": "concern_online",
@@ -1772,9 +1908,9 @@
    "parent": "concerns",
    "kind": "answer",
    "label": {
-    "ar": "جرّبنا مدرساً ولم يتحسن",
-    "en": "We tried a tutor without improvement",
-    "fr": "Nous avons essayé un tuteur sans progrès"
+    "ar": "ماذا لو جرّبنا مدرساً ولم يتحسن الطالب؟",
+    "en": "What if we tried a tutor before and saw no improvement?",
+    "fr": "Et si nous avons déjà essayé un tuteur sans amélioration ?"
    },
    "text": {
     "ar": "نتفهم التحفظ؛ نحدد سبب التعثر ونطابق الطالب مع مدرس وخطة أنسب.",
@@ -1794,16 +1930,16 @@
     "O-EN-3",
     "O-FR-3"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "concern_patient": {
    "id": "concern_patient",
    "parent": "concerns",
    "kind": "answer",
    "label": {
-    "ar": "نحتاج مدرساً صبوراً",
-    "en": "We need a patient tutor",
-    "fr": "Nous voulons un tuteur patient"
+    "ar": "هل لديكم مدرس صبور يناسب طفلنا؟",
+    "en": "Do you have a patient tutor for my child?",
+    "fr": "Avez-vous un tuteur patient pour mon enfant ?"
    },
    "text": {
     "ar": "نأخذ أسلوب التعلم والشخصية ضمن المطابقة ثم نتابع الملاءمة.",
@@ -1823,16 +1959,16 @@
     "O-EN-4",
     "O-FR-4"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "concern_timing": {
    "id": "concern_timing",
    "parent": "concerns",
    "kind": "answer",
    "label": {
-    "ar": "الوقت غير مناسب",
-    "en": "The timing does not work",
-    "fr": "L’horaire ne convient pas"
+    "ar": "ماذا لو كان الوقت غير مناسب لنا؟",
+    "en": "What if the timing does not work for us?",
+    "fr": "Et si l’horaire ne nous convient pas ?"
    },
    "text": {
     "ar": "نجمع أوقاتكم ونتحقق من التوفر؛ الموعد نهائي بعد تأكيد الأكاديمية.",
@@ -1852,16 +1988,16 @@
     "O-EN-5",
     "O-FR-5"
    ],
-   "origin": "kb"
+   "origin": "kb+ui-label"
   },
   "concerns": {
    "id": "concerns",
    "parent": "root",
    "kind": "menu",
    "label": {
-    "ar": "لديّ تحفظ أو قلق",
-    "en": "I have a concern",
-    "fr": "J’ai une réserve"
+    "ar": "ماذا لو كان لديّ تحفظ أو قلق؟",
+    "en": "What if I have a concern?",
+    "fr": "Et si j’ai une réserve ou une inquiétude ?"
    },
    "text": {
     "ar": "ما الذي يقلقكم؟",
@@ -1893,9 +2029,9 @@
    "parent": "root",
    "kind": "form",
    "label": {
-    "ar": "سجّل الآن",
-    "en": "Register now",
-    "fr": "S’inscrire"
+    "ar": "كيف أسجّل الآن؟",
+    "en": "How do I register now?",
+    "fr": "Comment m’inscrire maintenant ?"
    },
    "text": {
     "ar": "سنجمع بضع معلومات بسيطة، خطوة بخطوة، ثم تراجعونها قبل الإرسال.",
@@ -1911,9 +2047,9 @@
    "parent": "root",
    "kind": "answer",
    "label": {
-    "ar": "تواصل مع الفريق",
-    "en": "Contact the team",
-    "fr": "Contacter l’équipe"
+    "ar": "مع من أتواصل وكيف؟",
+    "en": "Who can I contact, and how?",
+    "fr": "Qui contacter et comment ?"
    },
    "text": {
     "ar": "البريد الإلكتروني: successpathmentors@gmail.com\nالهاتف: +1 647 787 5999",

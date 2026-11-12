@@ -29,8 +29,8 @@ def rows(name):
     return out
 
 
-FAQ, POL, PKG, SUB, COM, PATH, OBJ, SERV, FB = (rows(n) for n in
-    ["FAQ", "POLICIES", "PACKAGES", "SUBJECTS", "COMPANY", "SUBJECT_PATHWAYS", "OBJECTIONS", "SERVICES", "FALLBACKS"])
+FAQ, POL, PKG, SUB, COM, PATH, OBJ, SERV, FB, NUR = (rows(n) for n in
+    ["FAQ", "POLICIES", "PACKAGES", "SUBJECTS", "COMPANY", "SUBJECT_PATHWAYS", "OBJECTIONS", "SERVICES", "FALLBACKS", "SALES_NURTURE"])
 
 # Records that must never reach customers (test row, conversation-specific example, duplicates)
 EXCLUDED = {"FAQ-UQ-39556": "test record", "FAQ-358": "conversation-specific example, not a general answer"}
@@ -114,7 +114,7 @@ CTA_REG = {"to": "register"}
 svc = {l: com("service", l) for l in LANGS}
 add("about", "root", "menu", MAIN[0][1],
     {l: svc[l]["content"] for l in LANGS if svc[l]},
-    ["about_online", "about_grades", "about_curriculum"], src(*svc.values()))
+    ["about_online", "about_grades", "about_curriculum", "about_exam", "about_mentoring"], src(*svc.values()))
 
 
 def faq_leaf(nid, parent, cat, follow, label_override=None):
@@ -290,7 +290,32 @@ add("followup", "root", "menu", MAIN[5][1],
     ["followup_assessment", "followup_updates", "classes_certificates"], [], origin="ui")
 add("classes", "root", "menu", MAIN[4][1],
     {"ar": "اختر ما تريد معرفته.", "en": "Choose what you want to know.", "fr": "Choisissez ce que vous voulez savoir."},
-    ["classes_duration", "classes_frequency", "classes_homework", "classes_matching", "classes_tech", "classes_booking"], [], origin="ui")
+    ["classes_duration", "classes_frequency", "classes_homework", "classes_matching", "classes_tutor", "classes_tailored", "classes_tech", "classes_booking"], [], origin="ui")
+
+svc_leaf("about_exam", "about", 4,
+         {"ar": "هل تقدمون التحضير للاختبارات؟", "en": "Do you help with exam preparation?", "fr": "Aidez-vous à préparer les examens ?"},
+         ["subjects", "trial", "register"])
+svc_leaf("about_mentoring", "about", 3,
+         {"ar": "هل تقدمون إرشاداً أكاديمياً وتنظيماً للدراسة؟", "en": "Do you offer academic mentoring and study organization?",
+          "fr": "Offrez-vous du mentorat scolaire et de l’aide à l’organisation ?"},
+         ["subjects", "trial", "register"])
+
+
+def nur_leaf(nid, parent, key, label, follow):
+    r = next((x for x in NUR if x["nurture_key"] == key), None)
+    txt = {l: r[f"fact_{l}"] for l in LANGS if r and r.get(f"fact_{l}")}
+    for l in LANGS:
+        if l not in txt:
+            gaps.append((nid, l, f"no ACTIVE SALES_NURTURE '{key}' text"))
+    add(nid, parent, "answer", label, txt, follow, src(r), origin="kb+ui-label")
+
+
+nur_leaf("classes_tutor", "classes", "objection.tutor.tutor_experience",
+         {"ar": "ما الخبرة التي تراعونها في المدرسين؟", "en": "What tutor experience do you look for?", "fr": "Quelle expérience recherchez-vous chez les tuteurs ?"},
+         ["classes_matching", "trial", "register"])
+nur_leaf("classes_tailored", "classes", "personalized_assessment",
+         {"ar": "كيف تُصمَّم الحصص لتناسب الطالب؟", "en": "How are lessons tailored to each student?", "fr": "Comment les cours sont-ils adaptés à chaque élève ?"},
+         ["followup_assessment", "trial", "register"])
 # pricing leaves point to the frequency answer (cross-link)
 for n in pk:
     for c in ("ca", "us"):
@@ -352,6 +377,43 @@ for l in LANGS:
 add("human", "root", "answer", UI["human"], htxt,
     [{"to": "register", "preset": {"request": "CALLBACK"}}], src(email, phone), origin="composed",
     persistent=True)
+
+# ---------------------------------------------------------------- every title is a question (interface wording, not facts)
+QLABEL = {
+    "about": {"ar": "من أنتم وما الخدمات التي تقدمونها؟", "en": "Who are you and what do you offer?", "fr": "Qui êtes-vous et que proposez-vous ?"},
+    "subjects": {"ar": "ما المواد والصفوف التي تدرّسونها؟", "en": "Which subjects and grades do you teach?", "fr": "Quelles matières et quels niveaux enseignez-vous ?"},
+    "pricing": {"ar": "ما الأسعار والباقات المتاحة؟", "en": "What prices and packages are available?", "fr": "Quels sont les tarifs et forfaits disponibles ?"},
+    "trial": {"ar": "كيف أحصل على الحصة التجريبية المجانية؟", "en": "How do I get the free trial lesson?", "fr": "Comment obtenir l’essai gratuit ?"},
+    "classes": {"ar": "كيف تسير الحصص؟", "en": "How do lessons work?", "fr": "Comment se déroulent les cours ?"},
+    "followup": {"ar": "كيف تتم متابعة تقدم الطالب؟", "en": "How is the student’s progress followed?", "fr": "Comment suit-on les progrès de l’élève ?"},
+    "policies": {"ar": "كيف يمكن الإلغاء أو تغيير الموعد أو استرداد المبلغ؟", "en": "How can I cancel, reschedule or ask for a refund?", "fr": "Comment annuler, déplacer un cours ou demander un remboursement ?"},
+    "concerns": {"ar": "ماذا لو كان لديّ تحفظ أو قلق؟", "en": "What if I have a concern?", "fr": "Et si j’ai une réserve ou une inquiétude ?"},
+    "register": {"ar": "كيف أسجّل الآن؟", "en": "How do I register now?", "fr": "Comment m’inscrire maintenant ?"},
+    "human": {"ar": "مع من أتواصل وكيف؟", "en": "Who can I contact, and how?", "fr": "Qui contacter et comment ?"},
+    "price_ca": {"ar": "كم الأسعار في كندا؟", "en": "What are the prices in Canada?", "fr": "Quels sont les tarifs au Canada ?"},
+    "price_us": {"ar": "كم الأسعار في الولايات المتحدة؟", "en": "What are the prices in the United States?", "fr": "Quels sont les tarifs aux États-Unis ?"},
+    "concern_price": {"ar": "ماذا لو كان السعر مرتفعاً علينا؟", "en": "What if the price is too high for us?", "fr": "Et si le prix est trop élevé pour nous ?"},
+    "concern_tried": {"ar": "ماذا لو جرّبنا مدرساً ولم يتحسن الطالب؟", "en": "What if we tried a tutor before and saw no improvement?", "fr": "Et si nous avons déjà essayé un tuteur sans amélioration ?"},
+    "concern_patient": {"ar": "هل لديكم مدرس صبور يناسب طفلنا؟", "en": "Do you have a patient tutor for my child?", "fr": "Avez-vous un tuteur patient pour mon enfant ?"},
+    "concern_timing": {"ar": "ماذا لو كان الوقت غير مناسب لنا؟", "en": "What if the timing does not work for us?", "fr": "Et si l’horaire ne nous convient pas ?"},
+}
+for c in ("ca", "us"):
+    for n in sorted(pk):
+        QLABEL[f"price_{c}_{n}"] = {"ar": f"كم سعر باقة {n} {'حصة' if n == 12 else 'حصص'}؟", "en": f"How much is the {n}-lesson package?",
+                                   "fr": f"Combien coûte le forfait de {n} cours ?"}
+SUB_Q = {"en": lambda n: f"Do you teach {n}?",
+         "fr": lambda n: "Enseignez-vous " + {"Anglais": "l’anglais", "Physique": "la physique"}.get(n, n) + " ?"}
+for nid in sub_ids:
+    lab = nodes[nid]["label"]
+    q = {"ar": f"هل تدرّسون {lab['ar']}؟"}
+    for l in ("en", "fr"):
+        if l in lab:
+            q[l] = SUB_Q[l](lab[l])
+    QLABEL[nid] = q
+for nid, q in QLABEL.items():
+    nodes[nid]["label"] = q
+    if nodes[nid]["origin"] == "kb":
+        nodes[nid]["origin"] = "kb+ui-label"
 
 # ---------------------------------------------------------------- finish: normalise options, verify
 for n in list(nodes.values()):
