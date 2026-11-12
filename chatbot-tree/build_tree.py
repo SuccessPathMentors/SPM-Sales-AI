@@ -301,7 +301,7 @@ add("help", "root", "menu", MAIN[5][1],
     {"ar": "نفهم أن لكل طفل احتياجاً مختلفاً. اختر ما يصف حالة ابنك وسنوضح كيف نساعده.",
      "en": "We understand every child is different. Choose what describes your child and we will explain how we help.",
      "fr": "Chaque enfant est différent. Choisissez ce qui décrit votre enfant et nous expliquerons comment nous l’aidons."},
-    ["help_struggle", "concern_focus", "help_motivation", "help_tutors", "followup_assessment", "followup_updates"], [], origin="ui")
+    ["help_struggle", "concern_focus", "help_motivation", "help_quality", "help_exams", "help_change", "followup_updates"], [], origin="ui")
 
 add("classes", "root", "menu", MAIN[4][1],
     {"ar": "اختر ما تريد معرفته.", "en": "Choose what you want to know.", "fr": "Choisissez ce que vous voulez savoir."},
@@ -348,13 +348,38 @@ HELP_LBL = {
     "motivation": {"ar": "ابني قليل الدافعية، كيف تتعاملون معه؟", "en": "My child lacks motivation. How do you handle that?", "fr": "Mon enfant manque de motivation. Comment réagissez-vous ?"},
     "tutors": {"ar": "من هم المدرسون الذين سيتعاملون مع ابني؟", "en": "Who are the tutors who will work with my child?", "fr": "Qui sont les tuteurs qui travailleront avec mon enfant ?"},
 }
-HELP_FOLLOW = {"struggle": ["about_mentoring", "about_exam", "classes_tailored", "trial"],
+HELP_FOLLOW = {"struggle": ["followup_assessment", "classes_tailored", "help_exams", "trial"],
                "motivation": ["concern_patient", "concern_tried", "trial", "register"],
-               "tutors": ["classes_matching", "classes_tutor", "trial", "register"]}
+               "tutors": ["classes_matching", "classes_tutor", "help_quality", "register"]}
 for k in ("struggle", "motivation", "tutors"):
     add("help_" + k, "help", "answer", HELP_LBL[k], HELP_TXT[k], HELP_FOLLOW[k], [], origin="owner")
     for l in LANGS:
         composed.append(("help_" + k, l, OWNER))
+# owner-stated quality assurance (chat 2026-11-12): comfort, liking the tutor, tutor change, quality supervisor, grades, real exams
+QA_NODES = {
+ "help_quality": (
+  {"ar": "إزاي بتتأكدوا إن ابني مرتاح وبيتقدّم؟", "en": "How do you make sure my child is comfortable and progressing?", "fr": "Comment vous assurez-vous que mon enfant est à l’aise et progresse ?"},
+  {"ar": "عندنا مراقب جودة بيتابع الحصص وبيتابع علامات الطالب. وبنتأكد إن الطالب مرتاح مع المدرّس وبيحبه، وإنه بيتقدّم فعلاً، ولو مش مرتاح بنقدر نغيّر المدرّس.",
+   "en": "We have a quality supervisor who follows the lessons and tracks the student’s grades. We make sure the student is comfortable with the tutor and likes them, and that they are really progressing; if not, we can change the tutor.",
+   "fr": "Nous avons un responsable qualité qui suit les cours et les notes de l’élève. Nous veillons à ce que l’élève soit à l’aise avec le tuteur et l’apprécie, et qu’il progresse réellement ; sinon, nous pouvons changer de tuteur."},
+  ["help_change", "help_exams", "help_tutors", "trial"]),
+ "help_change": (
+  {"ar": "ينفع نغيّر المدرّس؟", "en": "Can we change the tutor?", "fr": "Peut-on changer de tuteur ?"},
+  {"ar": "أيوه، لو الطالب مش مرتاح مع المدرّس أو مش بيحبه، إحنا بنقدر نغيّر المدرّس.",
+   "en": "Yes. If the student is not comfortable with the tutor or does not like them, we can change the tutor.",
+   "fr": "Oui. Si l’élève n’est pas à l’aise avec le tuteur ou ne l’apprécie pas, nous pouvons changer de tuteur."},
+  ["policy_refund", "classes_matching", "trial", "register"]),
+ "help_exams": (
+  {"ar": "بتعملوا امتحانات لابني؟", "en": "Do you give my child exams?", "fr": "Donnez-vous des examens à mon enfant ?"},
+  {"ar": "أيوه، بنتأكد إن الطالب بيتقدّم، وبنعمل له امتحانات حقيقية وأسئلة صعبة عشان يبقى جاهز للمدرسة ونساعده يتحسّن مستواه.",
+   "en": "Yes. We make sure the student is progressing, and we give them real exams and challenging questions so they are ready for school and we help improve their level.",
+   "fr": "Oui. Nous veillons à ce que l’élève progresse et nous lui proposons de vrais examens et des questions difficiles pour qu’il soit prêt pour l’école et que nous l’aidions à améliorer son niveau."},
+  ["about_exam", "about_mentoring", "trial", "register"]),
+}
+for _k, (_lab, _txt, _fol) in QA_NODES.items():
+    add(_k, "help", "answer", _lab, _txt, _fol, [], origin="owner")
+    for l in LANGS:
+        composed.append((_k, l, OWNER))
 # pricing leaves point to the frequency answer (cross-link)
 for n in pk:
     for c in ("ca", "us"):
@@ -481,7 +506,7 @@ AR_EG = {
  "classes_booking": "الميعاد أو توفّر المدرّس محتاج تأكيد من الفريق عندنا. ابعتلنا اليوم والوقت والمنطقة الزمنية المناسبة ليك.",
  "classes_certificates": "إحنا حالياً مبنقدّمش شهادة رسمية بعد عدد معيّن من الحصص. لكن الفريق ممكن يوفّر تقرير عن تقدّم الطالب لو طلبته.",
  "followup_assessment": "إحنا بنعمل تقييم أولي مجاني عشان نفهم المستوى والفجوات والتحديات، مع حصة تجريبية مجانية لكل طالب جديد ولكل مادة جديدة. وبعد حوالي 4–6 حصص ممكن نعمل تقييم متابعة عشان نقيس التقدّم ونديّ ولي الأمر ملاحظاتنا.",
- "followup_updates": "إحنا بنقدّم تحديثات يومية أو أسبوعية من المدرّس عن التحديات والفجوات والإنجازات والخطة والخطوات الجاية، مع إمكانية تقييم متابعة بعد حوالي 4–6 حصص ومشاركة الملاحظات مع ولي الأمر.",
+ "followup_updates": "إحنا بنقدّم تحديثات أسبوعية من المدرّس عن التحديات والفجوات والإنجازات والخطة والخطوات الجاية، مع إمكانية تقييم متابعة بعد حوالي 4–6 حصص ومشاركة الملاحظات مع ولي الأمر.",
  "help": "إحنا فاهمين إن كل طفل ليه احتياجه. اختار اللي يوصف حالة ابنك، وإحنا نوضّحلك بنساعده إزاي.",
  "classes": "اختار اللي عايز تعرفه.",
  "about_exam": "إحنا بنقدّم مراجعة موجّهة على حسب المنهج والفجوات ونوع التقييم.",
@@ -515,6 +540,22 @@ AR_EG["human"] = "تقدر تتواصل معانا كده:\n" + nodes["human"]["
 for _nid, _t in AR_EG.items():
     nodes[_nid]["text"]["ar"] = _t
     composed.append((_nid, "ar", "Arabic reworded to Egyptian dialect, first-person voice (owner instruction 2026-11-12); facts unchanged, owner to review"))
+
+# owner correction 2026-11-12: updates from the tutor are weekly only (the KB row S-5 still says "daily or weekly" and must be fixed there)
+_fu = nodes["followup_updates"]["text"]
+_fu["en"] = _fu["en"].replace("Daily or weekly teacher updates", "Weekly teacher updates")
+_fu["fr"] = _fu["fr"].replace("Mises à jour quotidiennes ou hebdomadaires du tuteur", "Mises à jour hebdomadaires du tuteur")
+composed.append(("followup_updates", "all", "owner correction: weekly updates only; KB row S-5 to be corrected"))
+
+# Arabic UI wording in Egyptian dialect
+UI["pick"]["ar"] = "اختار من الاختيارات دي."
+UI["back2"]["ar"] = "رجوع مرتين"
+UI["fwd"]["ar"] = "قدّام"
+UI["you_are_here"]["ar"] = "إنت هنا"
+UI["human"]["ar"] = "كلّم الفريق"
+UI["related"]["ar"] = "أسئلة ممكن تهمّك"
+UI["next_step"]["ar"] = "الخطوة الجاية"
+UI["greeting"]["ar"] = AR_EG["root"]
 
 # ---------------------------------------------------------------- every title is a question (interface wording, not facts)
 QLABEL = {
@@ -552,6 +593,47 @@ for nid, q in QLABEL.items():
     nodes[nid]["label"] = q
     if nodes[nid]["origin"] == "kb":
         nodes[nid]["origin"] = "kb+ui-label"
+
+
+# ---------------------------------------------------------------- Arabic titles in Egyptian dialect (owner instruction 2026-11-12); EN/FR unchanged
+EG_LABEL = {
+ "about": "إنتوا مين وبتقدّموا إيه؟", "about_online": "هي الدروس أونلاين؟", "about_grades": "بتدرّسوا لأنهي صفوف؟",
+ "about_where": "بتخدموا بلدي أو مدينتي؟", "about_curriculum": "بتدعموا أنهي مناهج؟",
+ "subjects": "بتدرّسوا أنهي مواد وصفوف؟",
+ "sub_004_ontario": "بتدعموا فيزياء الصف الحادي عشر على منهج أونتاريو؟",
+ "pricing": "إيه الأسعار والباقات المتاحة؟", "price_ca": "الأسعار في كندا كام؟", "price_us": "الأسعار في أمريكا كام؟",
+ "pricing_payment": "إيه طرق الدفع؟",
+ "trial": "إزاي آخد الحصة التجريبية المجانية؟",
+ "classes": "الحصص بتمشي إزاي؟", "classes_duration": "الحصة مدتها قد إيه؟", "classes_frequency": "بتنصحوا بكام حصة في الأسبوع؟",
+ "classes_homework": "فيه واجب بعد الحصة؟", "classes_matching": "بتختاروا المدرّس إزاي؟",
+ "classes_tech": "إيه الأجهزة والتقنية المطلوبة للحصص؟", "classes_booking": "الميعاد والمدرّس مأكّدين؟",
+ "classes_certificates": "الطالب بياخد شهادة رسمية بعد ما يخلّص عشرين حصة؟",
+ "classes_tutor": "بتراعوا أنهي خبرة في المدرّسين؟", "classes_tailored": "الحصص بتتظبط إزاي عشان تناسب الطالب؟",
+ "followup_assessment": "فيه تقييم للطالب؟", "followup_updates": "ولي الأمر بيتابع تقدّم الطالب إزاي؟",
+ "help": "إزاي بتساعدوا ابني يتحسّن وبتتابعوا تقدّمه؟",
+ "help_struggle": "ابني ضعيف أو عنده صعوبة في الدراسة، بتساعدوه إزاي؟",
+ "help_motivation": "ابني دافعيته قليلة، بتتعاملوا معاه إزاي؟",
+ "help_tutors": "مين المدرّسين اللي هيتعاملوا مع ابني؟",
+ "about_exam": "بتقدّموا تحضير للامتحانات؟", "about_mentoring": "بتقدّموا إرشاد أكاديمي وتنظيم للمذاكرة؟",
+ "policies": "إزاي ألغي أو أغيّر ميعاد أو أسترد فلوسي؟",
+ "policy_cancellation": "إيه سياسة الإلغاء؟", "policy_absence": "إيه اللي بيحصل لو غبت؟",
+ "policy_minimum": "إيه الحد الأدنى للحصص؟", "policy_refund": "لو المدرّس أو الخدمة مناسبتناش، إيه اللي بيحصل؟",
+ "policy_reschedule": "إزاي أغيّر ميعاد حصة؟",
+ "concerns": "لو عندي تحفّظ أو قلق، أعمل إيه؟", "concern_price": "لو السعر عالي علينا؟",
+ "concern_online": "هو الأونلاين فعّال؟", "concern_tried": "لو جرّبنا مدرّس والطالب ما اتحسّنش؟",
+ "concern_patient": "عندكم مدرّس صبور يناسب ابننا؟", "concern_timing": "لو الوقت مش مناسب لنا؟",
+ "concern_focus": "لو ابني مش بيركّز في الدروس أونلاين؟", "concern_inperson": "لو إحنا بنفضّل الدروس الحضورية؟",
+ "register": "أسجّل إزاي دلوقتي؟", "human": "أتواصل مع مين وإزاي؟",
+}
+for _sid in sub_ids:
+    EG_LABEL[_sid] = "بتدرّسوا " + nodes[_sid]["label"]["ar"].replace("هل تدرّسون ", "").rstrip("؟") + "؟"
+    if _sid + "_strands" in nodes:
+        EG_LABEL[_sid + "_strands"] = "إيه محاور المادة؟"
+for _c in ("ca", "us"):
+    for _n in sorted(pk):
+        EG_LABEL[f"price_{_c}_{_n}"] = f"باقة {_n} {'حصة' if _n == 12 else 'حصص'} سعرها كام؟"
+for _nid, _l in EG_LABEL.items():
+    nodes[_nid]["label"]["ar"] = _l
 
 # ---------------------------------------------------------------- finish: normalise options, verify
 for n in list(nodes.values()):
