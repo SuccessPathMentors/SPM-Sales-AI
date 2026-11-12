@@ -1,7 +1,7 @@
 # Tree build report
 
 Source: Success_Path_Mentors_AI_KB_V2_SPM_2026-08-18.xlsx
-Nodes: 59  |  KB records used: 215
+Nodes: 62  |  KB records used: 217
 
 ## Excluded from customers
 - FAQ-UQ-39556: test record
@@ -17,6 +17,7 @@ Nodes: 59  |  KB records used: 215
 - price_ca_4 (Canada price = package row with USD→CAD per decision D-009; live sheet must confirm)
 - price_ca_8 (Canada price = package row with USD→CAD per decision D-009; live sheet must confirm)
 - price_ca_12 (Canada price = package row with USD→CAD per decision D-009; live sheet must confirm)
+- about_where (two verbatim country-level LOCATIONS rows (Canada + United States) joined)
 - human (contact lines assembled from COM-005 (email) and COM-009 (phone))
 
 ## Language gaps (node hidden in that language until approved text exists)
@@ -26,7 +27,7 @@ Nodes: 59  |  KB records used: 215
 - sub_007: no approved subject name in this language
 - sub_008: no approved subject name in this language
 - classes_certificates: no approved FAQ 'certificates' row in this language
-### fr: 10
+### fr: 11
 - sub_001: no approved subject name in this language
 - sub_001_strands: no approved topic list in this language
 - sub_003: no approved subject name in this language
@@ -37,6 +38,7 @@ Nodes: 59  |  KB records used: 215
 - sub_007: no approved subject name in this language
 - sub_008: no approved subject name in this language
 - classes_certificates: no approved FAQ 'certificates' row in this language
+- about_where: no ACTIVE country-level LOCATIONS rows in this language
 
 ## Not found in the KB (not invented)
 - Payment methods and how to pay

@@ -99,13 +99,14 @@ MAIN = [
     ("pricing",  {"ar": "الأسعار والباقات", "en": "Prices and packages", "fr": "Tarifs et forfaits"}),
     ("trial",    {"ar": "الحصة التجريبية المجانية", "en": "Free trial lesson", "fr": "Essai gratuit"}),
     ("classes",  {"ar": "كيف تسير الحصص؟", "en": "How lessons work", "fr": "Déroulement des cours"}),
-    ("followup", {"ar": "التقييم ومتابعة الطالب", "en": "Assessment and progress follow-up", "fr": "Évaluation et suivi de l’élève"}),
+    ("help",     {"ar": "كيف تساعدون ابني؟", "en": "How do you help my child?", "fr": "Comment aidez-vous mon enfant ?"}),
     ("policies", {"ar": "الإلغاء والغياب والاسترداد", "en": "Cancellation, absence and refunds", "fr": "Annulation, absence et remboursement"}),
     ("concerns", {"ar": "لديّ تحفظ أو قلق", "en": "I have a concern", "fr": "J’ai une réserve"}),
     ("register", {"ar": "سجّل الآن", "en": "Register now", "fr": "S’inscrire"}),
 ]
 add("root", None, "menu", {"ar": "الرئيسية", "en": "Home", "fr": "Accueil"}, UI["greeting"],
-    [m[0] for m in MAIN], origin="ui")
+    # ordered by real traffic (WU109_INTENT_SUMMARY): learning goal 24%, subjects/grades 20%, pricing 11%, registration ~10%
+    ["help", "subjects", "pricing", "trial", "register", "classes", "concerns", "policies", "about"], origin="ui")
 
 CTA_TRIAL = {"to": "trial"}
 CTA_REG = {"to": "register"}
@@ -114,7 +115,7 @@ CTA_REG = {"to": "register"}
 svc = {l: com("service", l) for l in LANGS}
 add("about", "root", "menu", MAIN[0][1],
     {l: svc[l]["content"] for l in LANGS if svc[l]},
-    ["about_online", "about_grades", "about_curriculum", "about_exam", "about_mentoring"], src(*svc.values()))
+    ["about_online", "about_grades", "about_where", "about_curriculum"], src(*svc.values()))
 
 
 def faq_leaf(nid, parent, cat, follow, label_override=None):
@@ -200,7 +201,7 @@ for s in SUB:
     add(nid, "subjects", "answer", label, text, opts, src(s))
 add("subjects", "root", "menu", MAIN[1][1],
     {"ar": "اختر المادة.", "en": "Choose a subject.", "fr": "Choisissez une matière."},
-    sub_ids, [], origin="ui")
+    ["about_grades"] + sub_ids, [], origin="ui")
 
 # ---------------------------------------------------------------- pricing (country first, per decision D-009)
 pk = {}
@@ -253,7 +254,7 @@ nodes["trial"]["origin"] = "kb+ui-label"
 faq_leaf("classes_duration", "classes", "lesson_duration", ["classes_frequency", "trial", "register"])
 faq_leaf("classes_frequency", "classes", "lesson_frequency", ["pricing", "trial", "register"])
 faq_leaf("classes_homework", "classes", "homework", ["classes_matching", "trial", "register"])
-faq_leaf("classes_matching", "classes", "matching", ["trial", "register"])
+faq_leaf("classes_matching", "classes", "matching", ["classes_tutor", "trial", "register"])
 
 
 def svc_leaf(nid, parent, num, label, follow):
@@ -278,24 +279,24 @@ add("classes_booking", "classes", "answer",
     {"ar": "هل الموعد والمدرس مؤكدان؟", "en": "Are the tutor and lesson time confirmed?", "fr": "Le tuteur et l’horaire sont-ils confirmés ?"},
     {l: fb[l]["message"] for l in LANGS if fb[l]},
     [{"to": "register", "preset": {"request": "CALLBACK"}}, "classes_matching", "policy_reschedule"], src(*fb.values()), origin="kb+ui-label")
-faq_leaf("classes_certificates", "followup", "certificates", ["followup_updates", "register"])
-svc_leaf("followup_assessment", "followup", 2,
+faq_leaf("classes_certificates", "help", "certificates", ["followup_updates", "register"])
+svc_leaf("followup_assessment", "help", 2,
          {"ar": "هل يوجد تقييم للطالب؟", "en": "Is the student assessed?", "fr": "L’élève est-il évalué ?"},
          ["followup_updates", "trial", "register"])
-svc_leaf("followup_updates", "followup", 5,
+svc_leaf("followup_updates", "help", 5,
          {"ar": "كيف يتابع ولي الأمر تقدم الطالب؟", "en": "How can parents follow the student’s progress?", "fr": "Comment les parents suivent-ils les progrès de l’élève ?"},
          ["followup_assessment", "classes_certificates", "register"])
-add("followup", "root", "menu", MAIN[5][1],
-    {"ar": "اختر ما تريد معرفته.", "en": "Choose what you want to know.", "fr": "Choisissez ce que vous voulez savoir."},
-    ["followup_assessment", "followup_updates", "classes_certificates"], [], origin="ui")
+add("help", "root", "menu", MAIN[5][1],
+    {"ar": "اختر ما يهمّك.", "en": "Choose what matters to you.", "fr": "Choisissez ce qui vous intéresse."},
+    ["classes_tailored", "followup_assessment", "about_mentoring", "about_exam", "followup_updates", "concern_tried"], [], origin="ui")
 add("classes", "root", "menu", MAIN[4][1],
     {"ar": "اختر ما تريد معرفته.", "en": "Choose what you want to know.", "fr": "Choisissez ce que vous voulez savoir."},
-    ["classes_duration", "classes_frequency", "classes_homework", "classes_matching", "classes_tutor", "classes_tailored", "classes_tech", "classes_booking"], [], origin="ui")
+    ["classes_duration", "classes_frequency", "classes_homework", "classes_matching", "classes_tech", "classes_booking"], [], origin="ui")
 
-svc_leaf("about_exam", "about", 4,
+svc_leaf("about_exam", "help", 4,
          {"ar": "هل تقدمون التحضير للاختبارات؟", "en": "Do you help with exam preparation?", "fr": "Aidez-vous à préparer les examens ?"},
          ["subjects", "trial", "register"])
-svc_leaf("about_mentoring", "about", 3,
+svc_leaf("about_mentoring", "help", 3,
          {"ar": "هل تقدمون إرشاداً أكاديمياً وتنظيماً للدراسة؟", "en": "Do you offer academic mentoring and study organization?",
           "fr": "Offrez-vous du mentorat scolaire et de l’aide à l’organisation ?"},
          ["subjects", "trial", "register"])
@@ -313,7 +314,7 @@ def nur_leaf(nid, parent, key, label, follow):
 nur_leaf("classes_tutor", "classes", "objection.tutor.tutor_experience",
          {"ar": "ما الخبرة التي تراعونها في المدرسين؟", "en": "What tutor experience do you look for?", "fr": "Quelle expérience recherchez-vous chez les tuteurs ?"},
          ["classes_matching", "trial", "register"])
-nur_leaf("classes_tailored", "classes", "personalized_assessment",
+nur_leaf("classes_tailored", "help", "personalized_assessment",
          {"ar": "كيف تُصمَّم الحصص لتناسب الطالب؟", "en": "How are lessons tailored to each student?", "fr": "Comment les cours sont-ils adaptés à chaque élève ?"},
          ["followup_assessment", "trial", "register"])
 # pricing leaves point to the frequency answer (cross-link)
@@ -358,8 +359,36 @@ for n in range(1, 6):
         [{"to": "pricing"}, {"to": "trial"}, {"to": "register"}] if n == 1 else [{"to": "trial"}, {"to": "register"}],
         src(*rs.values()))
 excluded_note.append(("O-AR/EN/FR-6", "'I need time to think' promises to send a summary; the tree cannot send one, so it is not offered"))
+# approved SALES_NURTURE texts for the two most common online worries (focus is a real-traffic theme)
+nur_leaf("concern_focus", "concerns", "objection.online.focus_concern",
+         {"ar": "ماذا لو كان طفلي لا يركّز في الدروس أونلاين؟", "en": "What if my child cannot focus in online lessons?",
+          "fr": "Et si mon enfant n’arrive pas à se concentrer en ligne ?"},
+         ["concern_inperson", "trial", "register"])
+nur_leaf("concern_inperson", "concerns", "objection.online.in_person_preference",
+         {"ar": "ماذا لو كنا نفضّل الدروس الحضورية؟", "en": "What if we prefer in-person lessons?", "fr": "Et si nous préférons les cours en présentiel ?"},
+         ["concern_focus", "trial", "register"])
+nodes["concern_online"]["options"] = [{"to": "concern_focus"}, {"to": "concern_inperson"}, {"to": "trial"}, {"to": "register"}]
+cids = [c for c in cids if c != "concern_tried"]   # reachable from "How do you help my child?" and listed here too
+cids = ["concern_price", "concern_online", "concern_focus", "concern_tried", "concern_patient", "concern_timing"]
 add("concerns", "root", "menu", MAIN[7][1],
     {"ar": "ما الذي يقلقكم؟", "en": "What is on your mind?", "fr": "Qu’est-ce qui vous préoccupe ?"}, cids, [], origin="ui")
+
+# where do you serve (location.ask, INT-004): composed from the country-level LOCATIONS rows
+LOCS = rows("LOCATIONS")
+def loc_country(country, lang):
+    return next((r["service_note"] for r in LOCS if r.get("country") == country and str(r.get("language")).lower() == lang
+                 and not r.get("city") and (not r.get("region") or r.get("region") == lang)), None)
+wtxt = {}
+for l in LANGS:
+    a, b = loc_country("Canada", l), loc_country("United States", l)
+    if a and b:
+        wtxt[l] = a + " " + b
+        composed.append(("about_where", l, "two verbatim country-level LOCATIONS rows (Canada + United States) joined"))
+    else:
+        gaps.append(("about_where", l, "no ACTIVE country-level LOCATIONS rows in this language"))
+add("about_where", "about", "answer",
+    {"ar": "هل تخدمون بلدي أو مدينتي؟", "en": "Do you serve my country or city?", "fr": "Servez-vous mon pays ou ma ville ?"},
+    wtxt, ["pricing", "trial", "register"], [], origin="composed")
 
 # ---------------------------------------------------------------- register + human
 add("register", "root", "form", MAIN[8][1],
@@ -385,7 +414,7 @@ QLABEL = {
     "pricing": {"ar": "ما الأسعار والباقات المتاحة؟", "en": "What prices and packages are available?", "fr": "Quels sont les tarifs et forfaits disponibles ?"},
     "trial": {"ar": "كيف أحصل على الحصة التجريبية المجانية؟", "en": "How do I get the free trial lesson?", "fr": "Comment obtenir l’essai gratuit ?"},
     "classes": {"ar": "كيف تسير الحصص؟", "en": "How do lessons work?", "fr": "Comment se déroulent les cours ?"},
-    "followup": {"ar": "كيف تتم متابعة تقدم الطالب؟", "en": "How is the student’s progress followed?", "fr": "Comment suit-on les progrès de l’élève ?"},
+    "help": {"ar": "كيف تساعدون ابني على التحسّن وكيف تتابعون تقدمه؟", "en": "How do you help my child improve and track progress?", "fr": "Comment aidez-vous mon enfant à progresser et suivez-vous ses progrès ?"},
     "policies": {"ar": "كيف يمكن الإلغاء أو تغيير الموعد أو استرداد المبلغ؟", "en": "How can I cancel, reschedule or ask for a refund?", "fr": "Comment annuler, déplacer un cours ou demander un remboursement ?"},
     "concerns": {"ar": "ماذا لو كان لديّ تحفظ أو قلق؟", "en": "What if I have a concern?", "fr": "Et si j’ai une réserve ou une inquiétude ?"},
     "register": {"ar": "كيف أسجّل الآن؟", "en": "How do I register now?", "fr": "Comment m’inscrire maintenant ?"},
@@ -457,7 +486,7 @@ REGISTER = {
     "backend_contract": "Validated_Human_Handoff_FIXED.json / Validate Lead Payload (workflow swhmNa0Goo0uYm1k)",
 }
 
-tree = dict(meta=dict(source=KB.split("/")[-1], note="Built from the 2026-08-18 KB snapshot; the live sheet changed on 2026-09-17 and must be re-checked.",
+tree = dict(meta=dict(source=KB.split("/")[-1], note="Built from the 2026-08-18 KB snapshot; live sheet re-verified 2026-11-12: content tabs identical to this snapshot.",
                       langs=LANGS), ui=UI, nodes=nodes, register=REGISTER)
 
 # ---------------------------------------------------------------- integrity checks

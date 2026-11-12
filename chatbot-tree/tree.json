@@ -1,7 +1,7 @@
 {
  "meta": {
   "source": "Success_Path_Mentors_AI_KB_V2_SPM_2026-08-18.xlsx",
-  "note": "Built from the 2026-08-18 KB snapshot; the live sheet changed on 2026-09-17 and must be re-checked.",
+  "note": "Built from the 2026-08-18 KB snapshot; live sheet re-verified 2026-11-12: content tabs identical to this snapshot.",
   "langs": [
    "ar",
    "en",
@@ -82,7 +82,7 @@
    },
    "options": [
     {
-     "to": "about"
+     "to": "help"
     },
     {
      "to": "subjects"
@@ -94,19 +94,19 @@
      "to": "trial"
     },
     {
+     "to": "register"
+    },
+    {
      "to": "classes"
-    },
-    {
-     "to": "followup"
-    },
-    {
-     "to": "policies"
     },
     {
      "to": "concerns"
     },
     {
-     "to": "register"
+     "to": "policies"
+    },
+    {
+     "to": "about"
     }
    ],
    "sources": [],
@@ -134,13 +134,10 @@
      "to": "about_grades"
     },
     {
+     "to": "about_where"
+    },
+    {
      "to": "about_curriculum"
-    },
-    {
-     "to": "about_exam"
-    },
-    {
-     "to": "about_mentoring"
     }
    ],
    "sources": [
@@ -818,6 +815,9 @@
    },
    "options": [
     {
+     "to": "about_grades"
+    },
+    {
      "to": "sub_001"
     },
     {
@@ -1283,6 +1283,9 @@
    },
    "options": [
     {
+     "to": "classes_tutor"
+    },
+    {
      "to": "trial"
     },
     {
@@ -1365,7 +1368,7 @@
   },
   "classes_certificates": {
    "id": "classes_certificates",
-   "parent": "followup",
+   "parent": "help",
    "kind": "answer",
    "label": {
     "ar": "هل يحصل الطالب على شهادة رسمية بعد إكمال عشرين حصة؟"
@@ -1388,7 +1391,7 @@
   },
   "followup_assessment": {
    "id": "followup_assessment",
-   "parent": "followup",
+   "parent": "help",
    "kind": "answer",
    "label": {
     "ar": "هل يوجد تقييم للطالب؟",
@@ -1420,7 +1423,7 @@
   },
   "followup_updates": {
    "id": "followup_updates",
-   "parent": "followup",
+   "parent": "help",
    "kind": "answer",
    "label": {
     "ar": "كيف يتابع ولي الأمر تقدم الطالب؟",
@@ -1450,29 +1453,38 @@
    ],
    "origin": "kb+ui-label"
   },
-  "followup": {
-   "id": "followup",
+  "help": {
+   "id": "help",
    "parent": "root",
    "kind": "menu",
    "label": {
-    "ar": "كيف تتم متابعة تقدم الطالب؟",
-    "en": "How is the student’s progress followed?",
-    "fr": "Comment suit-on les progrès de l’élève ?"
+    "ar": "كيف تساعدون ابني على التحسّن وكيف تتابعون تقدمه؟",
+    "en": "How do you help my child improve and track progress?",
+    "fr": "Comment aidez-vous mon enfant à progresser et suivez-vous ses progrès ?"
    },
    "text": {
-    "ar": "اختر ما تريد معرفته.",
-    "en": "Choose what you want to know.",
-    "fr": "Choisissez ce que vous voulez savoir."
+    "ar": "اختر ما يهمّك.",
+    "en": "Choose what matters to you.",
+    "fr": "Choisissez ce qui vous intéresse."
    },
    "options": [
     {
+     "to": "classes_tailored"
+    },
+    {
      "to": "followup_assessment"
+    },
+    {
+     "to": "about_mentoring"
+    },
+    {
+     "to": "about_exam"
     },
     {
      "to": "followup_updates"
     },
     {
-     "to": "classes_certificates"
+     "to": "concern_tried"
     }
    ],
    "sources": [],
@@ -1506,12 +1518,6 @@
      "to": "classes_matching"
     },
     {
-     "to": "classes_tutor"
-    },
-    {
-     "to": "classes_tailored"
-    },
-    {
      "to": "classes_tech"
     },
     {
@@ -1523,7 +1529,7 @@
   },
   "about_exam": {
    "id": "about_exam",
-   "parent": "about",
+   "parent": "help",
    "kind": "answer",
    "label": {
     "ar": "هل تقدمون التحضير للاختبارات؟",
@@ -1555,7 +1561,7 @@
   },
   "about_mentoring": {
    "id": "about_mentoring",
-   "parent": "about",
+   "parent": "help",
    "kind": "answer",
    "label": {
     "ar": "هل تقدمون إرشاداً أكاديمياً وتنظيماً للدراسة؟",
@@ -1617,7 +1623,7 @@
   },
   "classes_tailored": {
    "id": "classes_tailored",
-   "parent": "classes",
+   "parent": "help",
    "kind": "answer",
    "label": {
     "ar": "كيف تُصمَّم الحصص لتناسب الطالب؟",
@@ -1890,6 +1896,12 @@
    },
    "options": [
     {
+     "to": "concern_focus"
+    },
+    {
+     "to": "concern_inperson"
+    },
+    {
      "to": "trial"
     },
     {
@@ -1990,6 +2002,66 @@
    ],
    "origin": "kb+ui-label"
   },
+  "concern_focus": {
+   "id": "concern_focus",
+   "parent": "concerns",
+   "kind": "answer",
+   "label": {
+    "ar": "ماذا لو كان طفلي لا يركّز في الدروس أونلاين؟",
+    "en": "What if my child cannot focus in online lessons?",
+    "fr": "Et si mon enfant n’arrive pas à se concentrer en ligne ?"
+   },
+   "text": {
+    "ar": "نتفهم أن التركيز هو التحدي الأساسي. تتيح الجلسة الفردية للمدرس متابعة طالب واحد وتعديل الإيقاع والأسلوب وفق استجابته.",
+    "en": "We understand that focus is the main concern. One-to-one lessons allow the tutor to monitor one student and adapt the pace and approach to their response.",
+    "fr": "Nous comprenons que la concentration est la principale préoccupation. Les cours individuels permettent au tuteur de suivre un seul élève et d’adapter le rythme et l’approche à ses réactions."
+   },
+   "options": [
+    {
+     "to": "concern_inperson"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "objection.online.focus_concern"
+   ],
+   "origin": "kb+ui-label"
+  },
+  "concern_inperson": {
+   "id": "concern_inperson",
+   "parent": "concerns",
+   "kind": "answer",
+   "label": {
+    "ar": "ماذا لو كنا نفضّل الدروس الحضورية؟",
+    "en": "What if we prefer in-person lessons?",
+    "fr": "Et si nous préférons les cours en présentiel ?"
+   },
+   "text": {
+    "ar": "نتفهم تفضيل الدروس الحضورية. توفر جلساتنا الفردية عبر الإنترنت تفاعلًا مباشرًا ومتابعة مخصصة دون مشاركة انتباه المدرس مع طلاب آخرين.",
+    "en": "We understand the preference for in-person lessons. Our one-to-one online sessions provide direct interaction and personalized attention without sharing the tutor’s focus with other students.",
+    "fr": "Nous comprenons la préférence pour les cours en personne. Nos séances individuelles en ligne offrent une interaction directe et un suivi personnalisé."
+   },
+   "options": [
+    {
+     "to": "concern_focus"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [
+    "objection.online.in_person_preference"
+   ],
+   "origin": "kb+ui-label"
+  },
   "concerns": {
    "id": "concerns",
    "parent": "root",
@@ -2012,6 +2084,9 @@
      "to": "concern_online"
     },
     {
+     "to": "concern_focus"
+    },
+    {
      "to": "concern_tried"
     },
     {
@@ -2023,6 +2098,33 @@
    ],
    "sources": [],
    "origin": "ui"
+  },
+  "about_where": {
+   "id": "about_where",
+   "parent": "about",
+   "kind": "answer",
+   "label": {
+    "ar": "هل تخدمون بلدي أو مدينتي؟",
+    "en": "Do you serve my country or city?",
+    "fr": "Servez-vous mon pays ou ma ville ?"
+   },
+   "text": {
+    "ar": "دروس خصوصية أونلاين تخدم الطلاب في كندا. دروس خصوصية أونلاين تخدم الطلاب في الولايات المتحدة.",
+    "en": "Online one-to-one tutoring serving students across Canada. Online one-to-one tutoring serving students across United States."
+   },
+   "options": [
+    {
+     "to": "pricing"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [],
+   "origin": "composed"
   },
   "register": {
    "id": "register",
