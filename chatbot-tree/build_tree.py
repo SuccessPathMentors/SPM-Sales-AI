@@ -463,9 +463,24 @@ add("register", "root", "form", MAIN[8][1],
 email = com("contact", "ar")   # COM-005 (email value)
 phone = com("contact", "en")   # COM-009 (phone value)
 LBL = {"ar": ("البريد الإلكتروني", "الهاتف"), "en": ("Email", "Phone"), "fr": ("Courriel", "Téléphone")}
-htxt = {l: f"{LBL[l][0]}: {email['content']}\n{LBL[l][1]}: {phone['content']}" for l in LANGS}
+PH = "\u2066" + phone["content"] + "\u2069"   # isolate the number so it keeps its order inside Arabic text
+WA = "https://wa.me/" + re.sub(r"\D", "", phone["content"])   # WhatsApp link built from the approved phone number
+htxt = {
+ "ar": f"تقدر تتواصل معانا على الواتساب على الرقم {PH}. فريق خدمة العملاء والدعم الفني والعمليات ممكن يحجزلك حصة ويجاوب على كل أسئلتك.\n"
+       f"تحب تكلّم خدمة العملاء مباشرة؟ دوس على الرابط:\n{WA}\n"
+       "ولو عندك تفاصيل عايز تشاركها، زي واجب أو أوراق عمل أو تمارين، أو عايز تحكي عن احتياجات طفلك، أو تغيّر المدرّس، أو عندك شكوى، أو عايز تعدّل أو تأجّل ميعاد، تقدر تتواصل معانا كتابةً أو بمكالمة على الواتساب.\n"
+       f"{LBL['ar'][0]}: {email['content']}",
+ "en": f"You can reach us on WhatsApp at {phone['content']}. Our customer service, technical support and operations team can book a lesson for you and answer all your questions.\n"
+       f"To chat with customer service directly, use this link:\n{WA}\n"
+       "If you have details to share, such as homework, worksheets or exercises, or you want to tell us more about your child’s needs, change the tutor, make a complaint, or change or postpone a lesson, you can contact us by text or by phone call on WhatsApp.\n"
+       f"{LBL['en'][0]}: {email['content']}",
+ "fr": f"Vous pouvez nous joindre sur WhatsApp au {phone['content']}. Notre équipe du service client, du support technique et des opérations peut réserver un cours pour vous et répondre à toutes vos questions.\n"
+       f"Pour discuter directement avec le service client, utilisez ce lien :\n{WA}\n"
+       "Si vous avez des informations à partager, comme des devoirs, des fiches de travail ou des exercices, ou si vous voulez nous parler des besoins de votre enfant, changer de tuteur, faire une réclamation ou modifier ou reporter un cours, vous pouvez nous contacter par message ou par appel sur WhatsApp.\n"
+       f"{LBL['fr'][0]} : {email['content']}",
+}
 for l in LANGS:
-    composed.append(("human", l, "contact lines assembled from COM-005 (email) and COM-009 (phone)"))
+    composed.append(("human", l, "WhatsApp contact text stated by the owner 2026-11-12; email line from COM-005; wa.me link built from COM-009"))
 add("human", "root", "answer", UI["human"], htxt,
     [{"to": "register", "preset": {"request": "CALLBACK"}}], src(email, phone), origin="composed",
     persistent=True)
@@ -536,7 +551,6 @@ AR_EG = {
 for _sid in ("sub_001", "sub_002", "sub_004", "sub_005"):
     AR_EG[_sid + "_strands"] = "خليني أوضّحلك المحاور اللي بنشتغل عليها:\n" + nodes[_sid + "_strands"]["text"]["ar"]
 AR_EG["sub_003_strands"] = "خليني أوضّحلك المحاور اللي بنشتغل عليها:\n" + nodes["sub_003_strands"]["text"]["ar"]
-AR_EG["human"] = "تقدر تتواصل معانا كده:\n" + nodes["human"]["text"]["ar"]
 for _nid, _t in AR_EG.items():
     nodes[_nid]["text"]["ar"] = _t
     composed.append((_nid, "ar", "Arabic reworded to Egyptian dialect, first-person voice (owner instruction 2026-11-12); facts unchanged, owner to review"))

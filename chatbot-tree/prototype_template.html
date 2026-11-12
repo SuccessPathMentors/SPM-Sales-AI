@@ -103,6 +103,7 @@ pre{direction:ltr;text-align:left;background:var(--surface);border:1px solid var
 .phases li{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:baseline}
 .phases .tag{justify-self:start}
 details summary{cursor:pointer;color:var(--accent)}
+.msg a{color:inherit;font-weight:600;text-decoration:underline;word-break:break-all}
 </style>
 
 <div class="wrap">
@@ -193,6 +194,7 @@ var S = { lang:"ar", path:["root"], fwd:[], open:{root:true}, reg:null, sent:fal
 
 /* ---------- helpers ---------- */
 function $(id){return document.getElementById(id)}
+function rich(t){var d=el("div"); String(t).split(/(https:\/\/[^\s]+)/).forEach(function(p){if(/^https:\/\//.test(p)){var a=el("a",null,p); a.href=p; a.target="_blank"; a.rel="noopener noreferrer"; d.appendChild(a)} else if(p)d.appendChild(document.createTextNode(p))}); return d}
 function el(tag, cls, text){var e=document.createElement(tag); if(cls)e.className=cls; if(text!=null)e.textContent=text; return e}
 function L(obj){return obj && obj[S.lang]}
 function avail(id){var n=N[id]; return !!(n && L(n.label) && (L(n.text) || n.kind==="form"))}
@@ -398,7 +400,7 @@ function renderLog(scroll){
     if(i>0)log.appendChild(el("div","msg me",L(n.label)||n.label.ar));
     var bot=el("div","msg bot");
     if(n.kind==="form"){bot.appendChild(el("div",null,L(n.text)||"")); var box=el("div"); bot.appendChild(box); if(i===S.path.length-1)renderWizard(box); else box.hidden=true;}
-    else bot.appendChild(el("div",null,L(n.text)||""));
+    else bot.appendChild(rich(L(n.text)||""));
     log.appendChild(bot);
   });
   var id=cur(), n=N[id], opts=optionsFor(id);

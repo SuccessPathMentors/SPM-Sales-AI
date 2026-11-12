@@ -25,7 +25,7 @@ Nodes: 69  |  KB records used: 217
 - help_change (owner-approved in chat 2026-11-12; not yet in the KB sheet)
 - help_exams (owner-approved in chat 2026-11-12; not yet in the KB sheet)
 - about_where (two verbatim country-level LOCATIONS rows (Canada + United States) joined)
-- human (contact lines assembled from COM-005 (email) and COM-009 (phone))
+- human (WhatsApp contact text stated by the owner 2026-11-12; email line from COM-005; wa.me link built from COM-009)
 - root (Arabic reworded to Egyptian dialect, first-person voice (owner instruction 2026-11-12); facts unchanged, owner to review)
 - about (Arabic reworded to Egyptian dialect, first-person voice (owner instruction 2026-11-12); facts unchanged, owner to review)
 - about_online (Arabic reworded to Egyptian dialect, first-person voice (owner instruction 2026-11-12); facts unchanged, owner to review)
@@ -91,7 +91,6 @@ Nodes: 69  |  KB records used: 217
 - sub_004_strands (Arabic reworded to Egyptian dialect, first-person voice (owner instruction 2026-11-12); facts unchanged, owner to review)
 - sub_005_strands (Arabic reworded to Egyptian dialect, first-person voice (owner instruction 2026-11-12); facts unchanged, owner to review)
 - sub_003_strands (Arabic reworded to Egyptian dialect, first-person voice (owner instruction 2026-11-12); facts unchanged, owner to review)
-- human (Arabic reworded to Egyptian dialect, first-person voice (owner instruction 2026-11-12); facts unchanged, owner to review)
 - followup_updates (owner correction: weekly updates only; KB row S-5 to be corrected)
 
 ## Language gaps (node hidden in that language until approved text exists)
