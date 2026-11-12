@@ -10,7 +10,7 @@
  },
  "ui": {
   "greeting": {
-   "ar": "أهلاً بكم في Success Path Mentors. اختر ما يهمّكم.",
+   "ar": "أهلاً بيكم في Success Path Mentors. اختار اللي يهمّك وإحنا نوضّحلك.",
    "en": "Welcome to Success Path Mentors. Choose what you would like to know.",
    "fr": "Bienvenue chez Success Path Mentors. Choisissez ce qui vous intéresse."
   },
@@ -76,7 +76,7 @@
     "fr": "Accueil"
    },
    "text": {
-    "ar": "أهلاً بكم في Success Path Mentors. اختر ما يهمّكم.",
+    "ar": "أهلاً بيكم في Success Path Mentors. اختار اللي يهمّك وإحنا نوضّحلك.",
     "en": "Welcome to Success Path Mentors. Choose what you would like to know.",
     "fr": "Bienvenue chez Success Path Mentors. Choisissez ce qui vous intéresse."
    },
@@ -122,7 +122,7 @@
     "fr": "Qui êtes-vous et que proposez-vous ?"
    },
    "text": {
-    "ar": "دروس خصوصية فردية عبر الإنترنت للطلاب من الصف الأول حتى الصف الثاني عشر.",
+    "ar": "إحنا بنقدّم دروس خصوصية فردية أونلاين لطلاب من الصف الأول لحد الصف الثاني عشر.",
     "en": "One-to-one online tutoring for students in Grades 1–12.",
     "fr": "Tutorat individuel en ligne pour les élèves de la 1re à la 12e année."
    },
@@ -157,7 +157,7 @@
     "fr": "Les cours sont-ils en ligne ?"
    },
    "text": {
-    "ar": "نعم، جميع الدروس فردية وتُقدَّم عبر الإنترنت.",
+    "ar": "أيوه، كل الدروس عندنا فردية وبتتقدّم أونلاين.",
     "en": "Yes. All lessons are delivered online in a one-to-one format.",
     "fr": "Oui. Les cours sont individuels et se déroulent en ligne."
    },
@@ -189,7 +189,7 @@
     "fr": "Quels niveaux accompagnez-vous ?"
    },
    "text": {
-    "ar": "نخدم الطلاب من الصف الأول حتى الصف الثاني عشر.",
+    "ar": "إحنا بنخدم الطلاب من الصف الأول لحد الصف الثاني عشر.",
     "en": "We support students in Grades 1–12.",
     "fr": "Nous accompagnons les élèves de la 1re à la 12e année."
    },
@@ -221,7 +221,7 @@
     "fr": "Quels programmes soutenez-vous ?"
    },
    "text": {
-    "ar": "نقدم دعماً متوافقاً مع المناهج الكندية والأمريكية حسب صف الطالب واحتياجه.",
+    "ar": "إحنا بنقدّم دعم متوافق مع المناهج الكندية والأمريكية، على حسب صف الطالب واحتياجه.",
     "en": "Support is aligned with Canadian or American curricula based on grade and needs.",
     "fr": "Le soutien est adapté aux programmes canadiens ou américains selon le niveau et les besoins."
    },
@@ -254,7 +254,7 @@
    },
    "text": {
     "en": "• Basics and Operations\n• Fractions and Rational Numbers\n• Algebra and Equations\n• Functions\n• Geometry and Trigonometry\n• Statistics and Probability\n• Advanced Mathematics and Pre-Calculus\n• Financial Literacy",
-    "ar": "• الأساسيات والعمليات الحسابية\n• الكسور والأعداد النسبية\n• الجبر والمعادلات\n• الدوال\n• الهندسة وحساب المثلثات\n• الإحصاء والاحتمالات\n• الرياضيات المتقدمة وما قبل التفاضل\n• الثقافة المالية"
+    "ar": "خليني أوضّحلك المحاور اللي بنشتغل عليها:\n• الأساسيات والعمليات الحسابية\n• الكسور والأعداد النسبية\n• الجبر والمعادلات\n• الدوال\n• الهندسة وحساب المثلثات\n• الإحصاء والاحتمالات\n• الرياضيات المتقدمة وما قبل التفاضل\n• الثقافة المالية"
    },
    "options": [
     {
@@ -296,7 +296,7 @@
     "en": "Do you teach Mathematics?"
    },
    "text": {
-    "ar": "دروس رياضيات فردية عبر الإنترنت.",
+    "ar": "إحنا بنقدّم دروس رياضيات فردية أونلاين.",
     "en": "Mathematics: one-to-one online lessons for Grades 1–12."
    },
    "options": [
@@ -332,7 +332,7 @@
    },
    "text": {
     "en": "• Foundational Reading\n• Grammar & Language Conventions\n• Literature & Literary Analysis\n• Reading Comprehension\n• Reading Fluency\n• Speaking & Listening\n• Vocabulary & Word Study\n• Academic Skills & Assignments\n• Writing\n• Assessment & Test Preparation\n• Cross-Curricular Support",
-    "ar": "• القراءة التأسيسية\n• القواعد والاتفاقيات اللغوية\n• الأدب والتحليل الأدبي\n• الفهم القرائي\n• الطلاقة القرائية\n• التحدث والاستماع\n• المفردات ودراسة الكلمات\n• المهارات والواجبات الأكاديمية\n• الكتابة\n• التحضير للتقييم والاختبارات\n• الدعم عبر المواد",
+    "ar": "خليني أوضّحلك المحاور اللي بنشتغل عليها:\n• القراءة التأسيسية\n• القواعد والاتفاقيات اللغوية\n• الأدب والتحليل الأدبي\n• الفهم القرائي\n• الطلاقة القرائية\n• التحدث والاستماع\n• المفردات ودراسة الكلمات\n• المهارات والواجبات الأكاديمية\n• الكتابة\n• التحضير للتقييم والاختبارات\n• الدعم عبر المواد",
     "fr": "• Lecture fondamentale\n• Grammaire et conventions linguistiques\n• Littérature et analyse littéraire\n• Compréhension de lecture\n• Fluidité en lecture\n• Expression orale et écoute\n• Vocabulaire et étude des mots\n• Compétences et travaux scolaires\n• Écriture\n• Préparation aux évaluations\n• Soutien interdisciplinaire"
    },
    "options": [
@@ -393,7 +393,7 @@
     "fr": "Enseignez-vous l’anglais ?"
    },
    "text": {
-    "ar": "دروس لغة إنجليزية فردية عبر الإنترنت.",
+    "ar": "إحنا بنقدّم دروس لغة إنجليزية فردية أونلاين.",
     "en": "English: one-to-one online lessons for Grades 1–12.",
     "fr": "Anglais : cours individuels en ligne de la 1re à la 12e année."
    },
@@ -430,7 +430,7 @@
    },
    "text": {
     "en": "• Earth and Space Science\n• Life Science\n• Scientific Inquiry and Laboratory Skills\n• Structures and Engineering",
-    "ar": "• علوم الأرض والفضاء\n• علوم الحياة\n• الاستقصاء العلمي ومهارات المختبر\n• الهياكل والهندسة"
+    "ar": "خليني أوضّحلك المحاور اللي بنشتغل عليها:\n• علوم الأرض والفضاء\n• علوم الحياة\n• الاستقصاء العلمي ومهارات المختبر\n• الهياكل والهندسة"
    },
    "options": [
     {
@@ -464,7 +464,7 @@
     "en": "Do you teach General Science?"
    },
    "text": {
-    "ar": "دروس علوم فردية بحسب الصف والمنهج.",
+    "ar": "إحنا بنقدّم دروس علوم فردية على حسب الصف والمنهج.",
     "en": "General Science: one-to-one online lessons for Grades 1–12."
    },
    "options": [
@@ -500,7 +500,7 @@
    },
    "text": {
     "en": "• Dynamics and Forces\n• Electricity and Circuits\n• Electrostatics and Electromagnetism\n• Integrated Physics\n• Kinematics\n• Measurement, Vectors, and Modeling\n• Modern Physics\n• Momentum and Collisions\n• Optics\n• Oscillations\n• Thermal Physics\n• Waves and Sound\n• Work, Energy, and Power\n• Ontario Grade 11 Physics Curriculum",
-    "ar": "• الديناميكا والقوى\n• الكهرباء والدوائر\n• الكهرباء الساكنة والكهرومغناطيسية\n• الفيزياء المتكاملة\n• الحركة\n• القياس والمتجهات والنمذجة\n• الفيزياء الحديثة\n• الزخم والتصادمات\n• البصريات\n• الاهتزازات\n• الفيزياء الحرارية\n• الموجات والصوت\n• الشغل والطاقة والقدرة\n• منهج أونتاريو للفيزياء - الصف 11",
+    "ar": "خليني أوضّحلك المحاور اللي بنشتغل عليها:\n• الديناميكا والقوى\n• الكهرباء والدوائر\n• الكهرباء الساكنة والكهرومغناطيسية\n• الفيزياء المتكاملة\n• الحركة\n• القياس والمتجهات والنمذجة\n• الفيزياء الحديثة\n• الزخم والتصادمات\n• البصريات\n• الاهتزازات\n• الفيزياء الحرارية\n• الموجات والصوت\n• الشغل والطاقة والقدرة\n• منهج أونتاريو للفيزياء - الصف 11",
     "fr": "• Programme de physique de 11e année en Ontario"
    },
    "options": [
@@ -557,7 +557,7 @@
     "fr": "Proposez-vous du soutien en physique de 11e année selon le programme de l’Ontario ?"
    },
    "text": {
-    "ar": "نعم. تدعم Success Path Mentors مادة الفيزياء للصف الحادي عشر وفق منهج أونتاريو في كندا. يمكن مواءمة الدروس مع منهج أونتاريو ومواد الطالب الدراسية وواجباته واحتياجاته التعليمية. تتم مطابقة المدرس حسب المادة والصف والمنهج واللغة واحتياجات الطالب، ويُؤكد توفر المدرس قبل اعتماد المطابقة.",
+    "ar": "أيوه. إحنا في Success Path Mentors بندعم مادة الفيزياء للصف الحادي عشر على منهج أونتاريو في كندا. وبنقدر نظبّط الدروس مع منهج أونتاريو ومواد الطالب في المدرسة وواجباته واحتياجاته التعليمية. وبنختار المدرّس على حسب المادة والصف والمنهج واللغة واحتياجات الطالب، وبنأكّد إن المدرّس متاح قبل ما نعتمد الاختيار.",
     "en": "Yes. Success Path Mentors supports Grade 11 Physics aligned with the Ontario curriculum in Canada. Lessons can be aligned with the Ontario curriculum, the student's course materials, school assignments, and learning needs. Tutor matching considers subject, grade, curriculum, language, and student needs, and tutor availability is confirmed before the match is finalized.",
     "fr": "Oui. Success Path Mentors offre du soutien en physique de 11e année aligné sur le programme de l’Ontario au Canada. Les cours peuvent être adaptés au programme de l’Ontario, au matériel scolaire, aux devoirs et aux besoins d’apprentissage de l’élève. Le jumelage tient compte de la matière, du niveau, du programme, de la langue et des besoins de l’élève; la disponibilité du tuteur est confirmée avant de finaliser le jumelage."
    },
@@ -589,7 +589,7 @@
     "fr": "Enseignez-vous la physique ?"
    },
    "text": {
-    "ar": "دروس فيزياء فردية أونلاين للصفوف 9–12. ندعم فيزياء الصف الحادي عشر وفق منهج أونتاريو في كندا، ويمكن مواءمة الدروس مع منهج الطالب ومواد المدرسة والواجبات واحتياجاته التعليمية. تتم مطابقة المدرس حسب المادة والصف والمنهج واللغة واحتياجات الطالب، ويُؤكد توفر المدرس قبل اعتماد المطابقة.",
+    "ar": "إحنا بنقدّم دروس فيزياء فردية أونلاين للصفوف 9–12. وبندعم فيزياء الصف الحادي عشر على منهج أونتاريو في كندا، وبنقدر نظبّط الدروس مع منهج الطالب ومواد المدرسة والواجبات واحتياجاته التعليمية. وبنختار المدرّس على حسب المادة والصف والمنهج واللغة واحتياجات الطالب، وبنأكّد إن المدرّس متاح قبل ما نعتمد الاختيار.",
     "en": "Physics: one-to-one online lessons for Grades 9–12.",
     "fr": "Physique : cours individuels en ligne de la 9e à la 12e année."
    },
@@ -629,7 +629,7 @@
    },
    "text": {
     "en": "• Acids, Bases, and Aqueous Equilibria\n• Atomic Structure and Periodicity\n• Chemical Bonding and Molecular Structure\n• Chemical Equilibrium\n• Chemical Kinetics\n• Chemical Nomenclature and Formulas\n• Chemical Reactions and Equations\n• Integrated Chemistry\n• Matter and Chemical Properties\n• Nuclear Chemistry\n• Organic Chemistry\n• Redox and Electrochemistry\n• Solutions and Solubility\n• States of Matter and Gases\n• Stoichiometry and Quantitative Chemistry\n• Thermochemistry",
-    "ar": "• الأحماض والقواعد والاتزانات المائية\n• البنية الذرية والدورية\n• الروابط الكيميائية والبنية الجزيئية\n• الاتزان الكيميائي\n• الحركية الكيميائية\n• التسمية والصيغ الكيميائية\n• التفاعلات والمعادلات الكيميائية\n• الكيمياء المتكاملة\n• المادة والخواص الكيميائية\n• الكيمياء النووية\n• الكيمياء العضوية\n• الأكسدة والاختزال والكيمياء الكهربائية\n• المحاليل والذوبانية\n• حالات المادة والغازات\n• الحسابات الستوكيومترية والكيمياء الكمية\n• الكيمياء الحرارية"
+    "ar": "خليني أوضّحلك المحاور اللي بنشتغل عليها:\n• الأحماض والقواعد والاتزانات المائية\n• البنية الذرية والدورية\n• الروابط الكيميائية والبنية الجزيئية\n• الاتزان الكيميائي\n• الحركية الكيميائية\n• التسمية والصيغ الكيميائية\n• التفاعلات والمعادلات الكيميائية\n• الكيمياء المتكاملة\n• المادة والخواص الكيميائية\n• الكيمياء النووية\n• الكيمياء العضوية\n• الأكسدة والاختزال والكيمياء الكهربائية\n• المحاليل والذوبانية\n• حالات المادة والغازات\n• الحسابات الستوكيومترية والكيمياء الكمية\n• الكيمياء الحرارية"
    },
    "options": [
     {
@@ -687,7 +687,7 @@
     "en": "Do you teach Chemistry?"
    },
    "text": {
-    "ar": "دروس كيمياء فردية لطلاب المرحلة الثانوية.",
+    "ar": "إحنا بنقدّم دروس كيمياء فردية لطلاب المرحلة الثانوية.",
     "en": "Chemistry: one-to-one online lessons for Grades 9–12."
    },
    "options": [
@@ -720,7 +720,7 @@
     "ar": "هل تدرّسون اللغة الفرنسية؟"
    },
    "text": {
-    "ar": "دروس لغة فرنسية فردية عبر الإنترنت."
+    "ar": "إحنا بنقدّم دروس لغة فرنسية فردية أونلاين."
    },
    "options": [
     {
@@ -749,7 +749,7 @@
     "ar": "هل تدرّسون اللغة العربية؟"
    },
    "text": {
-    "ar": "دروس لغة عربية فردية عبر الإنترنت."
+    "ar": "إحنا بنقدّم دروس لغة عربية فردية أونلاين."
    },
    "options": [
     {
@@ -778,7 +778,7 @@
     "ar": "هل تدرّسون الدراسات الإسلامية؟"
    },
    "text": {
-    "ar": "دروس فردية في الدراسات الإسلامية."
+    "ar": "إحنا بنقدّم دروس فردية في الدراسات الإسلامية."
    },
    "options": [
     {
@@ -809,7 +809,7 @@
     "fr": "Quelles matières et quels niveaux enseignez-vous ?"
    },
    "text": {
-    "ar": "اختر المادة.",
+    "ar": "اختار المادة اللي تهمّك.",
     "en": "Choose a subject.",
     "fr": "Choisissez une matière."
    },
@@ -855,7 +855,7 @@
     "fr": "Combien coûte le forfait de 4 cours ?"
    },
    "text": {
-    "ar": "باقة 4 حصص بسعر 110 دولارات كندية (CAD).",
+    "ar": "إحنا بنقدّم باقة 4 حصص بسعر 110 دولار كندي (CAD).",
     "en": "The 4-lesson package is CAD 110.",
     "fr": "Le forfait de 4 cours coûte 110 CAD."
    },
@@ -890,7 +890,7 @@
     "fr": "Combien coûte le forfait de 8 cours ?"
    },
    "text": {
-    "ar": "باقة 8 حصص بسعر 220 دولارًا كنديًا (CAD).",
+    "ar": "إحنا بنقدّم باقة 8 حصص بسعر 220 دولار كندي (CAD).",
     "en": "The 8-lesson package is CAD 220.",
     "fr": "Le forfait de 8 cours coûte 220 CAD."
    },
@@ -925,7 +925,7 @@
     "fr": "Combien coûte le forfait de 12 cours ?"
    },
    "text": {
-    "ar": "باقة 12 حصة بسعر 280 دولارًا كنديًا (CAD).",
+    "ar": "إحنا بنقدّم باقة 12 حصة بسعر 280 دولار كندي (CAD).",
     "en": "The 12-lesson package is CAD 280.",
     "fr": "Le forfait de 12 cours coûte 280 CAD."
    },
@@ -960,7 +960,7 @@
     "fr": "Quels sont les tarifs au Canada ?"
    },
    "text": {
-    "ar": "اختر الباقة.",
+    "ar": "اختار الباقة.",
     "en": "Choose a package.",
     "fr": "Choisissez un forfait."
    },
@@ -988,7 +988,7 @@
     "fr": "Combien coûte le forfait de 4 cours ?"
    },
    "text": {
-    "ar": "باقة 4 حصص بسعر 110 دولارات أمريكية (USD).",
+    "ar": "إحنا بنقدّم باقة 4 حصص بسعر 110 دولار أمريكي (USD).",
     "en": "The 4-lesson package is USD 110.",
     "fr": "Le forfait de 4 cours coûte 110 USD."
    },
@@ -1023,7 +1023,7 @@
     "fr": "Combien coûte le forfait de 8 cours ?"
    },
    "text": {
-    "ar": "باقة 8 حصص بسعر 220 دولارًا أمريكيًا (USD).",
+    "ar": "إحنا بنقدّم باقة 8 حصص بسعر 220 دولار أمريكي (USD).",
     "en": "The 8-lesson package is USD 220.",
     "fr": "Le forfait de 8 cours coûte 220 USD."
    },
@@ -1058,7 +1058,7 @@
     "fr": "Combien coûte le forfait de 12 cours ?"
    },
    "text": {
-    "ar": "باقة 12 حصة بسعر 280 دولارًا أمريكيًا (USD).",
+    "ar": "إحنا بنقدّم باقة 12 حصة بسعر 280 دولار أمريكي (USD).",
     "en": "The 12-lesson package is USD 280.",
     "fr": "Le forfait de 12 cours coûte 280 USD."
    },
@@ -1093,7 +1093,7 @@
     "fr": "Quels sont les tarifs aux États-Unis ?"
    },
    "text": {
-    "ar": "اختر الباقة.",
+    "ar": "اختار الباقة.",
     "en": "Choose a package.",
     "fr": "Choisissez un forfait."
    },
@@ -1121,7 +1121,7 @@
     "fr": "Quels sont les tarifs et forfaits disponibles ?"
    },
    "text": {
-    "ar": "أين يقيم الطالب؟ يختلف سعر الباقة بحسب البلد.",
+    "ar": "الطالب مقيم فين؟ سعر الباقة بيختلف على حسب البلد.",
     "en": "Where does the student live? The package price depends on the country.",
     "fr": "Où réside l’élève ? Le prix du forfait dépend du pays."
    },
@@ -1149,7 +1149,7 @@
     "fr": "Quels moyens de paiement acceptez-vous ?"
    },
    "text": {
-    "ar": "في كندا: الدفع عبر التحويل بالبريد الإلكتروني (Interac e-Transfer). في الولايات المتحدة: الدفع عبر PayPal أو Stripe.",
+    "ar": "بالنسبة للدفع: في كندا إحنا بنستقبل الدفع بالتحويل عن طريق الإيميل (Interac e-Transfer). وفي أمريكا بنستقبل الدفع عن طريق PayPal أو Stripe.",
     "en": "In Canada: payment by email money transfer (Interac e-Transfer). In the United States: payment by PayPal or Stripe.",
     "fr": "Au Canada : paiement par virement par courriel (Interac e-Transfer). Aux États-Unis : paiement par PayPal ou Stripe."
    },
@@ -1180,7 +1180,7 @@
     "fr": "Comment obtenir l’essai gratuit ?"
    },
    "text": {
-    "ar": "نعم. تتوفر حصة تجريبية مجانية لكل طالب جديد ولكل مادة جديدة. يساعدنا ذلك على فهم مستوى الطالب واحتياجاته ومدى ملاءمة المدرس. يتم تنسيق الموعد حسب توفر الطالب والمدرس.",
+    "ar": "أيوه، إحنا بنقدّم حصة تجريبية مجانية لكل طالب جديد ولكل مادة جديدة. الحصة دي بتساعدنا نفهم مستوى الطالب واحتياجاته ومدى ملاءمة المدرّس. وبننسّق الميعاد على حسب مواعيد الطالب والمدرّس.",
     "en": "Yes. A free trial is available for every new student and for each new subject. It helps us understand the student’s level, needs, and tutor fit. The trial time is coordinated based on student and tutor availability.",
     "fr": "Oui. Un essai gratuit est offert à chaque nouvel élève et pour chaque nouvelle matière. Il aide à comprendre le niveau, les besoins et l’adéquation avec le tuteur. L’horaire est coordonné selon les disponibilités de l’élève et du tuteur."
    },
@@ -1215,7 +1215,7 @@
     "fr": "Combien de temps dure un cours ?"
    },
    "text": {
-    "ar": "مدة الحصة القياسية 60 دقيقة.",
+    "ar": "الحصة عندنا مدتها 60 دقيقة.",
     "en": "The standard lesson duration is 60 minutes.",
     "fr": "La durée standard d’un cours est de 60 minutes."
    },
@@ -1247,7 +1247,7 @@
     "fr": "Combien de cours par semaine recommandez-vous ?"
    },
    "text": {
-    "ar": "نوصي عادة بحصة إلى حصتين أسبوعياً حسب احتياج الطالب، والحد الأدنى حصة واحدة أسبوعياً للمحافظة على الاستمرارية.",
+    "ar": "إحنا عادةً بننصح بحصة لحصتين في الأسبوع على حسب احتياج الطالب، والحد الأدنى حصة واحدة في الأسبوع عشان نحافظ على الاستمرارية.",
     "en": "We usually recommend one to two lessons per week depending on the student’s needs, with a minimum of one lesson per week to maintain continuity.",
     "fr": "Nous recommandons généralement un à deux cours par semaine selon les besoins de l’élève, avec au moins un cours par semaine pour maintenir la continuité."
    },
@@ -1279,7 +1279,7 @@
     "fr": "Les élèves reçoivent-ils des devoirs après les cours ?"
    },
    "text": {
-    "ar": "يعطي المدرس واجباً أو تدريباً بعد كل حصة حسب الحاجة لتثبيت التعلم ومتابعة النقاط التي تم شرحها.",
+    "ar": "المدرّس بيدّي الطالب واجب أو تدريب بعد كل حصة على حسب الحاجة، عشان نثبّت التعلّم ونتابع النقط اللي اتشرحت.",
     "en": "The tutor provides homework or practice after each lesson as needed to reinforce learning and follow up on the topics covered.",
     "fr": "Le tuteur donne des devoirs ou des exercices après chaque cours selon les besoins afin de renforcer l’apprentissage et les notions étudiées."
    },
@@ -1311,7 +1311,7 @@
     "fr": "Comment choisissez-vous le tuteur ?"
    },
    "text": {
-    "ar": "تتم المطابقة حسب المادة والصف والمنهج واحتياجات الطالب واللغة المفضلة، ثم يُؤكد التوفر.",
+    "ar": "إحنا بنختار المدرّس على حسب المادة والصف والمنهج واحتياجات الطالب واللغة المفضلة، وبعدين بنأكّد التوفّر.",
     "en": "Matching considers subject, grade, curriculum, learning needs, and preferred language; availability is then confirmed.",
     "fr": "Le jumelage tient compte de la matière, du niveau, du programme, des besoins et de la langue; les disponibilités sont ensuite confirmées."
    },
@@ -1343,7 +1343,7 @@
     "fr": "De quel équipement a-t-on besoin pour les cours ?"
    },
    "text": {
-    "ar": "تُعقد الحصص أساساً عبر Google Meet. يمكن استخدام كمبيوتر مكتبي أو لابتوب أو تابلت أو هاتف، مع تفضيل شاشة أكبر مثل اللابتوب أو الكمبيوتر واتصال إنترنت مستقر.",
+    "ar": "الحصص بتتعمل أساساً على Google Meet. وتقدر تستخدم كمبيوتر أو لابتوب أو تابلت أو موبايل، والأفضل شاشة أكبر زي اللابتوب أو الكمبيوتر، مع اتصال إنترنت ثابت.",
     "en": "Lessons are delivered primarily through Google Meet. A desktop, laptop, tablet, or phone can be used; a laptop or computer with a larger screen is preferred, together with a stable internet connection.",
     "fr": "Les cours sont principalement donnés via Google Meet. Un ordinateur de bureau, un portable, une tablette ou un téléphone peuvent être utilisés; un portable ou un ordinateur avec un écran plus grand est préférable, avec une connexion Internet stable."
    },
@@ -1375,7 +1375,7 @@
     "fr": "Le tuteur et l’horaire sont-ils confirmés ?"
    },
    "text": {
-    "ar": "الموعد أو توفر المدرس يحتاج تأكيدًا من الفريق. أرسلوا اليوم والوقت والمنطقة الزمنية المناسبة.",
+    "ar": "الميعاد أو توفّر المدرّس محتاج تأكيد من الفريق عندنا. ابعتلنا اليوم والوقت والمنطقة الزمنية المناسبة ليك.",
     "en": "The tutor or time slot requires team confirmation. Please share your preferred day, time, and time zone.",
     "fr": "Le tuteur ou le créneau doit être confirmé par l’équipe. Indiquez le jour, l’heure et le fuseau horaire souhaités."
    },
@@ -1408,7 +1408,7 @@
     "ar": "هل يحصل الطالب على شهادة رسمية بعد إكمال عشرين حصة؟"
    },
    "text": {
-    "ar": "لا نقدم حالياً شهادة رسمية بعد إكمال عدد محدد من الحصص. يمكن للفريق توفير تقرير عن تقدم الطالب عند الطلب."
+    "ar": "إحنا حالياً مبنقدّمش شهادة رسمية بعد عدد معيّن من الحصص. لكن الفريق ممكن يوفّر تقرير عن تقدّم الطالب لو طلبته."
    },
    "options": [
     {
@@ -1433,7 +1433,7 @@
     "fr": "L’élève est-il évalué ?"
    },
    "text": {
-    "ar": "تقييم أولي مجاني لفهم المستوى والفجوات والتحديات، مع حصة تجريبية مجانية لكل طالب جديد ولكل مادة جديدة. بعد نحو 4–6 حصص يمكن إجراء تقييم متابعة لقياس التقدم وتقديم ملاحظات لولي الأمر.",
+    "ar": "إحنا بنعمل تقييم أولي مجاني عشان نفهم المستوى والفجوات والتحديات، مع حصة تجريبية مجانية لكل طالب جديد ولكل مادة جديدة. وبعد حوالي 4–6 حصص ممكن نعمل تقييم متابعة عشان نقيس التقدّم ونديّ ولي الأمر ملاحظاتنا.",
     "en": "A free initial assessment to identify level, gaps, and challenges, plus a free trial for every new student and each new subject. After about 4–6 lessons, a follow-up assessment may be used to review progress and provide parent feedback.",
     "fr": "Une évaluation initiale gratuite pour identifier le niveau, les lacunes et les difficultés, ainsi qu’un essai gratuit pour chaque nouvel élève et chaque nouvelle matière. Après environ 4 à 6 cours, une évaluation de suivi peut mesurer les progrès et informer les parents."
    },
@@ -1465,7 +1465,7 @@
     "fr": "Comment les parents suivent-ils les progrès de l’élève ?"
    },
    "text": {
-    "ar": "تحديثات يومية أو أسبوعية من المدرس حول التحديات والفجوات والإنجازات والخطة والخطوات التالية، مع إمكانية تقييم متابعة بعد نحو 4–6 حصص ومشاركة الملاحظات مع ولي الأمر.",
+    "ar": "إحنا بنقدّم تحديثات يومية أو أسبوعية من المدرّس عن التحديات والفجوات والإنجازات والخطة والخطوات الجاية، مع إمكانية تقييم متابعة بعد حوالي 4–6 حصص ومشاركة الملاحظات مع ولي الأمر.",
     "en": "Daily or weekly teacher updates on challenges, gaps, achievements, the plan, and next steps, with a follow-up assessment possible after about 4–6 lessons and feedback shared with the parent.",
     "fr": "Mises à jour quotidiennes ou hebdomadaires du tuteur sur les difficultés, les lacunes, les réussites, le plan et les prochaines étapes, avec une évaluation de suivi possible après environ 4 à 6 cours et un retour aux parents."
    },
@@ -1497,7 +1497,7 @@
     "fr": "Comment aidez-vous mon enfant à progresser et suivez-vous ses progrès ?"
    },
    "text": {
-    "ar": "نفهم أن لكل طفل احتياجاً مختلفاً. اختر ما يصف حالة ابنك وسنوضح كيف نساعده.",
+    "ar": "إحنا فاهمين إن كل طفل ليه احتياجه. اختار اللي يوصف حالة ابنك، وإحنا نوضّحلك بنساعده إزاي.",
     "en": "We understand every child is different. Choose what describes your child and we will explain how we help.",
     "fr": "Chaque enfant est différent. Choisissez ce qui décrit votre enfant et nous expliquerons comment nous l’aidons."
    },
@@ -1534,7 +1534,7 @@
     "fr": "Comment se déroulent les cours ?"
    },
    "text": {
-    "ar": "اختر ما تريد معرفته.",
+    "ar": "اختار اللي عايز تعرفه.",
     "en": "Choose what you want to know.",
     "fr": "Choisissez ce que vous voulez savoir."
    },
@@ -1571,7 +1571,7 @@
     "fr": "Aidez-vous à préparer les examens ?"
    },
    "text": {
-    "ar": "مراجعة موجهة حسب المنهج والفجوات ونوع التقييم.",
+    "ar": "إحنا بنقدّم مراجعة موجّهة على حسب المنهج والفجوات ونوع التقييم.",
     "en": "Targeted review based on curriculum, gaps, and assessment needs.",
     "fr": "Révision ciblée selon le programme, les lacunes et l’évaluation."
    },
@@ -1603,7 +1603,7 @@
     "fr": "Offrez-vous du mentorat scolaire et de l’aide à l’organisation ?"
    },
    "text": {
-    "ar": "تنظيم الدراسة وتحديد الأهداف وبناء العادات ومتابعة التقدم.",
+    "ar": "إحنا بنساعد في تنظيم الدراسة وتحديد الأهداف وبناء العادات ومتابعة التقدّم.",
     "en": "Study organization, goals, learning habits, and progress follow-up.",
     "fr": "Organisation, objectifs, habitudes d’étude et suivi des progrès."
    },
@@ -1635,7 +1635,7 @@
     "fr": "Quelle expérience recherchez-vous chez les tuteurs ?"
    },
    "text": {
-    "ar": "نتفهم أهمية خبرة المدرس. نراعي الخبرة المناسبة للمادة والصف والمنهج واحتياجات الطالب، ثم يؤكد الفريق المدرس المتاح.",
+    "ar": "إحنا فاهمين أهمية خبرة المدرّس. بنراعي الخبرة المناسبة للمادة والصف والمنهج واحتياجات الطالب، وبعدين الفريق بيأكّد المدرّس المتاح.",
     "en": "We understand the importance of tutor experience. We consider relevant experience with the subject, grade, curriculum, and student needs before the team confirms availability.",
     "fr": "Nous comprenons l’importance de l’expérience du tuteur. Nous tenons compte de son expérience dans la matière, le niveau, le programme et les besoins de l’élève avant confirmation."
    },
@@ -1665,7 +1665,7 @@
     "fr": "Comment les cours sont-ils adaptés à chaque élève ?"
    },
    "text": {
-    "ar": "نبدأ بفهم صف الطالب ومستواه حتى تكون التوصية مناسبة لاحتياجاته الدراسية.",
+    "ar": "إحنا بنبدأ بفهم صف الطالب ومستواه الحالي، عشان التوصية تبقى مناسبة لاحتياجاته الدراسية.",
     "en": "We begin by understanding the student’s grade and current level so the recommendation matches their academic needs.",
     "fr": "Nous commençons par comprendre le niveau scolaire et le niveau actuel de l’élève afin d’adapter la recommandation à ses besoins."
    },
@@ -1695,7 +1695,7 @@
     "fr": "Mon enfant a des difficultés scolaires. Comment l’aidez-vous ?"
    },
    "text": {
-    "ar": "نبدأ بفهم صف الطالب ومستواه، ثم يعمل معه مدرس متخصص بصبر وحرفية على نقاط ضعفه، مع واجب بعد الحصة ومتابعة لتقدمه وتقدير لكل تحسّن.",
+    "ar": "خليني أوضّحلك إحنا بنعمل إيه: بنبدأ نفهم صف الطالب ومستواه، وبعدين مدرّس متخصص بيشتغل معاه بصبر وحرفية على نقط ضعفه، مع واجب بعد الحصة ومتابعة لتقدّمه وتقدير لكل تحسّن بيحصل.",
     "en": "We start by understanding the student’s grade and level, then a specialised tutor works with them patiently and professionally on their weak points, with homework after the lesson, progress follow-up and recognition of every improvement.",
     "fr": "Nous commençons par comprendre le niveau de l’élève, puis un tuteur spécialisé travaille avec lui, avec patience et professionnalisme, sur ses points faibles, avec des devoirs après le cours, un suivi des progrès et une reconnaissance de chaque amélioration."
    },
@@ -1726,7 +1726,7 @@
     "fr": "Mon enfant manque de motivation. Comment réagissez-vous ?"
    },
    "text": {
-    "ar": "لدينا مدرسون متخصصون يتعاملون بصبر وحرفية مع الطالب قليل الدافعية، فيشجعونه ويقدّرون تقدمه ويعطونه واجباً مناسباً بعد الحصة ليبقى مستمراً.",
+    "ar": "عندنا مدرّسين متخصصين بيتعاملوا بصبر وحرفية مع الطالب اللي دافعيته قليلة؛ بيشجّعوه وبيقدّروا تقدّمه وبيدّوه واجب مناسب بعد الحصة عشان يفضل مستمر.",
     "en": "We have specialised tutors who work patiently and professionally with students who lack motivation: they encourage the student, recognise progress and give suitable homework after each lesson to keep them going.",
     "fr": "Nos tuteurs spécialisés travaillent avec patience et professionnalisme avec les élèves peu motivés : ils les encouragent, reconnaissent leurs progrès et donnent des devoirs adaptés après chaque cours pour maintenir l’élan."
    },
@@ -1757,7 +1757,7 @@
     "fr": "Qui sont les tuteurs qui travailleront avec mon enfant ?"
    },
    "text": {
-    "ar": "لدينا مدرسون متخصصون يتعاملون مع الطلاب بصبر وحرفية، ويتابعون تقدمهم ويقدّرون جهدهم، ويعطون واجباً بعد الحصة حسب الحاجة.",
+    "ar": "عندنا مدرّسين متخصصين بيتعاملوا مع الطلاب بصبر وحرفية، وبيتابعوا تقدّمهم وبيقدّروا مجهودهم، وبيدّوا واجب بعد الحصة على حسب الحاجة.",
     "en": "We have specialised tutors who work with students patiently and professionally, follow their progress, recognise their effort and give homework after the lesson as needed.",
     "fr": "Nos tuteurs sont spécialisés et travaillent avec les élèves avec patience et professionnalisme, suivent leurs progrès, reconnaissent leurs efforts et donnent des devoirs après le cours selon les besoins."
    },
@@ -1788,7 +1788,7 @@
     "fr": "Quelle est la politique d’annulation ?"
    },
    "text": {
-    "ar": "يمكن إلغاء حصة واحدة أسبوعيًا وإعادة جدولتها خلال الأسبوع نفسه.",
+    "ar": "سياستنا إنه ممكن تلغي حصة واحدة في الأسبوع وتعيد جدولتها في نفس الأسبوع.",
     "en": "One eligible change is normally allowed weekly. A replacement is not guaranteed until confirmed.",
     "fr": "Un changement est normalement permis par semaine, sous réserve de confirmation."
    },
@@ -1820,7 +1820,7 @@
     "fr": "Que se passe-t-il en cas d’absence ?"
    },
    "text": {
-    "ar": "الإلغاء أو الغياب الثاني خلال الأسبوع نفسه يُحتسب من رصيد الحصص.",
+    "ar": "في سياستنا، الإلغاء أو الغياب التاني في نفس الأسبوع بيتحسب من رصيد الحصص.",
     "en": "A second missed or cancelled lesson in the same week is normally counted.",
     "fr": "La deuxième séance annulée ou manquée est normalement comptabilisée."
    },
@@ -1852,7 +1852,7 @@
     "fr": "Quel est le nombre minimum de cours ?"
    },
    "text": {
-    "ar": "الحد الأدنى المطلوب هو حصة واحدة أسبوعيًا.",
+    "ar": "الحد الأدنى المطلوب عندنا حصة واحدة في الأسبوع.",
     "en": "The normal minimum is one lesson weekly unless a pause or exception is approved.",
     "fr": "Le minimum habituel est d’un cours par semaine."
    },
@@ -1884,7 +1884,7 @@
     "fr": "Et si le tuteur ou le service ne convient pas ?"
    },
    "text": {
-    "ar": "رضاكم وتقدم الطالب من أولوياتنا. إذا واجه الطالب مشكلة في ملاءمة المدرس أو أسلوبه أو لهجته أو شعر بعدم الارتياح، يرجى إبلاغنا فورًا. سنراجع الحالة وقد نقترح تغيير المدرس، أو حصصًا إضافية، أو خصمًا، أو تحويل الرصيد، أو استردادًا كليًا أو جزئيًا حسب الحالة وبعد موافقة الفريق.",
+    "ar": "إحنا رضاكم وتقدّم الطالب أولويتنا. لو الطالب واجه مشكلة في ملاءمة المدرّس أو أسلوبه أو لهجته، أو حسّ بعدم الارتياح، من فضلك بلّغنا فوراً. هنراجع الحالة، وممكن نقترح تغيير المدرّس، أو حصص إضافية، أو خصم، أو تحويل الرصيد، أو استرداد كلي أو جزئي على حسب الحالة وبعد موافقة الفريق.",
     "en": "Your satisfaction and the student’s progress are priorities. If the tutor’s fit, teaching approach, accent, service quality, or the student’s comfort causes concern, please tell us promptly. We will review the case and may offer a tutor change, additional lessons, a discount, credit transfer, or a full or partial refund, subject to team approval.",
     "fr": "Votre satisfaction et les progrès de l’élève sont nos priorités. En cas de problème concernant le tuteur, sa méthode, son accent, la qualité du service ou le confort de l’élève, informez-nous rapidement. Nous examinerons la situation et pourrons proposer un changement de tuteur, des cours supplémentaires, une réduction, un transfert de crédit ou un remboursement total ou partiel, sous réserve de l’approbation de l’équipe."
    },
@@ -1916,7 +1916,7 @@
     "fr": "Comment déplacer un cours ?"
    },
    "text": {
-    "ar": "يمكن إلغاء حصة واحدة أسبوعيًا وإعادة جدولتها خلال الأسبوع نفسه.",
+    "ar": "سياستنا إنه ممكن تلغي حصة واحدة في الأسبوع وتعيد جدولتها في نفس الأسبوع.",
     "en": "One eligible change is normally allowed weekly. A replacement is not guaranteed until confirmed.",
     "fr": "Un changement est normalement permis par semaine, sous réserve de confirmation."
    },
@@ -1951,7 +1951,7 @@
     "fr": "Comment annuler, déplacer un cours ou demander un remboursement ?"
    },
    "text": {
-    "ar": "اختر ما تريد معرفته.",
+    "ar": "اختار اللي عايز تعرفه.",
     "en": "Choose what you want to know.",
     "fr": "Choisissez ce que vous voulez savoir."
    },
@@ -1985,7 +1985,7 @@
     "fr": "Et si le prix est trop élevé pour nous ?"
    },
    "text": {
-    "ar": "أتفهم أهمية الميزانية. لدينا باقات تبدأ من 4 حصص، ونختار حسب الهدف دون التزام زائد.",
+    "ar": "إحنا فاهمين إن الميزانية مهمة. عندنا باقات بتبدأ من 4 حصص، وبنختار على حسب الهدف من غير التزام زيادة.",
     "en": "I understand budget matters. Packages start at 4 lessons, so we can choose based on the goal without unnecessary commitment.",
     "fr": "Je comprends l’importance du budget. Les forfaits commencent à 4 cours; choisissons selon l’objectif."
    },
@@ -2017,7 +2017,7 @@
     "fr": "Le tutorat en ligne est-il efficace ?"
    },
    "text": {
-    "ar": "يفيد عندما تكون الحصة فردية والخطة مناسبة مع تدريب ومتابعة.",
+    "ar": "الأونلاين بيفيد لما تكون الحصة فردية والخطة مناسبة، مع تدريب ومتابعة.",
     "en": "It can work well when lessons are one-to-one with a suitable plan, practice, and follow-up.",
     "fr": "Il peut être efficace avec des cours individuels, un plan adapté et un suivi."
    },
@@ -2052,7 +2052,7 @@
     "fr": "Et si nous avons déjà essayé un tuteur sans amélioration ?"
    },
    "text": {
-    "ar": "نتفهم التحفظ؛ نحدد سبب التعثر ونطابق الطالب مع مدرس وخطة أنسب.",
+    "ar": "إحنا فاهمين تحفّظك؛ بنحدّد سبب التعثّر وبنطابق الطالب مع مدرّس وخطة أنسب.",
     "en": "We understand the hesitation; we identify the cause and match a more suitable tutor and plan.",
     "fr": "Nous comprenons; nous identifions la cause et proposons un jumelage plus adapté."
    },
@@ -2081,7 +2081,7 @@
     "fr": "Avez-vous un tuteur patient pour mon enfant ?"
    },
    "text": {
-    "ar": "نأخذ أسلوب التعلم والشخصية ضمن المطابقة ثم نتابع الملاءمة.",
+    "ar": "إحنا بناخد أسلوب التعلّم والشخصية في الاعتبار وإحنا بنختار المدرّس، وبعدين بنتابع الملاءمة.",
     "en": "Learning style and personality are considered during matching, then we follow up on fit.",
     "fr": "Le style d’apprentissage et la personnalité sont considérés dans le jumelage."
    },
@@ -2110,7 +2110,7 @@
     "fr": "Et si l’horaire ne nous convient pas ?"
    },
    "text": {
-    "ar": "نجمع أوقاتكم ونتحقق من التوفر؛ الموعد نهائي بعد تأكيد الأكاديمية.",
+    "ar": "إحنا بنجمع مواعيدكم المناسبة وبنتأكد من التوفّر؛ والميعاد بيبقى نهائي بعد تأكيد الأكاديمية.",
     "en": "We collect suitable times and check availability; the slot is final after academy confirmation.",
     "fr": "Nous recueillons vos horaires et vérifions les disponibilités; confirmation finale par l’académie."
    },
@@ -2139,7 +2139,7 @@
     "fr": "Et si mon enfant n’arrive pas à se concentrer en ligne ?"
    },
    "text": {
-    "ar": "نتفهم أن التركيز هو التحدي الأساسي. تتيح الجلسة الفردية للمدرس متابعة طالب واحد وتعديل الإيقاع والأسلوب وفق استجابته.",
+    "ar": "إحنا فاهمين إن التركيز هو التحدي الأساسي. الحصة الفردية بتخلّي المدرّس يتابع طالب واحد بس ويظبّط الإيقاع والأسلوب على حسب استجابته.",
     "en": "We understand that focus is the main concern. One-to-one lessons allow the tutor to monitor one student and adapt the pace and approach to their response.",
     "fr": "Nous comprenons que la concentration est la principale préoccupation. Les cours individuels permettent au tuteur de suivre un seul élève et d’adapter le rythme et l’approche à ses réactions."
    },
@@ -2169,7 +2169,7 @@
     "fr": "Et si nous préférons les cours en présentiel ?"
    },
    "text": {
-    "ar": "نتفهم تفضيل الدروس الحضورية. توفر جلساتنا الفردية عبر الإنترنت تفاعلًا مباشرًا ومتابعة مخصصة دون مشاركة انتباه المدرس مع طلاب آخرين.",
+    "ar": "إحنا فاهمين إنكم بتفضّلوا الدروس الحضورية. حصصنا الفردية أونلاين بتقدّم تفاعل مباشر ومتابعة مخصصة، من غير ما انتباه المدرّس يتوزّع على طلاب تانيين.",
     "en": "We understand the preference for in-person lessons. Our one-to-one online sessions provide direct interaction and personalized attention without sharing the tutor’s focus with other students.",
     "fr": "Nous comprenons la préférence pour les cours en personne. Nos séances individuelles en ligne offrent une interaction directe et un suivi personnalisé."
    },
@@ -2199,7 +2199,7 @@
     "fr": "Et si j’ai une réserve ou une inquiétude ?"
    },
    "text": {
-    "ar": "ما الذي يقلقكم؟",
+    "ar": "إيه اللي شاغلك؟",
     "en": "What is on your mind?",
     "fr": "Qu’est-ce qui vous préoccupe ?"
    },
@@ -2236,7 +2236,7 @@
     "fr": "Servez-vous mon pays ou ma ville ?"
    },
    "text": {
-    "ar": "دروس خصوصية أونلاين تخدم الطلاب في كندا. دروس خصوصية أونلاين تخدم الطلاب في الولايات المتحدة.",
+    "ar": "إحنا بنقدّم دروس خصوصية أونلاين للطلاب في كندا، وفي الولايات المتحدة كمان.",
     "en": "Online one-to-one tutoring serving students across Canada. Online one-to-one tutoring serving students across United States."
    },
    "options": [
@@ -2263,7 +2263,7 @@
     "fr": "Comment m’inscrire maintenant ?"
    },
    "text": {
-    "ar": "سنجمع بضع معلومات بسيطة، خطوة بخطوة، ثم تراجعونها قبل الإرسال.",
+    "ar": "هنسألك على كام معلومة بسيطة، خطوة خطوة، وبعدين تراجعها قبل ما نبعتها.",
     "en": "We will collect a few details, one step at a time, and you review them before sending.",
     "fr": "Nous allons recueillir quelques informations, étape par étape, et vous les vérifiez avant l’envoi."
    },
@@ -2281,7 +2281,7 @@
     "fr": "Qui contacter et comment ?"
    },
    "text": {
-    "ar": "البريد الإلكتروني: successpathmentors@gmail.com\nالهاتف: +1 647 787 5999",
+    "ar": "تقدر تتواصل معانا كده:\nالبريد الإلكتروني: successpathmentors@gmail.com\nالهاتف: +1 647 787 5999",
     "en": "Email: successpathmentors@gmail.com\nPhone: +1 647 787 5999",
     "fr": "Courriel: successpathmentors@gmail.com\nTéléphone: +1 647 787 5999"
    },
