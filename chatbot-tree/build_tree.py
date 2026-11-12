@@ -242,7 +242,18 @@ for c in ("ca", "us"):
 add("pricing", "root", "menu", MAIN[2][1],
     {"ar": "أين يقيم الطالب؟ يختلف سعر الباقة بحسب البلد.", "en": "Where does the student live? The package price depends on the country.",
      "fr": "Où réside l’élève ? Le prix du forfait dépend du pays."},
-    ["price_ca", "price_us"], [], origin="ui")
+    ["price_ca", "price_us", "pricing_payment"], [], origin="ui")
+
+# payment methods: stated and approved by the owner in chat on 2026-11-12 (not yet a KB row)
+OWNER = "owner-approved in chat 2026-11-12; not yet in the KB sheet"
+add("pricing_payment", "pricing", "answer",
+    {"ar": "ما طرق الدفع؟", "en": "What payment methods do you accept?", "fr": "Quels moyens de paiement acceptez-vous ?"},
+    {"ar": "في كندا: الدفع عبر التحويل بالبريد الإلكتروني (Interac e-Transfer). في الولايات المتحدة: الدفع عبر PayPal أو Stripe.",
+     "en": "In Canada: payment by email money transfer (Interac e-Transfer). In the United States: payment by PayPal or Stripe.",
+     "fr": "Au Canada : paiement par virement par courriel (Interac e-Transfer). Aux États-Unis : paiement par PayPal ou Stripe."},
+    ["price_ca", "price_us", {"to": "register", "preset": {"request": "CALLBACK"}}], [], origin="owner")
+for l in LANGS:
+    composed.append(("pricing_payment", l, OWNER))
 
 # ---------------------------------------------------------------- trial
 rs = {l: faq("trial", l) for l in LANGS}
@@ -287,8 +298,11 @@ svc_leaf("followup_updates", "help", 5,
          {"ar": "كيف يتابع ولي الأمر تقدم الطالب؟", "en": "How can parents follow the student’s progress?", "fr": "Comment les parents suivent-ils les progrès de l’élève ?"},
          ["followup_assessment", "classes_certificates", "register"])
 add("help", "root", "menu", MAIN[5][1],
-    {"ar": "اختر ما يهمّك.", "en": "Choose what matters to you.", "fr": "Choisissez ce qui vous intéresse."},
-    ["classes_tailored", "followup_assessment", "about_mentoring", "about_exam", "followup_updates", "concern_tried"], [], origin="ui")
+    {"ar": "نفهم أن لكل طفل احتياجاً مختلفاً. اختر ما يصف حالة ابنك وسنوضح كيف نساعده.",
+     "en": "We understand every child is different. Choose what describes your child and we will explain how we help.",
+     "fr": "Chaque enfant est différent. Choisissez ce qui décrit votre enfant et nous expliquerons comment nous l’aidons."},
+    ["help_struggle", "concern_focus", "help_motivation", "help_tutors", "followup_assessment", "followup_updates"], [], origin="ui")
+
 add("classes", "root", "menu", MAIN[4][1],
     {"ar": "اختر ما تريد معرفته.", "en": "Choose what you want to know.", "fr": "Choisissez ce que vous voulez savoir."},
     ["classes_duration", "classes_frequency", "classes_homework", "classes_matching", "classes_tech", "classes_booking"], [], origin="ui")
@@ -317,6 +331,30 @@ nur_leaf("classes_tutor", "classes", "objection.tutor.tutor_experience",
 nur_leaf("classes_tailored", "help", "personalized_assessment",
          {"ar": "كيف تُصمَّم الحصص لتناسب الطالب؟", "en": "How are lessons tailored to each student?", "fr": "Comment les cours sont-ils adaptés à chaque élève ?"},
          ["followup_assessment", "trial", "register"])
+# owner-stated approach (chat 2026-11-12): specialised tutors, patience, professionalism, progress tracking, appreciation, homework
+HELP_TXT = {
+    "struggle": {"ar": "نبدأ بفهم صف الطالب ومستواه، ثم يعمل معه مدرس متخصص بصبر وحرفية على نقاط ضعفه، مع واجب بعد الحصة ومتابعة لتقدمه وتقدير لكل تحسّن.",
+                 "en": "We start by understanding the student’s grade and level, then a specialised tutor works with them patiently and professionally on their weak points, with homework after the lesson, progress follow-up and recognition of every improvement.",
+                 "fr": "Nous commençons par comprendre le niveau de l’élève, puis un tuteur spécialisé travaille avec lui, avec patience et professionnalisme, sur ses points faibles, avec des devoirs après le cours, un suivi des progrès et une reconnaissance de chaque amélioration."},
+    "motivation": {"ar": "لدينا مدرسون متخصصون يتعاملون بصبر وحرفية مع الطالب قليل الدافعية، فيشجعونه ويقدّرون تقدمه ويعطونه واجباً مناسباً بعد الحصة ليبقى مستمراً.",
+                   "en": "We have specialised tutors who work patiently and professionally with students who lack motivation: they encourage the student, recognise progress and give suitable homework after each lesson to keep them going.",
+                   "fr": "Nos tuteurs spécialisés travaillent avec patience et professionnalisme avec les élèves peu motivés : ils les encouragent, reconnaissent leurs progrès et donnent des devoirs adaptés après chaque cours pour maintenir l’élan."},
+    "tutors": {"ar": "لدينا مدرسون متخصصون يتعاملون مع الطلاب بصبر وحرفية، ويتابعون تقدمهم ويقدّرون جهدهم، ويعطون واجباً بعد الحصة حسب الحاجة.",
+               "en": "We have specialised tutors who work with students patiently and professionally, follow their progress, recognise their effort and give homework after the lesson as needed.",
+               "fr": "Nos tuteurs sont spécialisés et travaillent avec les élèves avec patience et professionnalisme, suivent leurs progrès, reconnaissent leurs efforts et donnent des devoirs après le cours selon les besoins."},
+}
+HELP_LBL = {
+    "struggle": {"ar": "ابني ضعيف أو يواجه صعوبة دراسية، كيف تساعدونه؟", "en": "My child is struggling at school. How do you help?", "fr": "Mon enfant a des difficultés scolaires. Comment l’aidez-vous ?"},
+    "motivation": {"ar": "ابني قليل الدافعية، كيف تتعاملون معه؟", "en": "My child lacks motivation. How do you handle that?", "fr": "Mon enfant manque de motivation. Comment réagissez-vous ?"},
+    "tutors": {"ar": "من هم المدرسون الذين سيتعاملون مع ابني؟", "en": "Who are the tutors who will work with my child?", "fr": "Qui sont les tuteurs qui travailleront avec mon enfant ?"},
+}
+HELP_FOLLOW = {"struggle": ["about_mentoring", "about_exam", "classes_tailored", "trial"],
+               "motivation": ["concern_patient", "concern_tried", "trial", "register"],
+               "tutors": ["classes_matching", "classes_tutor", "trial", "register"]}
+for k in ("struggle", "motivation", "tutors"):
+    add("help_" + k, "help", "answer", HELP_LBL[k], HELP_TXT[k], HELP_FOLLOW[k], [], origin="owner")
+    for l in LANGS:
+        composed.append(("help_" + k, l, OWNER))
 # pricing leaves point to the frequency answer (cross-link)
 for n in pk:
     for c in ("ca", "us"):
@@ -535,7 +573,7 @@ for l in LANGS:
     lines.append(f"### {l}: {len(bylang[l])}")
     lines += [f"- {x}" for x in bylang[l]]
 lines += ["", "## Not found in the KB (not invented)",
-          "- Payment methods and how to pay", "- Teacher qualifications and vetting", "- Working hours of the team",
+          "- Teacher qualifications and vetting", "- Working hours of the team",
           "- EN/FR subject names for French, Arabic and Islamic Studies; FR names for Math, Science, Chemistry"]
 open(f"{OUT}/tree_report.md", "w").write("\n".join(lines) + "\n")
 print("OK nodes=", len(nodes), "sources=", len(used_sources), "gaps=", len(gaps), "composed=", len(composed))

@@ -1131,10 +1131,44 @@
     },
     {
      "to": "price_us"
+    },
+    {
+     "to": "pricing_payment"
     }
    ],
    "sources": [],
    "origin": "ui"
+  },
+  "pricing_payment": {
+   "id": "pricing_payment",
+   "parent": "pricing",
+   "kind": "answer",
+   "label": {
+    "ar": "ما طرق الدفع؟",
+    "en": "What payment methods do you accept?",
+    "fr": "Quels moyens de paiement acceptez-vous ?"
+   },
+   "text": {
+    "ar": "في كندا: الدفع عبر التحويل بالبريد الإلكتروني (Interac e-Transfer). في الولايات المتحدة: الدفع عبر PayPal أو Stripe.",
+    "en": "In Canada: payment by email money transfer (Interac e-Transfer). In the United States: payment by PayPal or Stripe.",
+    "fr": "Au Canada : paiement par virement par courriel (Interac e-Transfer). Aux États-Unis : paiement par PayPal ou Stripe."
+   },
+   "options": [
+    {
+     "to": "price_ca"
+    },
+    {
+     "to": "price_us"
+    },
+    {
+     "to": "register",
+     "preset": {
+      "request": "CALLBACK"
+     }
+    }
+   ],
+   "sources": [],
+   "origin": "owner"
   },
   "trial": {
    "id": "trial",
@@ -1463,28 +1497,28 @@
     "fr": "Comment aidez-vous mon enfant à progresser et suivez-vous ses progrès ?"
    },
    "text": {
-    "ar": "اختر ما يهمّك.",
-    "en": "Choose what matters to you.",
-    "fr": "Choisissez ce qui vous intéresse."
+    "ar": "نفهم أن لكل طفل احتياجاً مختلفاً. اختر ما يصف حالة ابنك وسنوضح كيف نساعده.",
+    "en": "We understand every child is different. Choose what describes your child and we will explain how we help.",
+    "fr": "Chaque enfant est différent. Choisissez ce qui décrit votre enfant et nous expliquerons comment nous l’aidons."
    },
    "options": [
     {
-     "to": "classes_tailored"
+     "to": "help_struggle"
+    },
+    {
+     "to": "concern_focus"
+    },
+    {
+     "to": "help_motivation"
+    },
+    {
+     "to": "help_tutors"
     },
     {
      "to": "followup_assessment"
     },
     {
-     "to": "about_mentoring"
-    },
-    {
-     "to": "about_exam"
-    },
-    {
      "to": "followup_updates"
-    },
-    {
-     "to": "concern_tried"
     }
    ],
    "sources": [],
@@ -1650,6 +1684,99 @@
     "personalized_assessment"
    ],
    "origin": "kb+ui-label"
+  },
+  "help_struggle": {
+   "id": "help_struggle",
+   "parent": "help",
+   "kind": "answer",
+   "label": {
+    "ar": "ابني ضعيف أو يواجه صعوبة دراسية، كيف تساعدونه؟",
+    "en": "My child is struggling at school. How do you help?",
+    "fr": "Mon enfant a des difficultés scolaires. Comment l’aidez-vous ?"
+   },
+   "text": {
+    "ar": "نبدأ بفهم صف الطالب ومستواه، ثم يعمل معه مدرس متخصص بصبر وحرفية على نقاط ضعفه، مع واجب بعد الحصة ومتابعة لتقدمه وتقدير لكل تحسّن.",
+    "en": "We start by understanding the student’s grade and level, then a specialised tutor works with them patiently and professionally on their weak points, with homework after the lesson, progress follow-up and recognition of every improvement.",
+    "fr": "Nous commençons par comprendre le niveau de l’élève, puis un tuteur spécialisé travaille avec lui, avec patience et professionnalisme, sur ses points faibles, avec des devoirs après le cours, un suivi des progrès et une reconnaissance de chaque amélioration."
+   },
+   "options": [
+    {
+     "to": "about_mentoring"
+    },
+    {
+     "to": "about_exam"
+    },
+    {
+     "to": "classes_tailored"
+    },
+    {
+     "to": "trial"
+    }
+   ],
+   "sources": [],
+   "origin": "owner"
+  },
+  "help_motivation": {
+   "id": "help_motivation",
+   "parent": "help",
+   "kind": "answer",
+   "label": {
+    "ar": "ابني قليل الدافعية، كيف تتعاملون معه؟",
+    "en": "My child lacks motivation. How do you handle that?",
+    "fr": "Mon enfant manque de motivation. Comment réagissez-vous ?"
+   },
+   "text": {
+    "ar": "لدينا مدرسون متخصصون يتعاملون بصبر وحرفية مع الطالب قليل الدافعية، فيشجعونه ويقدّرون تقدمه ويعطونه واجباً مناسباً بعد الحصة ليبقى مستمراً.",
+    "en": "We have specialised tutors who work patiently and professionally with students who lack motivation: they encourage the student, recognise progress and give suitable homework after each lesson to keep them going.",
+    "fr": "Nos tuteurs spécialisés travaillent avec patience et professionnalisme avec les élèves peu motivés : ils les encouragent, reconnaissent leurs progrès et donnent des devoirs adaptés après chaque cours pour maintenir l’élan."
+   },
+   "options": [
+    {
+     "to": "concern_patient"
+    },
+    {
+     "to": "concern_tried"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [],
+   "origin": "owner"
+  },
+  "help_tutors": {
+   "id": "help_tutors",
+   "parent": "help",
+   "kind": "answer",
+   "label": {
+    "ar": "من هم المدرسون الذين سيتعاملون مع ابني؟",
+    "en": "Who are the tutors who will work with my child?",
+    "fr": "Qui sont les tuteurs qui travailleront avec mon enfant ?"
+   },
+   "text": {
+    "ar": "لدينا مدرسون متخصصون يتعاملون مع الطلاب بصبر وحرفية، ويتابعون تقدمهم ويقدّرون جهدهم، ويعطون واجباً بعد الحصة حسب الحاجة.",
+    "en": "We have specialised tutors who work with students patiently and professionally, follow their progress, recognise their effort and give homework after the lesson as needed.",
+    "fr": "Nos tuteurs sont spécialisés et travaillent avec les élèves avec patience et professionnalisme, suivent leurs progrès, reconnaissent leurs efforts et donnent des devoirs après le cours selon les besoins."
+   },
+   "options": [
+    {
+     "to": "classes_matching"
+    },
+    {
+     "to": "classes_tutor"
+    },
+    {
+     "to": "trial"
+    },
+    {
+     "to": "register"
+    }
+   ],
+   "sources": [],
+   "origin": "owner"
   },
   "policy_cancellation": {
    "id": "policy_cancellation",

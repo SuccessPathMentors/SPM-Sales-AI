@@ -1,7 +1,7 @@
 # Tree build report
 
 Source: Success_Path_Mentors_AI_KB_V2_SPM_2026-08-18.xlsx
-Nodes: 62  |  KB records used: 217
+Nodes: 66  |  KB records used: 217
 
 ## Excluded from customers
 - FAQ-UQ-39556: test record
@@ -17,6 +17,10 @@ Nodes: 62  |  KB records used: 217
 - price_ca_4 (Canada price = package row with USD→CAD per decision D-009; live sheet must confirm)
 - price_ca_8 (Canada price = package row with USD→CAD per decision D-009; live sheet must confirm)
 - price_ca_12 (Canada price = package row with USD→CAD per decision D-009; live sheet must confirm)
+- pricing_payment (owner-approved in chat 2026-11-12; not yet in the KB sheet)
+- help_struggle (owner-approved in chat 2026-11-12; not yet in the KB sheet)
+- help_motivation (owner-approved in chat 2026-11-12; not yet in the KB sheet)
+- help_tutors (owner-approved in chat 2026-11-12; not yet in the KB sheet)
 - about_where (two verbatim country-level LOCATIONS rows (Canada + United States) joined)
 - human (contact lines assembled from COM-005 (email) and COM-009 (phone))
 
@@ -41,7 +45,6 @@ Nodes: 62  |  KB records used: 217
 - about_where: no ACTIVE country-level LOCATIONS rows in this language
 
 ## Not found in the KB (not invented)
-- Payment methods and how to pay
 - Teacher qualifications and vetting
 - Working hours of the team
 - EN/FR subject names for French, Arabic and Islamic Studies; FR names for Math, Science, Chemistry
